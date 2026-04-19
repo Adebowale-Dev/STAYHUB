@@ -1,0 +1,16 @@
+const express = require('express');
+const router = express.Router();
+const authController = require('../controllers/authController');
+const { protect } = require('../middlewares/authMiddleware');
+const { uploadProfilePicture } = require('../middlewares/uploadMiddleware');
+const { validateLogin, validatePasswordChange } = require('../middlewares/validationMiddleware');
+router.post('/login', validateLogin, authController.login);
+router.post('/forgot-password', authController.forgotPassword);
+router.post('/reset-password', authController.resetPassword);
+router.use(protect);
+router.get('/profile', authController.getProfile);
+router.put('/profile', authController.updateProfile);
+router.post('/profile/picture', uploadProfilePicture, authController.uploadProfilePicture);
+router.post('/change-password', validatePasswordChange, authController.changePassword);
+router.post('/logout', authController.logout);
+module.exports = router;

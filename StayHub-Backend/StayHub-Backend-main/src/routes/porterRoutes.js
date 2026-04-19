@@ -1,0 +1,15 @@
+const express = require('express');
+const router = express.Router();
+const porterController = require('../controllers/porterController');
+const { protect, checkFirstLogin } = require('../middlewares/authMiddleware');
+const { porterOnly, checkPorterApproval, checkPorterHostel } = require('../middlewares/roleMiddleware');
+const { validatePorterApplication } = require('../middlewares/validationMiddleware');
+router.post('/apply', validatePorterApplication, porterController.applyAsPorter);
+router.use(protect, porterOnly, checkFirstLogin, checkPorterApproval);
+router.get('/dashboard', porterController.getDashboard);
+router.use(checkPorterHostel);
+router.get('/students', porterController.getStudents);
+router.get('/rooms', porterController.getRooms);
+router.post('/checkin/:studentId', porterController.checkInStudent);
+router.post('/release-expired', porterController.releaseExpiredReservations);
+module.exports = router;

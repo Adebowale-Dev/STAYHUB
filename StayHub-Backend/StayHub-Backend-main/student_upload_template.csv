@@ -1,0 +1,2 @@
+firstName,lastName,matricNo,email,level,gender,collegeCode,departmentCode,password
+John,Doe,STU20240001,john.doe@example.edu,100,male,REPLACE_WITH_COLLEGE_CODE,REPLACE_WITH_DEPARTMENT_CODE,

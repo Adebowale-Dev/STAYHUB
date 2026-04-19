@@ -1,0 +1,15 @@
+const express = require('express');
+const router = express.Router();
+const paymentController = require('../controllers/paymentController');
+const { protect } = require('../middlewares/authMiddleware');
+const { adminOnly, studentOnly, restrictTo } = require('../middlewares/roleMiddleware');
+router.get('/callback', paymentController.handlePaystackCallback);
+router.get('/verify/:reference', paymentController.verifyPayment);
+router.use(protect);
+router.get('/amount', paymentController.getPaymentAmount);
+router.post('/initialize', studentOnly, paymentController.initializePayment);
+router.get('/status', studentOnly, paymentController.getPaymentStatus);
+router.post('/set-amount', adminOnly, paymentController.setPaymentAmount);
+router.get('/', adminOnly, paymentController.getAllPayments);
+router.get('/stats', adminOnly, paymentController.getPaymentStats);
+module.exports = router;
