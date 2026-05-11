@@ -1,194 +1,203 @@
-import React, { useState } from 'react';
-import { View, StyleSheet, Alert, Keyboard, KeyboardAvoidingView, TouchableWithoutFeedback, Platform, ScrollView, TouchableOpacity, StatusBar, } from 'react-native';
-import { TextInput, ActivityIndicator, Text } from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { useRouter } from 'expo-router';
+import React, { useState } from 'react';
+import {
+    Alert,
+    Keyboard,
+    KeyboardAvoidingView,
+    Platform,
+    ScrollView,
+    StatusBar,
+    TouchableOpacity,
+    TouchableWithoutFeedback,
+    View,
+} from 'react-native';
+import { ActivityIndicator, Text, TextInput } from 'react-native-paper';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { authAPI } from '../../services/api';
-import { useRouter } from 'expo-router';
+import { getStudentPalette } from '../../constants/design';
+import { useThemeStore } from '../../store/themeStore';
+
 export default function ForgotPasswordScreen() {
     const [email, setEmail] = useState('');
     const [loading, setLoading] = useState(false);
     const [sent, setSent] = useState(false);
     const router = useRouter();
     const insets = useSafeAreaInsets();
+    const isDark = useThemeStore((state) => state.isDark);
+    const palette = getStudentPalette(isDark);
+
     const handleSubmit = async () => {
         if (!email.trim()) {
             Alert.alert('Missing Field', 'Please enter your email address.');
             return;
         }
+
         setLoading(true);
         try {
             await authAPI.forgotPassword(email.trim().toLowerCase());
             setSent(true);
-        }
-        catch (e: any) {
+        } catch (e: any) {
             Alert.alert('Error', e.response?.data?.message ?? 'Failed to send reset email. Please try again.');
-        }
-        finally {
+        } finally {
             setLoading(false);
         }
     };
+
     if (sent) {
-        return (<View style={[styles.flex, { backgroundColor: '#1565C0' }]}>
-        <StatusBar barStyle="light-content" backgroundColor="#1565C0" translucent={false}/>
-        <View style={{ height: insets.top, backgroundColor: '#1565C0' }}/>
+        return (
+            <View className="flex-1 bg-hero">
+                <StatusBar barStyle="light-content" backgroundColor={palette.hero} />
+                <View style={{ height: insets.top }} />
+                <View className="px-5 pb-7">
+                    <View className="relative overflow-hidden rounded-[32px] border border-white/15 bg-white/8 px-5 py-6">
+                        <View className="absolute -right-10 -top-14 h-40 w-40 rounded-full bg-white/10" />
+                        <View className="absolute -bottom-12 -left-8 h-28 w-28 rounded-full bg-[#2F80ED]/25" />
 
-        
-        <View style={styles.successTop}>
-          <View style={styles.bubble1}/>
-          <View style={styles.bubble2}/>
-        </View>
+                        <View className="mb-5 h-[72px] w-[72px] items-center justify-center self-center rounded-full bg-primary">
+                            <MaterialCommunityIcons name="email-check-outline" size={32} color="#fff" />
+                        </View>
+                        <Text className="text-center text-[26px] font-extrabold text-white">
+                            Check Your Email
+                        </Text>
+                        <Text className="mt-3 text-center text-[14px] leading-6 text-white/75">
+                            We sent a password reset link to the address below.
+                        </Text>
+                        <View className="mt-5 self-center rounded-full bg-white/95 px-4 py-2.5">
+                            <Text className="text-[13px] font-bold text-primary">{email}</Text>
+                        </View>
+                        <Text className="mt-4 text-center text-[13px] leading-5 text-white/70">
+                            If you do not see it soon, check spam or try again with a different email.
+                        </Text>
 
-        
-        <View style={[styles.card, { flex: 1 }]}>
-          <View style={styles.successIconWrap}>
-            <View style={styles.successIconCircle}>
-              <MaterialCommunityIcons name="email-check-outline" size={32} color="#fff"/>
+                        <TouchableOpacity
+                            className="mt-7 flex-row items-center justify-center rounded-2xl bg-white py-4"
+                            onPress={() => router.back()}
+                            activeOpacity={0.85}
+                        >
+                            <MaterialCommunityIcons name="arrow-left" size={18} color={palette.primary} />
+                            <Text className="ml-2 text-[14px] font-extrabold text-primary">Back to Login</Text>
+                        </TouchableOpacity>
+                    </View>
+                </View>
             </View>
-          </View>
-
-          <Text style={styles.cardTitle}>Check Your Email</Text>
-          <Text style={styles.successBody}>
-            We sent a password reset link to:
-          </Text>
-          <View style={styles.emailChip}>
-            <MaterialCommunityIcons name="email-outline" size={14} color="#1565C0"/>
-            <Text style={styles.emailChipText} numberOfLines={1}>{email}</Text>
-          </View>
-          <Text style={[styles.successBody, { marginTop: 12 }]}>
-            Didn't receive it? Check your spam folder or try again with a different email.
-          </Text>
-
-          <TouchableOpacity style={[styles.primaryBtn, { marginTop: 28 }]} onPress={() => router.back()} activeOpacity={0.85}>
-            <MaterialCommunityIcons name="arrow-left" size={16} color="#fff"/>
-            <Text style={styles.primaryBtnText}>Back to Login</Text>
-          </TouchableOpacity>
-        </View>
-      </View>);
+        );
     }
-    return (<TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
-      <KeyboardAvoidingView style={styles.flex} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-        <StatusBar barStyle="light-content" backgroundColor="#1565C0" translucent={false}/>
 
-        <ScrollView style={styles.scroll} contentContainerStyle={[styles.scrollContent, { paddingTop: insets.top + 16 }]} keyboardShouldPersistTaps="handled" keyboardDismissMode="on-drag" showsVerticalScrollIndicator={false} bounces={false}>
-        
-        <View style={styles.branding}>
-          <View style={styles.bubble1}/>
-          <View style={styles.bubble2}/>
+    return (
+        <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
+            <KeyboardAvoidingView
+                className="flex-1 bg-background"
+                behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+            >
+                <StatusBar barStyle="light-content" backgroundColor={palette.hero} />
+                <ScrollView
+                    className="flex-1"
+                    contentContainerStyle={{ flexGrow: 1, paddingTop: insets.top + 18 }}
+                    keyboardShouldPersistTaps="handled"
+                    keyboardDismissMode="on-drag"
+                    showsVerticalScrollIndicator={false}
+                    bounces={false}
+                >
+                    <View className="bg-hero px-5 pb-8">
+                        <View className="absolute -right-8 -top-12 h-44 w-44 rounded-full bg-[#2F80ED]/25" />
+                        <View className="absolute -bottom-10 -left-7 h-28 w-28 rounded-full bg-white/10" />
 
-          
-          <TouchableOpacity style={styles.backBtn} onPress={() => router.back()} disabled={loading} activeOpacity={0.7}>
-            <MaterialCommunityIcons name="arrow-left" size={20} color="#fff"/>
-          </TouchableOpacity>
+                        <TouchableOpacity
+                            className="mb-6 h-10 w-10 items-center justify-center rounded-full bg-white/15"
+                            onPress={() => router.back()}
+                            disabled={loading}
+                            activeOpacity={0.7}
+                        >
+                            <MaterialCommunityIcons name="arrow-left" size={20} color="#fff" />
+                        </TouchableOpacity>
 
-          
-          <View style={styles.iconCircle}>
-            <MaterialCommunityIcons name="lock-reset" size={30} color="#fff"/>
-          </View>
+                        <View className="h-[74px] w-[74px] items-center justify-center self-center rounded-full border-2 border-white/25 bg-white/15">
+                            <MaterialCommunityIcons name="lock-reset" size={30} color="#fff" />
+                        </View>
+                        <Text className="mt-4 text-center text-[28px] font-extrabold tracking-hero text-white">
+                            Reset Password
+                        </Text>
+                        <Text className="mt-2 text-center text-[14px] leading-6 text-white/70">
+                            We&apos;ll send a reset link to your email so you can get back into StayHub quickly.
+                        </Text>
+                    </View>
 
-          <Text style={styles.appName}>Reset Password</Text>
-          <Text style={styles.appTagline}>We'll send a reset link to your email</Text>
-        </View>
+                    <View
+                        className="-mt-5 flex-1 rounded-t-[32px] border border-border bg-surface px-5 pb-8 pt-7"
+                        style={{
+                            shadowColor: palette.shadow,
+                            shadowOffset: { width: 0, height: -10 },
+                            shadowOpacity: 0.06,
+                            shadowRadius: 18,
+                            elevation: 8,
+                        }}
+                    >
+                        <Text className="text-[24px] font-extrabold text-foreground">
+                            Forgot your password?
+                        </Text>
+                        <Text className="mt-2 text-[14px] leading-6 text-foreground-secondary">
+                            Enter the email linked to your account and we&apos;ll send you a secure reset link.
+                        </Text>
 
-        
-        <View style={styles.card}>
-          <Text style={styles.cardTitle}>Forgot your password?</Text>
-          <Text style={styles.cardSub}>
-            Enter the email address linked to your account and we'll send you a reset link.
-          </Text>
+                        <View className="mt-6">
+                            <Text className="mb-2 text-[12px] font-extrabold uppercase tracking-[0.5px] text-foreground-secondary">
+                                Email Address
+                            </Text>
+                            <TextInput
+                                mode="outlined"
+                                value={email}
+                                onChangeText={setEmail}
+                                keyboardType="email-address"
+                                autoCapitalize="none"
+                                autoCorrect={false}
+                                disabled={loading}
+                                placeholder="you@example.com"
+                                style={{ backgroundColor: palette.surface }}
+                                outlineColor={palette.border}
+                                activeOutlineColor={palette.primary}
+                                left={<TextInput.Icon icon="email-outline" color={palette.textSecondary} />}
+                            />
+                        </View>
 
-          <TextInput mode="outlined" label="Email Address" value={email} onChangeText={setEmail} keyboardType="email-address" autoCapitalize="none" autoCorrect={false} disabled={loading} style={styles.input} outlineColor="#E0E0E0" activeOutlineColor="#1565C0" left={<TextInput.Icon icon="email-outline"/>}/>
+                        <TouchableOpacity
+                            className="mt-6 min-h-[56px] flex-row items-center justify-center rounded-[20px] bg-primary"
+                            onPress={handleSubmit}
+                            disabled={loading}
+                            activeOpacity={0.85}
+                            style={{
+                                shadowColor: palette.primary,
+                                shadowOffset: { width: 0, height: 10 },
+                                shadowOpacity: 0.24,
+                                shadowRadius: 18,
+                                elevation: 8,
+                                opacity: loading ? 0.72 : 1,
+                            }}
+                        >
+                            {loading ? (
+                                <ActivityIndicator size={20} color="#fff" />
+                            ) : (
+                                <>
+                                    <MaterialCommunityIcons name="send-outline" size={18} color="#fff" />
+                                    <Text className="ml-2 text-[15px] font-extrabold text-white">
+                                        Send Reset Link
+                                    </Text>
+                                </>
+                            )}
+                        </TouchableOpacity>
 
-          <TouchableOpacity style={[styles.primaryBtn, loading && { opacity: 0.7 }]} onPress={handleSubmit} disabled={loading} activeOpacity={0.85}>
-            {loading ? (<ActivityIndicator size={20} color="#fff"/>) : (<>
-                <MaterialCommunityIcons name="send-outline" size={16} color="#fff"/>
-                <Text style={styles.primaryBtnText}>Send Reset Link</Text>
-              </>)}
-          </TouchableOpacity>
-
-          <TouchableOpacity style={styles.backLinkWrap} onPress={() => router.back()} disabled={loading} activeOpacity={0.7}>
-            <MaterialCommunityIcons name="arrow-left" size={14} color="#1565C0"/>
-            <Text style={styles.backLinkText}>Back to Login</Text>
-          </TouchableOpacity>
-        </View>
-      </ScrollView>
-      </KeyboardAvoidingView>
-    </TouchableWithoutFeedback>);
+                        <TouchableOpacity
+                            className="mt-5 flex-row items-center justify-center"
+                            onPress={() => router.back()}
+                            disabled={loading}
+                            activeOpacity={0.7}
+                        >
+                            <MaterialCommunityIcons name="arrow-left" size={15} color={palette.primary} />
+                            <Text className="ml-1.5 text-[13px] font-bold text-primary">Back to Login</Text>
+                        </TouchableOpacity>
+                    </View>
+                </ScrollView>
+            </KeyboardAvoidingView>
+        </TouchableWithoutFeedback>
+    );
 }
-const styles = StyleSheet.create({
-    flex: { flex: 1, backgroundColor: '#1565C0' },
-    scroll: { flex: 1, backgroundColor: '#1565C0' },
-    scrollContent: { flexGrow: 1 },
-    branding: {
-        alignItems: 'center',
-        paddingHorizontal: 24,
-        paddingBottom: 32,
-        paddingTop: 8,
-        overflow: 'hidden',
-    },
-    successTop: { height: 60, overflow: 'hidden' },
-    bubble1: {
-        position: 'absolute', width: 200, height: 200, borderRadius: 100,
-        backgroundColor: 'rgba(255,255,255,0.06)', top: -80, right: -50,
-    },
-    bubble2: {
-        position: 'absolute', width: 130, height: 130, borderRadius: 65,
-        backgroundColor: 'rgba(255,255,255,0.05)', bottom: -40, left: -30,
-    },
-    backBtn: {
-        alignSelf: 'flex-start',
-        width: 38, height: 38, borderRadius: 19,
-        backgroundColor: 'rgba(255,255,255,0.15)',
-        alignItems: 'center', justifyContent: 'center',
-        marginBottom: 20,
-    },
-    iconCircle: {
-        width: 72, height: 72, borderRadius: 36,
-        backgroundColor: 'rgba(255,255,255,0.18)',
-        alignItems: 'center', justifyContent: 'center',
-        marginBottom: 14,
-        borderWidth: 2,
-        borderColor: 'rgba(255,255,255,0.25)',
-    },
-    appName: { color: '#fff', fontSize: 22, fontWeight: '800' },
-    appTagline: { color: 'rgba(255,255,255,0.65)', fontSize: 13, marginTop: 5, textAlign: 'center' },
-    card: {
-        backgroundColor: '#fff',
-        borderTopLeftRadius: 32,
-        borderTopRightRadius: 32,
-        paddingHorizontal: 26,
-        paddingTop: 30,
-        paddingBottom: 32,
-        minHeight: 400,
-    },
-    cardTitle: { fontSize: 20, fontWeight: '800', color: '#1A1A2E', marginBottom: 6 },
-    cardSub: { fontSize: 13, color: '#9E9E9E', lineHeight: 19, marginBottom: 24 },
-    input: { marginBottom: 18, backgroundColor: '#fff' },
-    primaryBtn: {
-        flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8,
-        backgroundColor: '#1565C0', paddingVertical: 15, borderRadius: 14,
-        shadowColor: '#1565C0', shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.28, shadowRadius: 10, elevation: 5,
-    },
-    primaryBtnText: { color: '#fff', fontSize: 15, fontWeight: '700' },
-    backLinkWrap: {
-        flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
-        gap: 5, marginTop: 20,
-    },
-    backLinkText: { fontSize: 13, color: '#1565C0', fontWeight: '600' },
-    successIconWrap: { alignItems: 'center', marginTop: 20, marginBottom: 20 },
-    successIconCircle: {
-        width: 72, height: 72, borderRadius: 36,
-        backgroundColor: '#1565C0',
-        alignItems: 'center', justifyContent: 'center',
-    },
-    successBody: { fontSize: 13, color: '#757575', textAlign: 'center', lineHeight: 20 },
-    emailChip: {
-        flexDirection: 'row', alignItems: 'center', gap: 6,
-        alignSelf: 'center',
-        backgroundColor: '#E3F2FD',
-        paddingHorizontal: 14, paddingVertical: 7,
-        borderRadius: 20, marginTop: 8,
-    },
-    emailChipText: { fontSize: 13, color: '#1565C0', fontWeight: '600' },
-});

@@ -1,7 +1,8 @@
 import React from 'react';
-import { StyleSheet } from 'react-native';
 import { Chip } from 'react-native-paper';
+
 type Variant = 'success' | 'warning' | 'error' | 'info' | 'neutral';
+
 const COLORS: Record<Variant, {
     bg: string;
     text: string;
@@ -16,17 +17,16 @@ interface Props {
     label: string;
     variant?: Variant;
 }
+
 export function Badge({ label, variant = 'neutral' }: Props) {
     const { bg, text } = COLORS[variant];
-    return (<Chip compact style={[styles.chip, { backgroundColor: bg }]} textStyle={[styles.text, { color: text }]}>
-      {label}
-    </Chip>);
+    return (
+        <Chip
+            compact
+            style={{ borderRadius: 999, paddingHorizontal: 2, minHeight: 28, backgroundColor: bg }}
+            textStyle={{ fontSize: 11, fontWeight: '800', letterSpacing: 0.2, color: text }}
+        >
+            {label}
+        </Chip>
+    );
 }
-const styles = StyleSheet.create({
-    chip: {
-        borderRadius: 999,
-        paddingHorizontal: 2,
-        minHeight: 28,
-    },
-    text: { fontSize: 11, fontWeight: '700', letterSpacing: 0.2 },
-});

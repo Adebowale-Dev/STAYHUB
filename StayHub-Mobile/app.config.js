@@ -1,10 +1,17 @@
 const packageJson = require('./package.json');
-const apiBaseUrl = process.env.API_BASE_URL || 'http://172.20.10.3:5000/api';
-const paystackPublicKey = process.env.PAYSTACK_PUBLIC_KEY || 'pk_test_f5ab1691491857e39c3ca1221d7e8d5680317b13';
-const easProjectId = process.env.EXPO_EAS_PROJECT_ID ||
-    process.env.EXPO_PUBLIC_EAS_PROJECT_ID ||
-    process.env.EAS_PROJECT_ID ||
-    '';
+const getEnv = (...keys) => {
+    for (const key of keys) {
+        const value = process.env[key];
+        if (typeof value === 'string' && value.trim()) {
+            return value.trim();
+        }
+    }
+    return '';
+};
+const apiBaseUrl = getEnv('EXPO_PUBLIC_API_BASE_URL', 'API_BASE_URL');
+const paystackPublicKey = getEnv('EXPO_PUBLIC_PAYSTACK_PUBLIC_KEY', 'PAYSTACK_PUBLIC_KEY') ||
+    'pk_test_f5ab1691491857e39c3ca1221d7e8d5680317b13';
+const easProjectId = getEnv('EXPO_PUBLIC_EAS_PROJECT_ID', 'EXPO_EAS_PROJECT_ID', 'EAS_PROJECT_ID');
 module.exports = {
     expo: {
         name: 'StayHub',

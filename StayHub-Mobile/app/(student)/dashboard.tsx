@@ -1,6 +1,14 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { Image, RefreshControl, ScrollView, StatusBar, StyleSheet, TouchableOpacity, View } from 'react-native';
-import { ActivityIndicator, Text, useTheme } from 'react-native-paper';
+import {
+    Image,
+    RefreshControl,
+    ScrollView,
+    StatusBar,
+    StyleSheet,
+    TouchableOpacity,
+    View,
+} from 'react-native';
+import { Text, useTheme } from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -9,23 +17,11 @@ import AlertsCard from '../../components/AlertsCard';
 import { Reveal } from '../../components/ui/Reveal';
 import { useAuthStore } from '../../store/authStore';
 import type { DashboardData } from '../../types';
+import { getStudentPalette } from '../../constants/design';
+import { StudentHero } from '../../components/ui/StudentHero';
+import { LoadingSpinner } from '../../components/LoadingSpinner';
 
 type IconName = React.ComponentProps<typeof MaterialCommunityIcons>['name'];
-
-const ACTIONS: {
-    icon: IconName;
-    label: string;
-    sub: string;
-    route: '/(student)/hostels' | '/(student)/notifications' | '/(student)/payment' | '/(student)/reservation' | '/(student)/profile';
-    color: string;
-    backgroundColor: string;
-}[] = [
-    { icon: 'home-city', label: 'Hostels', sub: 'Browse spaces', route: '/(student)/hostels', color: '#1565C0', backgroundColor: '#E3F2FD' },
-    { icon: 'bell-ring-outline', label: 'Alerts', sub: 'Unread updates', route: '/(student)/notifications', color: '#EF6C00', backgroundColor: '#FFF3E0' },
-    { icon: 'credit-card-outline', label: 'Payment', sub: 'Settle fees', route: '/(student)/payment', color: '#7B1FA2', backgroundColor: '#F3E5F5' },
-    { icon: 'calendar-check-outline', label: 'Reserve', sub: 'View reservation', route: '/(student)/reservation', color: '#00796B', backgroundColor: '#E0F2F1' },
-    { icon: 'account-circle-outline', label: 'Profile', sub: 'Manage account', route: '/(student)/profile', color: '#C62828', backgroundColor: '#FFEBEE' },
-];
 
 function getGreeting() {
     const hour = new Date().getHours();
@@ -43,9 +39,7 @@ function formatReservationStatus(value?: string | null) {
         return 'No reservation';
     }
 
-    return value
-        .replace(/_/g, ' ')
-        .replace(/\b\w/g, (letter) => letter.toUpperCase());
+    return value.replace(/_/g, ' ').replace(/\b\w/g, (letter) => letter.toUpperCase());
 }
 
 function formatAmountLabel(amount: number | null) {
@@ -62,6 +56,61 @@ export default function DashboardScreen() {
     const router = useRouter();
     const insets = useSafeAreaInsets();
     const theme = useTheme();
+    const palette = getStudentPalette(theme.dark);
+    const actions: {
+        icon: IconName;
+        label: string;
+        sub: string;
+        route:
+            | '/(student)/hostels'
+            | '/(student)/notifications'
+            | '/(student)/payment'
+            | '/(student)/reservation'
+            | '/(student)/profile';
+        color: string;
+        backgroundColor: string;
+    }[] = [
+        {
+            icon: 'home-city-outline',
+            label: 'Hostels',
+            sub: 'Browse available spaces',
+            route: '/(student)/hostels',
+            color: palette.primary,
+            backgroundColor: palette.primarySoft,
+        },
+        {
+            icon: 'bell-ring-outline',
+            label: 'Alerts',
+            sub: 'Stay ahead of updates',
+            route: '/(student)/notifications',
+            color: palette.warning,
+            backgroundColor: palette.warningSoft,
+        },
+        {
+            icon: 'credit-card-check-outline',
+            label: 'Payment',
+            sub: 'Review hostel fees',
+            route: '/(student)/payment',
+            color: palette.success,
+            backgroundColor: palette.successSoft,
+        },
+        {
+            icon: 'calendar-check-outline',
+            label: 'Reserve',
+            sub: 'See your room status',
+            route: '/(student)/reservation',
+            color: palette.primary,
+            backgroundColor: palette.surfaceMuted,
+        },
+        {
+            icon: 'account-circle-outline',
+            label: 'Profile',
+            sub: 'Manage your account',
+            route: '/(student)/profile',
+            color: palette.primaryStrong,
+            backgroundColor: palette.primarySoft,
+        },
+    ];
 
     const loadDashboard = async () => {
         setError(false);
@@ -73,7 +122,10 @@ export default function DashboardScreen() {
             if (data?.paymentStatus !== 'paid') {
                 try {
                     const amountResponse = await paymentAPI.getAmount();
-                    const amount = amountResponse.data.data?.amount ?? (amountResponse.data as any)?.amount ?? null;
+                    const amount =
+                        amountResponse.data.data?.amount ??
+                        (amountResponse.data as any)?.amount ??
+                        null;
                     setPaymentAmount(typeof amount === 'number' ? amount : null);
                 }
                 catch {
@@ -116,63 +168,74 @@ export default function DashboardScreen() {
     const paymentPaid = dashboard?.paymentStatus === 'paid';
     const reservationStatus = dashboard?.reservationStatus ?? dashboard?.reservation?.status ?? null;
     const hasReservation = dashboard?.hasReservation ?? false;
-    const reservationLabel = reservationStatus === 'temporary'
-        ? 'Invite pending'
-        : hasReservation
-            ? 'Room reserved'
-            : 'No reservation';
+    const paymentToneColor = paymentPaid ? '#B8E0C0' : '#FFD08A';
+    const reservationToneColor = hasReservation ? '#D6E7FF' : 'rgba(255,255,255,0.72)';
+    const reservationLabel =
+        reservationStatus === 'temporary'
+            ? 'Invite pending'
+            : hasReservation
+                ? 'Room reserved'
+                : 'No reservation';
 
     if (loading) {
         return (
-            <View style={[styles.loadingScreen, { backgroundColor: theme.colors.background }]}>
-                <StatusBar barStyle="light-content" backgroundColor="#1565C0" />
-                <View style={[styles.hero, { paddingTop: insets.top + 18 }]}>
-                    <View style={styles.heroBubbleLarge} />
-                    <View style={styles.heroBubbleSmall} />
-                    <View style={styles.heroBubbleMid} />
-                </View>
-                <View style={styles.loadingBody}>
-                    <ActivityIndicator size="large" color="#1565C0" />
-                </View>
-            </View>
+            <LoadingSpinner
+                title="Preparing your dashboard"
+                message="Syncing room status, payment details, and current alerts."
+            />
         );
     }
 
     return (
-        <View style={[styles.screen, { backgroundColor: theme.colors.background }]}>
-            <StatusBar barStyle="light-content" backgroundColor="#1565C0" />
-            <View style={{ height: insets.top, backgroundColor: '#1565C0' }} />
+        <View className="flex-1" style={{ backgroundColor: palette.pageBackground }}>
+            <StatusBar barStyle="light-content" backgroundColor={palette.hero} />
 
             <ScrollView
-                style={styles.flex}
-                contentContainerStyle={styles.content}
+                className="flex-1"
+                contentContainerStyle={{ paddingBottom: 144 }}
                 showsVerticalScrollIndicator={false}
-                refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#1565C0" colors={['#1565C0']} />}
+                refreshControl={
+                    <RefreshControl
+                        refreshing={refreshing}
+                        onRefresh={onRefresh}
+                        tintColor={palette.primary}
+                        colors={[palette.primary]}
+                    />
+                }
             >
-                <View style={styles.hero}>
-                    <View style={styles.heroBubbleLarge} />
-                    <View style={styles.heroBubbleSmall} />
-                    <View style={styles.heroBubbleMid} />
-
-                    <View style={styles.heroTopRow}>
-                        <View style={styles.heroCopyWrap}>
-                            <Text style={styles.greetingText}>{getGreeting()}</Text>
-                            <Text style={styles.heroName}>{user?.firstName} {user?.lastName}</Text>
-                            <Text style={styles.heroSubtitle}>
-                                {department || 'Student account'}{user?.level ? ` | ${user.level} Level` : ''}
-                            </Text>
-                            {user?.matricNumber ? <Text style={styles.heroMeta}>{user.matricNumber}</Text> : null}
-                        </View>
-
-                        <View style={styles.avatarColumn}>
-                            <View style={styles.avatarRing}>
-                                {user?.profilePicture ? (
-                                    <Image source={{ uri: user.profilePicture }} style={styles.avatarImage} />
-                                ) : (
-                                    <View style={styles.avatarInner}>
-                                        <Text style={styles.avatarText}>{initials}</Text>
+                <StudentHero
+                    insetTop={insets.top}
+                    eyebrow="Student dashboard"
+                    title={`${getGreeting()}, ${user?.firstName ?? 'Student'}`}
+                    subtitle="Everything you need for hostel life is lined up here, from live room availability to payments and reservation updates."
+                >
+                    <View style={styles.heroIdentityRow}>
+                        <View style={styles.heroIdentityCopy}>
+                            <View style={styles.heroMetaChips}>
+                                {department ? (
+                                    <View style={styles.heroMetaPill}>
+                                        <MaterialCommunityIcons
+                                            name="school-outline"
+                                            size={14}
+                                            color="#FFFFFF"
+                                        />
+                                        <Text style={styles.heroMetaText}>
+                                            {department}
+                                            {user?.level ? ` | ${user.level} Level` : ''}
+                                        </Text>
                                     </View>
-                                )}
+                                ) : null}
+
+                                {user?.matricNumber ? (
+                                    <View style={styles.heroMetaPill}>
+                                        <MaterialCommunityIcons
+                                            name="card-account-details-outline"
+                                            size={14}
+                                            color="#FFFFFF"
+                                        />
+                                        <Text style={styles.heroMetaText}>{user.matricNumber}</Text>
+                                    </View>
+                                ) : null}
                             </View>
 
                             {dashboard?.currentSession ? (
@@ -181,390 +244,652 @@ export default function DashboardScreen() {
                                 </View>
                             ) : null}
                         </View>
+
+                        <View style={styles.avatarRing}>
+                            {user?.profilePicture ? (
+                                <Image source={{ uri: user.profilePicture }} style={styles.avatarImage} />
+                            ) : (
+                                <View style={styles.avatarInner}>
+                                    <Text style={styles.avatarText}>{initials}</Text>
+                                </View>
+                            )}
+                        </View>
                     </View>
 
                     <View style={styles.heroStatusRow}>
-                        <View style={[styles.heroStatusCard, { backgroundColor: paymentPaid ? 'rgba(76, 175, 80, 0.20)' : 'rgba(255, 152, 0, 0.20)' }]}>
+                        <View style={styles.heroStatusCard}>
                             <MaterialCommunityIcons
                                 name={paymentPaid ? 'check-circle-outline' : 'clock-outline'}
                                 size={18}
-                                color={paymentPaid ? '#B8E0C0' : '#FFD08A'}
+                                color={paymentToneColor}
                             />
-                            <View>
-                                <Text style={[styles.heroStatusLabel, { color: paymentPaid ? '#B8E0C0' : '#FFD08A' }]}>Payment</Text>
-                                <Text style={styles.heroStatusValue}>{paymentPaid ? 'Cleared' : 'Pending'}</Text>
+                            <View style={styles.heroStatusCopy}>
+                                <Text
+                                    style={[
+                                        styles.heroStatusLabel,
+                                        { color: paymentToneColor },
+                                    ]}
+                                >
+                                    Payment
+                                </Text>
+                                <Text style={styles.heroStatusValue}>
+                                    {paymentPaid ? 'Cleared' : 'Pending review'}
+                                </Text>
                             </View>
                         </View>
 
-                        <View style={[styles.heroStatusCard, { backgroundColor: hasReservation ? 'rgba(33,150,243,0.20)' : 'rgba(255,255,255,0.12)' }]}>
+                        <View style={styles.heroStatusCard}>
                             <MaterialCommunityIcons
                                 name={hasReservation ? 'bed-outline' : 'bed-empty'}
                                 size={18}
-                                color={hasReservation ? '#B4D7FF' : 'rgba(255,255,255,0.72)'}
+                                color={reservationToneColor}
                             />
-                            <View>
-                                <Text style={[styles.heroStatusLabel, { color: hasReservation ? '#B4D7FF' : 'rgba(255,255,255,0.72)' }]}>Reservation</Text>
+                            <View style={styles.heroStatusCopy}>
+                                <Text
+                                    style={[
+                                        styles.heroStatusLabel,
+                                        { color: reservationToneColor },
+                                    ]}
+                                >
+                                    Reservation
+                                </Text>
                                 <Text style={styles.heroStatusValue}>{reservationLabel}</Text>
                             </View>
                         </View>
                     </View>
-                </View>
+                </StudentHero>
 
-                {error ? (
-                    <View style={styles.section}>
-                        <View style={[styles.stateCard, { backgroundColor: theme.colors.surface }]}>
-                            <MaterialCommunityIcons name="wifi-off" size={38} color="#BDBDBD" />
-                            <Text style={[styles.stateTitle, { color: theme.colors.onSurface }]}>Could not load dashboard</Text>
-                            <Text style={[styles.stateCopy, { color: theme.colors.onSurfaceVariant }]}>
-                                Check your connection and try again.
+                <View className="-mt-6 px-[18px]">
+                    {error ? (
+                        <View
+                            style={[
+                                styles.stateCard,
+                                {
+                                    backgroundColor: palette.surface,
+                                    borderColor: palette.border,
+                                    shadowColor: palette.shadow,
+                                },
+                            ]}
+                        >
+                            <View style={[styles.stateIconWrap, { backgroundColor: palette.dangerSoft }]}>
+                                <MaterialCommunityIcons name="wifi-off" size={26} color={palette.danger} />
+                            </View>
+                            <Text style={[styles.stateTitle, { color: palette.textPrimary }]}>
+                                Could not load your dashboard
                             </Text>
-                            <TouchableOpacity style={styles.primaryButton} onPress={() => { setLoading(true); loadDashboard(); }} activeOpacity={0.85}>
+                            <Text style={[styles.stateCopy, { color: palette.textSecondary }]}>
+                                Check your connection and refresh to continue.
+                            </Text>
+                            <TouchableOpacity
+                                style={[styles.primaryButton, { backgroundColor: palette.primary }]}
+                                onPress={() => {
+                                    setLoading(true);
+                                    loadDashboard();
+                                }}
+                                activeOpacity={0.9}
+                            >
                                 <MaterialCommunityIcons name="refresh" size={16} color="#FFFFFF" />
                                 <Text style={styles.primaryButtonText}>Retry</Text>
                             </TouchableOpacity>
                         </View>
-                    </View>
-                ) : (
-                    <>
-                        <View style={styles.section}>
+                    ) : (
+                        <>
                             <Reveal delay={40}>
-                                <Text style={[styles.sectionLabel, { color: theme.colors.onSurfaceVariant }]}>At a glance</Text>
-                                <View style={styles.overviewGrid}>
-                                    <View style={[styles.overviewCard, { backgroundColor: theme.colors.surface }]}>
-                                        <Text style={[styles.overviewEyebrow, { color: theme.colors.onSurfaceVariant }]}>Outstanding fee</Text>
-                                        <Text style={[styles.overviewValue, { color: theme.colors.onSurface }]}>
-                                            {paymentPaid ? 'Paid in full' : formatAmountLabel(paymentAmount)}
-                                        </Text>
+                                <View
+                                    style={[
+                                        styles.spotlightCard,
+                                        {
+                                            backgroundColor: palette.surface,
+                                            borderColor: palette.border,
+                                            shadowColor: palette.shadow,
+                                        },
+                                    ]}
+                                >
+                                    <View style={styles.spotlightHeader}>
+                                        <View>
+                                            <Text
+                                                style={[
+                                                    styles.sectionEyebrow,
+                                                    { color: palette.textMuted },
+                                                ]}
+                                            >
+                                                At a glance
+                                            </Text>
+                                            <Text
+                                                style={[
+                                                    styles.sectionTitle,
+                                                    { color: palette.textPrimary },
+                                                ]}
+                                            >
+                                                StayHub snapshot
+                                            </Text>
+                                        </View>
+                                        <View
+                                            style={[
+                                                styles.spotlightBadge,
+                                                { backgroundColor: palette.primarySoft },
+                                            ]}
+                                        >
+                                            <Text
+                                                style={[
+                                                    styles.spotlightBadgeText,
+                                                    { color: palette.primary },
+                                                ]}
+                                            >
+                                                Live
+                                            </Text>
+                                        </View>
                                     </View>
-                                    <View style={[styles.overviewCard, { backgroundColor: theme.colors.surface }]}>
-                                        <Text style={[styles.overviewEyebrow, { color: theme.colors.onSurfaceVariant }]}>Room status</Text>
-                                        <Text style={[styles.overviewValue, { color: theme.colors.onSurface }]}>
-                                            {formatReservationStatus(reservationStatus)}
-                                        </Text>
+
+                                    <View style={styles.overviewGrid}>
+                                        <View
+                                            style={[
+                                                styles.overviewCard,
+                                                {
+                                                    backgroundColor: palette.surfaceMuted,
+                                                    borderColor: palette.border,
+                                                },
+                                            ]}
+                                        >
+                                            <Text
+                                                style={[
+                                                    styles.overviewEyebrow,
+                                                    { color: palette.textMuted },
+                                                ]}
+                                            >
+                                                Outstanding fee
+                                            </Text>
+                                            <Text
+                                                style={[
+                                                    styles.overviewValue,
+                                                    { color: palette.textPrimary },
+                                                ]}
+                                            >
+                                                {paymentPaid ? 'Paid in full' : formatAmountLabel(paymentAmount)}
+                                            </Text>
+                                        </View>
+
+                                        <View
+                                            style={[
+                                                styles.overviewCard,
+                                                {
+                                                    backgroundColor: palette.surfaceMuted,
+                                                    borderColor: palette.border,
+                                                },
+                                            ]}
+                                        >
+                                            <Text
+                                                style={[
+                                                    styles.overviewEyebrow,
+                                                    { color: palette.textMuted },
+                                                ]}
+                                            >
+                                                Room status
+                                            </Text>
+                                            <Text
+                                                style={[
+                                                    styles.overviewValue,
+                                                    { color: palette.textPrimary },
+                                                ]}
+                                            >
+                                                {formatReservationStatus(reservationStatus)}
+                                            </Text>
+                                        </View>
                                     </View>
                                 </View>
                             </Reveal>
-                        </View>
 
-                        {!paymentPaid ? (
+                            {!paymentPaid ? (
+                                <View className="mt-[22px]">
+                                    <Reveal delay={100}>
+                                        <TouchableOpacity
+                                            style={[styles.paymentBanner, { backgroundColor: palette.warningSoft }]}
+                                            activeOpacity={0.9}
+                                            onPress={() => router.push('/(student)/payment')}
+                                        >
+                                            <View style={styles.paymentBannerLeft}>
+                                                <View style={[styles.paymentBannerIcon, { backgroundColor: palette.surface }]}>
+                                                    <MaterialCommunityIcons
+                                                        name="alert-circle-outline"
+                                                        size={20}
+                                                        color={palette.warning}
+                                                    />
+                                                </View>
+                                                <View style={styles.paymentBannerCopy}>
+                                                    <Text style={[styles.paymentBannerTitle, { color: palette.warning }]}>
+                                                        Payment still outstanding
+                                                    </Text>
+                                                    <Text style={[styles.paymentBannerSubtitle, { color: palette.textSecondary }]}>
+                                                        {paymentAmount != null
+                                                            ? `Amount due: ${formatAmountLabel(paymentAmount)}`
+                                                            : 'Open payment to review the amount and complete checkout.'}
+                                                    </Text>
+                                                </View>
+                                            </View>
+                                            <View style={[styles.paymentBannerCta, { backgroundColor: palette.warning }]}>
+                                                <Text style={styles.paymentBannerCtaText}>Pay now</Text>
+                                            </View>
+                                        </TouchableOpacity>
+                                    </Reveal>
+                                </View>
+                            ) : null}
+
                             <View style={styles.section}>
-                                <Reveal delay={120}>
-                                    <TouchableOpacity
-                                        style={styles.paymentBanner}
-                                        activeOpacity={0.85}
-                                        onPress={() => router.push('/(student)/payment')}
-                                    >
-                                        <View style={styles.paymentBannerLeft}>
-                                            <View style={styles.paymentBannerIcon}>
-                                                <MaterialCommunityIcons name="alert-circle-outline" size={20} color="#E65100" />
-                                            </View>
-                                            <View style={styles.paymentBannerCopy}>
-                                                <Text style={styles.paymentBannerTitle}>Payment outstanding</Text>
-                                                <Text style={styles.paymentBannerSubtitle}>
-                                                    {paymentAmount != null ? `Amount due: ${formatAmountLabel(paymentAmount)}` : 'Tap to review your payment status'}
-                                                </Text>
-                                            </View>
-                                        </View>
-                                        <View style={styles.paymentBannerCta}>
-                                            <Text style={styles.paymentBannerCtaText}>Pay now</Text>
-                                        </View>
-                                    </TouchableOpacity>
+                            <View className="mt-[22px]">
+                                <Reveal delay={150}>
+                                    <AlertsCard />
                                 </Reveal>
                             </View>
-                        ) : null}
+                            </View>
 
-                        <View style={styles.section}>
-                            <Reveal delay={180}>
-                                <AlertsCard />
-                            </Reveal>
-                        </View>
+                            <View className="mt-[22px]">
+                                <Reveal delay={210}>
+                                    <View className="mb-[14px]">
+                                        <View>
+                                            <Text className="mb-1.5 text-[11px] font-extrabold uppercase tracking-[1px]" style={{ color: palette.textMuted }}>
+                                                Reservation
+                                            </Text>
+                                            <Text className="text-[22px] font-extrabold tracking-[-0.5px]" style={{ color: palette.textPrimary }}>
+                                                Current room snapshot
+                                            </Text>
+                                        </View>
+                                    </View>
 
-                        <View style={styles.section}>
-                            <Reveal delay={240}>
-                                <Text style={[styles.sectionLabel, { color: theme.colors.onSurfaceVariant }]}>Reservation snapshot</Text>
+                                    {hasReservation && dashboard?.reservation ? (
+                                        <TouchableOpacity
+                                            style={[
+                                                styles.reservationCard,
+                                                {
+                                                    backgroundColor: palette.surface,
+                                                    borderColor: palette.border,
+                                                    shadowColor: palette.shadow,
+                                                },
+                                            ]}
+                                            activeOpacity={0.9}
+                                            onPress={() => router.push('/(student)/reservation')}
+                                        >
+                                            <View style={styles.reservationCardHeader}>
+                                                <View style={styles.reservationCardHeaderCopy}>
+                                                    <Text
+                                                        style={[
+                                                            styles.reservationEyebrow,
+                                                            { color: palette.textMuted },
+                                                        ]}
+                                                    >
+                                                        Assigned hostel
+                                                    </Text>
+                                                    <Text
+                                                        style={[
+                                                            styles.reservationTitle,
+                                                            { color: palette.textPrimary },
+                                                        ]}
+                                                    >
+                                                        {dashboard.reservation.hostel?.name ?? 'Assigned hostel'}
+                                                    </Text>
+                                                </View>
 
-                                {hasReservation && dashboard?.reservation ? (
-                                    <TouchableOpacity
-                                        style={[styles.reservationCard, { backgroundColor: theme.colors.surface }]}
-                                        activeOpacity={0.85}
-                                        onPress={() => router.push('/(student)/reservation')}
-                                    >
-                                        <View style={styles.reservationCardHeader}>
-                                            <View>
-                                                <Text style={[styles.reservationEyebrow, { color: theme.colors.onSurfaceVariant }]}>Current stay</Text>
-                                                <Text style={[styles.reservationTitle, { color: theme.colors.onSurface }]}>
-                                                    {dashboard.reservation.hostel?.name ?? 'Assigned hostel'}
-                                                </Text>
-                                            </View>
-
-                                            <View
-                                                style={[
-                                                    styles.reservationStatusPill,
-                                                    {
-                                                        backgroundColor:
-                                                            dashboard.reservation.status === 'confirmed'
-                                                                ? '#E8F5E9'
-                                                                : dashboard.reservation.status === 'cancelled'
-                                                                    ? '#FFEBEE'
-                                                                    : '#FFF3E0',
-                                                    },
-                                                ]}
-                                            >
-                                                <Text
+                                                <View
                                                     style={[
-                                                        styles.reservationStatusText,
+                                                        styles.reservationStatusPill,
                                                         {
-                                                            color:
+                                                            backgroundColor:
                                                                 dashboard.reservation.status === 'confirmed'
-                                                                    ? '#2E7D32'
+                                                                    ? palette.successSoft
                                                                     : dashboard.reservation.status === 'cancelled'
-                                                                        ? '#C62828'
-                                                                        : '#E65100',
+                                                                        ? palette.dangerSoft
+                                                                        : palette.warningSoft,
                                                         },
                                                     ]}
                                                 >
-                                                    {formatReservationStatus(dashboard.reservation.status)}
-                                                </Text>
+                                                    <Text
+                                                        style={[
+                                                            styles.reservationStatusText,
+                                                            {
+                                                                color:
+                                                                    dashboard.reservation.status === 'confirmed'
+                                                                        ? '#2E7D32'
+                                                                        : dashboard.reservation.status === 'cancelled'
+                                                                            ? '#D92D20'
+                                                                            : '#C2410C',
+                                                            },
+                                                        ]}
+                                                    >
+                                                        {formatReservationStatus(dashboard.reservation.status)}
+                                                    </Text>
+                                                </View>
                                             </View>
-                                        </View>
 
-                                        <View style={styles.reservationDetailsRow}>
-                                            <View style={[styles.reservationMetricCard, { backgroundColor: theme.colors.background }]}>
-                                                <Text style={[styles.reservationMetricLabel, { color: theme.colors.onSurfaceVariant }]}>Room</Text>
-                                                <Text style={[styles.reservationMetricValue, { color: theme.colors.onSurface }]}>
-                                                    {dashboard.reservation.room?.roomNumber ?? '-'}
-                                                </Text>
+                                            <View style={styles.reservationDetailsRow}>
+                                                <View
+                                                    style={[
+                                                        styles.reservationMetricCard,
+                                                        {
+                                                            backgroundColor: palette.surfaceMuted,
+                                                            borderColor: palette.border,
+                                                        },
+                                                    ]}
+                                                >
+                                                    <Text
+                                                        style={[
+                                                            styles.reservationMetricLabel,
+                                                            { color: palette.textMuted },
+                                                        ]}
+                                                    >
+                                                        Room
+                                                    </Text>
+                                                    <Text
+                                                        style={[
+                                                            styles.reservationMetricValue,
+                                                            { color: palette.textPrimary },
+                                                        ]}
+                                                    >
+                                                        {dashboard.reservation.room?.roomNumber ?? '-'}
+                                                    </Text>
+                                                </View>
+
+                                                <View
+                                                    style={[
+                                                        styles.reservationMetricCard,
+                                                        {
+                                                            backgroundColor: palette.surfaceMuted,
+                                                            borderColor: palette.border,
+                                                        },
+                                                    ]}
+                                                >
+                                                    <Text
+                                                        style={[
+                                                            styles.reservationMetricLabel,
+                                                            { color: palette.textMuted },
+                                                        ]}
+                                                    >
+                                                        Occupancy
+                                                    </Text>
+                                                    <Text
+                                                        style={[
+                                                            styles.reservationMetricValue,
+                                                            { color: palette.textPrimary },
+                                                        ]}
+                                                    >
+                                                        {dashboard.reservation.room?.currentOccupancy ?? 0}/
+                                                        {dashboard.reservation.room?.capacity ?? 0}
+                                                    </Text>
+                                                </View>
                                             </View>
 
-                                            <View style={[styles.reservationMetricCard, { backgroundColor: theme.colors.background }]}>
-                                                <Text style={[styles.reservationMetricLabel, { color: theme.colors.onSurfaceVariant }]}>Occupancy</Text>
-                                                <Text style={[styles.reservationMetricValue, { color: theme.colors.onSurface }]}>
-                                                    {dashboard.reservation.room?.currentOccupancy ?? 0}/{dashboard.reservation.room?.capacity ?? 0}
+                                            {(dashboard.reservation.groupMembers?.length ?? 0) > 0 ? (
+                                                <Text
+                                                    style={[
+                                                        styles.groupSummary,
+                                                        { color: palette.textSecondary },
+                                                    ]}
+                                                >
+                                                    Group reservation with{' '}
+                                                    {dashboard.reservation.groupMembers!.length + 1} members
                                                 </Text>
+                                            ) : null}
+
+                                            <View style={[styles.reservationActionRow, { borderTopColor: palette.divider }]}>
+                                                <Text style={[styles.reservationActionText, { color: palette.primary }]}>
+                                                    View full reservation
+                                                </Text>
+                                                <View
+                                                    style={[
+                                                        styles.inlineArrowWrap,
+                                                        { backgroundColor: palette.primarySoft },
+                                                    ]}
+                                                >
+                                                    <MaterialCommunityIcons
+                                                        name="arrow-right"
+                                                        size={16}
+                                                        color={palette.primary}
+                                                    />
+                                                </View>
                                             </View>
-                                        </View>
-
-                                        {(dashboard.reservation.groupMembers?.length ?? 0) > 0 ? (
-                                            <Text style={[styles.groupSummary, { color: theme.colors.onSurfaceVariant }]}>
-                                                Group reservation with {dashboard.reservation.groupMembers!.length + 1} members
-                                            </Text>
-                                        ) : null}
-
-                                        <View style={styles.reservationActionRow}>
-                                            <Text style={styles.reservationActionText}>View details</Text>
-                                            <MaterialCommunityIcons name="arrow-right" size={18} color="#1565C0" />
-                                        </View>
-                                    </TouchableOpacity>
-                                ) : (
-                                    <View style={[styles.stateCard, { backgroundColor: theme.colors.surface }]}>
-                                        <MaterialCommunityIcons name="bed-empty" size={38} color="#BDBDBD" />
-                                        <Text style={[styles.stateTitle, { color: theme.colors.onSurface }]}>No room reserved yet</Text>
-                                        <Text style={[styles.stateCopy, { color: theme.colors.onSurfaceVariant }]}>
-                                            Browse available hostels and reserve your room for this session.
-                                        </Text>
-                                        <TouchableOpacity style={styles.primaryButton} onPress={() => router.push('/(student)/hostels')} activeOpacity={0.85}>
-                                            <MaterialCommunityIcons name="home-search-outline" size={16} color="#FFFFFF" />
-                                            <Text style={styles.primaryButtonText}>Browse hostels</Text>
                                         </TouchableOpacity>
-                                    </View>
-                                )}
-                            </Reveal>
-                        </View>
-
-                        <View style={styles.section}>
-                            <Reveal delay={320}>
-                                <Text style={[styles.sectionLabel, { color: theme.colors.onSurfaceVariant }]}>Quick actions</Text>
-                                <View style={styles.actionGrid}>
-                                    {ACTIONS.map((action) => (
-                                        <TouchableOpacity
-                                            key={action.label}
-                                            style={[styles.actionCard, { backgroundColor: theme.colors.surface }]}
-                                            onPress={() => router.push(action.route)}
-                                            activeOpacity={0.82}
+                                    ) : (
+                                        <View
+                                            style={[
+                                                styles.stateCard,
+                                                {
+                                                    backgroundColor: palette.surface,
+                                                    borderColor: palette.border,
+                                                    shadowColor: palette.shadow,
+                                                },
+                                            ]}
                                         >
-                                            <View style={[styles.actionIconWrap, { backgroundColor: action.backgroundColor }]}>
-                                                <MaterialCommunityIcons name={action.icon} size={24} color={action.color} />
+                                            <View style={[styles.stateIconWrap, { backgroundColor: palette.primarySoft }]}>
+                                                <MaterialCommunityIcons name="bed-empty" size={26} color={palette.primary} />
                                             </View>
-                                            <Text style={[styles.actionLabel, { color: theme.colors.onSurface }]}>{action.label}</Text>
-                                            <Text style={[styles.actionSub, { color: theme.colors.onSurfaceVariant }]}>{action.sub}</Text>
-                                            <View style={styles.actionArrowRow}>
-                                                <Text style={styles.actionArrowText}>Open</Text>
-                                                <MaterialCommunityIcons name="arrow-right" size={16} color="#1565C0" />
-                                            </View>
-                                        </TouchableOpacity>
-                                    ))}
-                                </View>
-                            </Reveal>
-                        </View>
-                    </>
-                )}
+                                            <Text style={[styles.stateTitle, { color: palette.textPrimary }]}>
+                                                No room reserved yet
+                                            </Text>
+                                            <Text style={[styles.stateCopy, { color: palette.textSecondary }]}>
+                                                Browse available hostels and secure your preferred room before the session fills up.
+                                            </Text>
+                                            <TouchableOpacity
+                                                style={[styles.primaryButton, { backgroundColor: palette.primary }]}
+                                                onPress={() => router.push('/(student)/hostels')}
+                                                activeOpacity={0.9}
+                                            >
+                                                <MaterialCommunityIcons
+                                                    name="home-search-outline"
+                                                    size={16}
+                                                    color="#FFFFFF"
+                                                />
+                                                <Text style={styles.primaryButtonText}>Browse hostels</Text>
+                                            </TouchableOpacity>
+                                        </View>
+                                    )}
+                                </Reveal>
+                            </View>
+
+                            <View className="mt-[22px]">
+                                <Reveal delay={260}>
+                                    <View className="mb-[14px]">
+                                        <View>
+                                            <Text className="mb-1.5 text-[11px] font-extrabold uppercase tracking-[1px]" style={{ color: palette.textMuted }}>
+                                                Quick actions
+                                            </Text>
+                                            <Text className="text-[22px] font-extrabold tracking-[-0.5px]" style={{ color: palette.textPrimary }}>
+                                                Move through StayHub faster
+                                            </Text>
+                                        </View>
+                                    </View>
+
+                                    <View style={styles.actionGrid}>
+                                        {actions.map((action) => (
+                                            <TouchableOpacity
+                                                key={action.label}
+                                                style={[
+                                                    styles.actionCard,
+                                                    {
+                                                        backgroundColor: palette.surface,
+                                                        borderColor: palette.border,
+                                                        shadowColor: palette.shadow,
+                                                    },
+                                                ]}
+                                                onPress={() => router.push(action.route)}
+                                                activeOpacity={0.9}
+                                            >
+                                                <View
+                                                    style={[
+                                                        styles.actionIconWrap,
+                                                        { backgroundColor: action.backgroundColor },
+                                                    ]}
+                                                >
+                                                    <MaterialCommunityIcons
+                                                        name={action.icon}
+                                                        size={22}
+                                                        color={action.color}
+                                                    />
+                                                </View>
+                                                <Text style={[styles.actionLabel, { color: palette.textPrimary }]}>
+                                                    {action.label}
+                                                </Text>
+                                                <Text style={[styles.actionSub, { color: palette.textSecondary }]}>
+                                                    {action.sub}
+                                                </Text>
+                                                <View style={styles.actionArrowRow}>
+                                                    <Text style={[styles.actionArrowText, { color: palette.primary }]}>
+                                                        Open
+                                                    </Text>
+                                                    <View
+                                                        style={[
+                                                            styles.inlineArrowWrap,
+                                                            { backgroundColor: palette.primarySoft },
+                                                        ]}
+                                                    >
+                                                        <MaterialCommunityIcons
+                                                            name="arrow-right"
+                                                            size={15}
+                                                            color={palette.primary}
+                                                        />
+                                                    </View>
+                                                </View>
+                                            </TouchableOpacity>
+                                        ))}
+                                    </View>
+                                </Reveal>
+                            </View>
+                        </>
+                    )}
+                </View>
             </ScrollView>
         </View>
     );
 }
 
 const styles = StyleSheet.create({
-    flex: {
-        flex: 1,
-    },
-    screen: {
-        flex: 1,
-    },
-    loadingScreen: {
-        flex: 1,
-    },
-    loadingBody: {
-        flex: 1,
-        alignItems: 'center',
-        justifyContent: 'center',
-    },
-    content: {
-        paddingBottom: 40,
-    },
-    hero: {
-        backgroundColor: '#1565C0',
-        paddingHorizontal: 22,
-        paddingTop: 18,
-        paddingBottom: 32,
-        borderBottomLeftRadius: 32,
-        borderBottomRightRadius: 32,
-        overflow: 'hidden',
-    },
-    heroBubbleLarge: {
-        position: 'absolute',
-        width: 220,
-        height: 220,
-        borderRadius: 110,
-        backgroundColor: 'rgba(255,255,255,0.06)',
-        top: -80,
-        right: -60,
-    },
-    heroBubbleSmall: {
-        position: 'absolute',
-        width: 132,
-        height: 132,
-        borderRadius: 66,
-        backgroundColor: 'rgba(255,255,255,0.05)',
-        bottom: -44,
-        left: -24,
-    },
-    heroBubbleMid: {
-        position: 'absolute',
-        width: 84,
-        height: 84,
-        borderRadius: 42,
-        backgroundColor: 'rgba(255,255,255,0.08)',
-        top: 34,
-        right: 108,
-    },
-    heroTopRow: {
+    heroIdentityRow: {
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'flex-start',
         gap: 14,
-        marginBottom: 22,
+        marginTop: 24,
+        marginBottom: 18,
     },
-    heroCopyWrap: {
+    heroIdentityCopy: {
         flex: 1,
+        gap: 12,
     },
-    greetingText: {
-        color: 'rgba(255,255,255,0.74)',
-        fontSize: 13,
-        fontWeight: '700',
-        marginBottom: 4,
+    heroMetaChips: {
+        flexDirection: 'row',
+        flexWrap: 'wrap',
+        gap: 10,
     },
-    heroName: {
-        color: '#FFFFFF',
-        fontSize: 26,
-        fontWeight: '800',
-        letterSpacing: -0.4,
-        marginBottom: 6,
-    },
-    heroSubtitle: {
-        color: 'rgba(255,255,255,0.78)',
-        fontSize: 13,
-        lineHeight: 18,
-    },
-    heroMeta: {
-        color: 'rgba(255,255,255,0.58)',
-        fontSize: 12,
-        marginTop: 4,
-    },
-    avatarColumn: {
+    heroMetaPill: {
+        flexDirection: 'row',
         alignItems: 'center',
-        gap: 8,
+        gap: 7,
+        borderRadius: 999,
+        paddingHorizontal: 12,
+        paddingVertical: 9,
+        backgroundColor: 'rgba(255,255,255,0.13)',
+        borderWidth: 1,
+        borderColor: 'rgba(255,255,255,0.16)',
+    },
+    heroMetaText: {
+        color: '#FFFFFF',
+        fontSize: 12,
+        fontWeight: '700',
+    },
+    sessionPill: {
+        alignSelf: 'flex-start',
+        borderRadius: 999,
+        paddingHorizontal: 12,
+        paddingVertical: 8,
+        backgroundColor: 'rgba(255,255,255,0.1)',
+        borderWidth: 1,
+        borderColor: 'rgba(255,255,255,0.14)',
+    },
+    sessionText: {
+        color: '#DCEBFF',
+        fontSize: 12,
+        fontWeight: '700',
     },
     avatarRing: {
-        width: 72,
-        height: 72,
-        borderRadius: 36,
+        width: 78,
+        height: 78,
+        borderRadius: 39,
         borderWidth: 2,
-        borderColor: 'rgba(255,255,255,0.35)',
-        padding: 3,
+        borderColor: 'rgba(255,255,255,0.34)',
+        padding: 4,
+        backgroundColor: 'rgba(255,255,255,0.06)',
     },
     avatarInner: {
         flex: 1,
-        borderRadius: 32,
-        backgroundColor: '#42A5F5',
+        borderRadius: 34,
+        backgroundColor: '#2F80ED',
         alignItems: 'center',
         justifyContent: 'center',
     },
     avatarImage: {
         width: '100%',
         height: '100%',
-        borderRadius: 32,
+        borderRadius: 34,
     },
     avatarText: {
         color: '#FFFFFF',
         fontSize: 20,
         fontWeight: '800',
     },
-    sessionPill: {
-        borderRadius: 999,
-        paddingHorizontal: 10,
-        paddingVertical: 5,
-        backgroundColor: 'rgba(255,255,255,0.14)',
-    },
-    sessionText: {
-        color: '#FFFFFF',
-        fontSize: 11,
-        fontWeight: '700',
-    },
     heroStatusRow: {
         flexDirection: 'row',
-        gap: 10,
+        gap: 12,
     },
     heroStatusCard: {
         flex: 1,
-        borderRadius: 18,
+        borderRadius: 20,
         paddingHorizontal: 14,
         paddingVertical: 14,
         flexDirection: 'row',
         alignItems: 'center',
         gap: 10,
+        backgroundColor: 'rgba(255,255,255,0.12)',
+        borderWidth: 1,
+        borderColor: 'rgba(255,255,255,0.16)',
+    },
+    heroStatusCopy: {
+        flex: 1,
+        gap: 4,
     },
     heroStatusLabel: {
         fontSize: 11,
-        fontWeight: '700',
+        fontWeight: '800',
         textTransform: 'uppercase',
         letterSpacing: 0.8,
-        marginBottom: 3,
     },
     heroStatusValue: {
         color: '#FFFFFF',
         fontSize: 14,
         fontWeight: '800',
     },
-    section: {
-        paddingHorizontal: 18,
-        paddingTop: 22,
+    spotlightCard: {
+        borderRadius: 28,
+        borderWidth: 1,
+        padding: 18,
+        shadowOffset: { width: 0, height: 14 },
+        shadowOpacity: 0.14,
+        shadowRadius: 24,
+        elevation: 10,
     },
-    sectionLabel: {
+    spotlightHeader: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'flex-start',
+        gap: 12,
+        marginBottom: 16,
+    },
+    spotlightBadge: {
+        borderRadius: 999,
+        paddingHorizontal: 11,
+        paddingVertical: 7,
+    },
+    spotlightBadgeText: {
         fontSize: 11,
-        fontWeight: '700',
+        fontWeight: '800',
         textTransform: 'uppercase',
-        letterSpacing: 1.1,
-        marginBottom: 12,
+        letterSpacing: 0.7,
     },
     overviewGrid: {
         flexDirection: 'row',
@@ -573,17 +898,13 @@ const styles = StyleSheet.create({
     overviewCard: {
         flex: 1,
         borderRadius: 20,
+        borderWidth: 1,
         paddingHorizontal: 16,
         paddingVertical: 16,
-        shadowColor: '#000000',
-        shadowOffset: { width: 0, height: 8 },
-        shadowOpacity: 0.07,
-        shadowRadius: 18,
-        elevation: 4,
     },
     overviewEyebrow: {
         fontSize: 11,
-        fontWeight: '700',
+        fontWeight: '800',
         textTransform: 'uppercase',
         letterSpacing: 0.8,
         marginBottom: 10,
@@ -591,11 +912,11 @@ const styles = StyleSheet.create({
     overviewValue: {
         fontSize: 17,
         fontWeight: '800',
-        lineHeight: 23,
+        lineHeight: 24,
     },
     paymentBanner: {
-        backgroundColor: '#FFF3E0',
-        borderRadius: 20,
+        backgroundColor: '#FFF3E4',
+        borderRadius: 24,
         paddingHorizontal: 16,
         paddingVertical: 16,
         flexDirection: 'row',
@@ -610,9 +931,9 @@ const styles = StyleSheet.create({
         flex: 1,
     },
     paymentBannerIcon: {
-        width: 42,
-        height: 42,
-        borderRadius: 14,
+        width: 46,
+        height: 46,
+        borderRadius: 16,
         backgroundColor: '#FFFFFF',
         alignItems: 'center',
         justifyContent: 'center',
@@ -622,20 +943,20 @@ const styles = StyleSheet.create({
         gap: 4,
     },
     paymentBannerTitle: {
-        color: '#E65100',
-        fontSize: 14,
+        color: '#9A3412',
+        fontSize: 15,
         fontWeight: '800',
     },
     paymentBannerSubtitle: {
-        color: '#A74A00',
+        color: '#B45309',
         fontSize: 12,
         lineHeight: 18,
     },
     paymentBannerCta: {
-        borderRadius: 14,
-        backgroundColor: '#E65100',
+        borderRadius: 16,
+        backgroundColor: '#C2410C',
         paddingHorizontal: 14,
-        paddingVertical: 10,
+        paddingVertical: 11,
     },
     paymentBannerCtaText: {
         color: '#FFFFFF',
@@ -643,33 +964,39 @@ const styles = StyleSheet.create({
         fontWeight: '800',
     },
     stateCard: {
-        borderRadius: 22,
+        borderRadius: 28,
+        borderWidth: 1,
         paddingHorizontal: 24,
         paddingVertical: 28,
         alignItems: 'center',
-        shadowColor: '#000000',
-        shadowOffset: { width: 0, height: 8 },
-        shadowOpacity: 0.07,
-        shadowRadius: 18,
-        elevation: 4,
+        shadowOffset: { width: 0, height: 14 },
+        shadowOpacity: 0.14,
+        shadowRadius: 24,
+        elevation: 10,
+    },
+    stateIconWrap: {
+        width: 56,
+        height: 56,
+        borderRadius: 18,
+        alignItems: 'center',
+        justifyContent: 'center',
+        marginBottom: 16,
     },
     stateTitle: {
-        fontSize: 18,
+        fontSize: 20,
         fontWeight: '800',
         textAlign: 'center',
-        marginTop: 6,
         marginBottom: 8,
     },
     stateCopy: {
         fontSize: 14,
         lineHeight: 21,
         textAlign: 'center',
-        marginBottom: 16,
+        marginBottom: 18,
     },
     primaryButton: {
-        minHeight: 46,
-        borderRadius: 16,
-        backgroundColor: '#1565C0',
+        minHeight: 50,
+        borderRadius: 18,
         paddingHorizontal: 18,
         flexDirection: 'row',
         alignItems: 'center',
@@ -682,14 +1009,14 @@ const styles = StyleSheet.create({
         fontWeight: '800',
     },
     reservationCard: {
-        borderRadius: 22,
+        borderRadius: 28,
+        borderWidth: 1,
         paddingHorizontal: 18,
         paddingVertical: 18,
-        shadowColor: '#000000',
-        shadowOffset: { width: 0, height: 8 },
-        shadowOpacity: 0.07,
-        shadowRadius: 18,
-        elevation: 4,
+        shadowOffset: { width: 0, height: 14 },
+        shadowOpacity: 0.14,
+        shadowRadius: 24,
+        elevation: 10,
     },
     reservationCardHeader: {
         flexDirection: 'row',
@@ -698,22 +1025,25 @@ const styles = StyleSheet.create({
         gap: 12,
         marginBottom: 16,
     },
+    reservationCardHeaderCopy: {
+        flex: 1,
+    },
     reservationEyebrow: {
         fontSize: 11,
-        fontWeight: '700',
+        fontWeight: '800',
         textTransform: 'uppercase',
         letterSpacing: 1,
         marginBottom: 4,
     },
     reservationTitle: {
-        fontSize: 20,
+        fontSize: 22,
         fontWeight: '800',
-        lineHeight: 26,
+        lineHeight: 28,
     },
     reservationStatusPill: {
         borderRadius: 999,
         paddingHorizontal: 10,
-        paddingVertical: 6,
+        paddingVertical: 7,
     },
     reservationStatusText: {
         fontSize: 11,
@@ -727,13 +1057,14 @@ const styles = StyleSheet.create({
     },
     reservationMetricCard: {
         flex: 1,
-        borderRadius: 16,
+        borderRadius: 18,
+        borderWidth: 1,
         paddingHorizontal: 14,
         paddingVertical: 14,
     },
     reservationMetricLabel: {
         fontSize: 11,
-        fontWeight: '700',
+        fontWeight: '800',
         textTransform: 'uppercase',
         letterSpacing: 0.8,
         marginBottom: 8,
@@ -754,12 +1085,17 @@ const styles = StyleSheet.create({
         marginTop: 16,
         paddingTop: 14,
         borderTopWidth: 1,
-        borderTopColor: '#EEF2F6',
     },
     reservationActionText: {
-        color: '#1565C0',
         fontSize: 13,
         fontWeight: '800',
+    },
+    inlineArrowWrap: {
+        width: 30,
+        height: 30,
+        borderRadius: 15,
+        alignItems: 'center',
+        justifyContent: 'center',
     },
     actionGrid: {
         flexDirection: 'row',
@@ -768,18 +1104,18 @@ const styles = StyleSheet.create({
     },
     actionCard: {
         width: '47%',
-        borderRadius: 20,
+        borderRadius: 24,
+        borderWidth: 1,
         paddingHorizontal: 16,
         paddingVertical: 16,
-        shadowColor: '#000000',
-        shadowOffset: { width: 0, height: 8 },
-        shadowOpacity: 0.07,
-        shadowRadius: 18,
-        elevation: 4,
+        shadowOffset: { width: 0, height: 12 },
+        shadowOpacity: 0.12,
+        shadowRadius: 20,
+        elevation: 8,
     },
     actionIconWrap: {
-        width: 50,
-        height: 50,
+        width: 48,
+        height: 48,
         borderRadius: 16,
         alignItems: 'center',
         justifyContent: 'center',
@@ -799,10 +1135,9 @@ const styles = StyleSheet.create({
         marginTop: 12,
         flexDirection: 'row',
         alignItems: 'center',
-        gap: 6,
+        justifyContent: 'space-between',
     },
     actionArrowText: {
-        color: '#1565C0',
         fontSize: 12,
         fontWeight: '800',
     },

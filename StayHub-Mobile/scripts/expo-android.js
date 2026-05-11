@@ -40,53 +40,63 @@ function ensureDir(dirPath, description) {
   }
 }
 
-ensureDir(sdkRoot, "Android SDK");
-ensureDir(platformToolsDir, "platform-tools");
-
 const env = { ...process.env };
 delete env.EXPO_OFFLINE;
 
-env.ANDROID_HOME = sdkRoot;
-env.ANDROID_SDK_ROOT = sdkRoot;
-env.ANDROID_AVD_HOME =
-  env.ANDROID_AVD_HOME || path.join(defaultUserProfile, ".android", "avd");
-env.EXPO_UNSTABLE_CORE_AUTOLINKING = "1";
 env.NODE_BINARY = nodeExecutable;
-
-if (studioJbr) {
-  env.JAVA_HOME = studioJbr;
-}
-
-env.ANDROID_USER_HOME =
-  env.ANDROID_USER_HOME || path.join(defaultUserProfile, ".android");
 env.NODE_ENV = env.NODE_ENV || "development";
 env.EXPO_NO_DEPENDENCY_VALIDATION = "1";
 
-env.PATH = [
-  nodeBinDir,
-  emulatorDir,
-  platformToolsDir,
-  cmdlineToolsDir,
-  fs.existsSync(studioJbrBin) ? studioJbrBin : null,
-  env.PATH,
-]
-  .filter(Boolean)
-  .join(path.delimiter);
-
 const adbExe = path.join(platformToolsDir, "adb.exe");
-if (fs.existsSync(adbExe)) {
-  spawnSync(adbExe, ["kill-server"], {
-    cwd: projectRoot,
-    env,
-    stdio: "ignore",
-    windowsHide: true,
-  });
-  spawnSync(adbExe, ["start-server"], {
-    cwd: projectRoot,
-    env,
-    stdio: "ignore",
-    windowsHide: true,
-  });
+let androidEnvConfigured = false;
+
+function configureAndroidEnv() {
+  if (androidEnvConfigured) {
+    return;
+  }
+
+  ensureDir(sdkRoot, "Android SDK");
+  ensureDir(platformToolsDir, "platform-tools");
+
+  env.ANDROID_HOME = sdkRoot;
+  env.ANDROID_SDK_ROOT = sdkRoot;
+  env.ANDROID_AVD_HOME =
+    env.ANDROID_AVD_HOME || path.join(defaultUserProfile, ".android", "avd");
+  env.ANDROID_USER_HOME =
+    env.ANDROID_USER_HOME || path.join(defaultUserProfile, ".android");
+  env.EXPO_UNSTABLE_CORE_AUTOLINKING = "1";
+
+  if (studioJbr) {
+    env.JAVA_HOME = studioJbr;
+  }
+
+  env.PATH = [
+    nodeBinDir,
+    emulatorDir,
+    platformToolsDir,
+    cmdlineToolsDir,
+    studioJbrBin && fs.existsSync(studioJbrBin) ? studioJbrBin : null,
+    env.PATH,
+  ]
+    .filter(Boolean)
+    .join(path.delimiter);
+
+  if (fs.existsSync(adbExe)) {
+    spawnSync(adbExe, ["kill-server"], {
+      cwd: projectRoot,
+      env,
+      stdio: "ignore",
+      windowsHide: true,
+    });
+    spawnSync(adbExe, ["start-server"], {
+      cwd: projectRoot,
+      env,
+      stdio: "ignore",
+      windowsHide: true,
+    });
+  }
+
+  androidEnvConfigured = true;
 }
 
 function delay(ms) {
@@ -349,6 +359,8 @@ function launchInstalledApp(serial) {
 }
 
 if (args[0] === "run:android") {
+  configureAndroidEnv();
+
   const gradlewBat = path.join(projectRoot, "android", "gradlew.bat");
   const gradleArgs = [
     "app:installDebug",

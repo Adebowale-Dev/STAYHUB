@@ -1,163 +1,306 @@
 import React from 'react';
-import { View, StyleSheet, TouchableOpacity } from 'react-native';
+import { StyleSheet, TouchableOpacity, View } from 'react-native';
 import { Text, useTheme } from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import type { Hostel } from '../types';
+import { getStudentPalette } from '../constants/design';
+
 interface Props {
     hostel: Hostel;
     onPress: () => void;
 }
+
 export function HostelCard({ hostel, onPress }: Props) {
     const theme = useTheme();
+    const palette = getStudentPalette(theme.dark);
     const isMale = hostel.gender === 'male';
     const isFull = hostel.availableRooms === 0;
     const ratio = hostel.totalRooms > 0 ? hostel.availableRooms / hostel.totalRooms : 0;
-    const accentColor = isMale ? '#1565C0' : '#C2185B';
-    const genderBg = isMale ? '#E3F2FD' : '#FCE4EC';
-    const genderText = isMale ? '#1565C0' : '#C2185B';
-    const barColor = ratio > 0.5 ? '#43A047' : ratio > 0 ? '#FF9800' : '#E53935';
-    return (<TouchableOpacity onPress={onPress} activeOpacity={0.82} style={styles.wrap}>
-      <View style={[styles.card, { backgroundColor: theme.colors.surface }]}>
+    const accentColor = isMale ? palette.primary : palette.primaryStrong;
+    const accentSoft = palette.primarySoft;
+    const barColor = ratio > 0.5 ? palette.success : ratio > 0 ? palette.warning : palette.danger;
+    const footerText = isFull ? 'Currently full' : 'Explore rooms';
 
-        
-        <View style={[styles.accent, { backgroundColor: accentColor }]}/>
+    return (
+        <TouchableOpacity onPress={onPress} activeOpacity={0.9} className="mb-4">
+            <View
+                style={[
+                    styles.card,
+                    {
+                        backgroundColor: palette.surface,
+                        borderColor: palette.border,
+                        shadowColor: palette.shadow,
+                    },
+                ]}
+            >
+                <View className="flex-row justify-between gap-[14px]">
+                    <View className="flex-1 flex-row gap-3">
+                        <View style={[styles.heroIcon, { backgroundColor: accentSoft }]}>
+                            <MaterialCommunityIcons
+                                name={isMale ? 'office-building' : 'home-group'}
+                                size={20}
+                                color={accentColor}
+                            />
+                        </View>
+                        <View className="flex-1">
+                            <Text
+                                style={[styles.name, { color: palette.textPrimary }]}
+                                numberOfLines={1}
+                            >
+                                {hostel.name}
+                            </Text>
+                            <Text
+                                style={[styles.subtext, { color: palette.textSecondary }]}
+                                numberOfLines={2}
+                            >
+                                {hostel.description || 'Clean accommodation with managed room allocation and student support.'}
+                            </Text>
+                        </View>
+                    </View>
 
-        <View style={styles.body}>
+                    <View className="items-end gap-2">
+                        {isFull ? (
+                            <View style={[styles.fullBadge, { backgroundColor: palette.dangerSoft }]}>
+                                <Text style={[styles.fullBadgeText, { color: palette.danger }]}>Full</Text>
+                            </View>
+                        ) : null}
+                        <View style={[styles.genderChip, { backgroundColor: accentSoft }]}>
+                            <MaterialCommunityIcons
+                                name={isMale ? 'human-male' : 'human-female'}
+                                size={12}
+                                color={accentColor}
+                            />
+                            <Text style={[styles.genderChipText, { color: accentColor }]}>
+                                {isMale ? 'Male' : 'Female'}
+                            </Text>
+                        </View>
+                    </View>
+                </View>
 
-          
-          <View style={styles.headerRow}>
-            <Text style={[styles.name, { color: theme.colors.onSurface }]} numberOfLines={1}>
-              {hostel.name}
-            </Text>
-            <View style={styles.badges}>
-              {isFull && (<View style={styles.fullBadge}>
-                  <Text style={styles.fullBadgeText}>Full</Text>
-                </View>)}
-              <View style={[styles.genderChip, { backgroundColor: genderBg }]}>
-                <MaterialCommunityIcons name={isMale ? 'human-male' : 'human-female'} size={11} color={genderText}/>
-                <Text style={[styles.genderChipText, { color: genderText }]}>
-                  {isMale ? 'Male' : 'Female'}
-                </Text>
-              </View>
+                <View style={styles.metricRow}>
+                    <View
+                        style={[
+                            styles.metricCard,
+                            { backgroundColor: palette.surfaceMuted, borderColor: palette.border },
+                        ]}
+                    >
+                        <Text style={[styles.metricLabel, { color: palette.textMuted }]}>Capacity</Text>
+                        <Text style={[styles.metricValue, { color: palette.textPrimary }]}>
+                            {hostel.totalRooms} rooms
+                        </Text>
+                    </View>
+                    <View
+                        style={[
+                            styles.metricCard,
+                            { backgroundColor: palette.surfaceMuted, borderColor: palette.border },
+                        ]}
+                    >
+                        <Text style={[styles.metricLabel, { color: palette.textMuted }]}>Availability</Text>
+                        <Text style={[styles.metricValue, { color: palette.textPrimary }]}>
+                            {hostel.availableRooms} open
+                        </Text>
+                    </View>
+                </View>
+
+                <View style={styles.progressHeader}>
+                    <Text style={[styles.progressLabel, { color: palette.textSecondary }]}>
+                        Room availability
+                    </Text>
+                    <Text style={[styles.progressValue, { color: barColor }]}>
+                        {Math.max(Math.round(ratio * 100), 0)}%
+                    </Text>
+                </View>
+
+                <View style={[styles.barTrack, { backgroundColor: palette.surfaceMuted }]}>
+                    <View
+                        style={[
+                            styles.barFill,
+                            { width: `${Math.max(Math.min(ratio * 100, 100), 6)}%`, backgroundColor: barColor },
+                        ]}
+                    />
+                </View>
+
+                {hostel.amenities?.length ? (
+                    <View style={styles.amenities}>
+                        {hostel.amenities.slice(0, 4).map((amenity) => (
+                            <View
+                                key={amenity}
+                                style={[
+                                    styles.amenityTag,
+                                    { backgroundColor: palette.surfaceMuted, borderColor: palette.border },
+                                ]}
+                            >
+                                <Text style={[styles.amenityText, { color: palette.textSecondary }]}>
+                                    {amenity}
+                                </Text>
+                            </View>
+                        ))}
+                        {hostel.amenities.length > 4 ? (
+                            <View
+                                style={[
+                                    styles.amenityTag,
+                                    { backgroundColor: palette.primarySoft, borderColor: 'transparent' },
+                                ]}
+                            >
+                                <Text style={[styles.amenityText, { color: palette.primary }]}>
+                                    +{hostel.amenities.length - 4}
+                                </Text>
+                            </View>
+                        ) : null}
+                    </View>
+                ) : null}
+
+                <View style={[styles.footer, { borderTopColor: palette.divider }]}>
+                    <Text style={[styles.footerText, { color: isFull ? palette.danger : palette.primary }]}>
+                        {footerText}
+                    </Text>
+                    <View
+                        style={[
+                            styles.footerArrow,
+                            { backgroundColor: isFull ? palette.dangerSoft : palette.primarySoft },
+                        ]}
+                    >
+                        <MaterialCommunityIcons
+                            name={isFull ? 'alert-circle-outline' : 'arrow-right'}
+                            size={16}
+                            color={isFull ? palette.danger : palette.primary}
+                        />
+                    </View>
+                </View>
             </View>
-          </View>
-
-          
-          {hostel.description ? (<Text style={[styles.desc, { color: theme.colors.onSurfaceVariant }]} numberOfLines={2}>
-              {hostel.description}
-            </Text>) : null}
-
-          
-          <View style={styles.statsRow}>
-            <View style={styles.statItem}>
-              <MaterialCommunityIcons name="bed-outline" size={14} color={theme.colors.onSurfaceVariant}/>
-              <Text style={[styles.statText, { color: theme.colors.onSurfaceVariant }]}>
-                {hostel.totalRooms} rooms total
-              </Text>
-            </View>
-            <View style={styles.statDot}/>
-            <View style={styles.statItem}>
-              <MaterialCommunityIcons name={isFull ? 'close-circle-outline' : 'check-circle-outline'} size={14} color={barColor}/>
-              <Text style={[styles.statText, { color: barColor, fontWeight: '600' }]}>
-                {hostel.availableRooms} available
-              </Text>
-            </View>
-          </View>
-
-          
-          <View style={[styles.barTrack, { backgroundColor: theme.colors.surfaceVariant }]}>
-            <View style={[
-            styles.barFill,
-            { width: `${Math.max(ratio * 100, 0)}%`, backgroundColor: barColor },
-        ]}/>
-          </View>
-
-          
-          {hostel.amenities && hostel.amenities.length > 0 && (<View style={styles.amenities}>
-              {hostel.amenities.slice(0, 4).map((a) => (<View key={a} style={[styles.amenityTag, { backgroundColor: theme.colors.surfaceVariant }]}>
-                  <Text style={[styles.amenityText, { color: theme.colors.onSurfaceVariant }]}>
-                    {a}
-                  </Text>
-                </View>))}
-              {hostel.amenities.length > 4 && (<View style={[styles.amenityTag, { backgroundColor: theme.colors.surfaceVariant }]}>
-                  <Text style={[styles.amenityText, { color: theme.colors.onSurfaceVariant }]}>
-                    +{hostel.amenities.length - 4}
-                  </Text>
-                </View>)}
-            </View>)}
-
-          
-          <View style={[styles.footer, { borderTopColor: theme.colors.surfaceVariant }]}>
-            <Text style={[styles.footerText, { color: accentColor }]}>
-              View Rooms
-            </Text>
-            <MaterialCommunityIcons name="arrow-right" size={15} color={accentColor}/>
-          </View>
-        </View>
-      </View>
-    </TouchableOpacity>);
+        </TouchableOpacity>
+    );
 }
+
 const styles = StyleSheet.create({
-    wrap: { marginBottom: 14 },
     card: {
-        flexDirection: 'row',
-        borderRadius: 18,
-        overflow: 'hidden',
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.07,
-        shadowRadius: 10,
-        elevation: 3,
+        borderRadius: 26,
+        borderWidth: 1,
+        padding: 18,
+        shadowOffset: { width: 0, height: 12 },
+        shadowOpacity: 0.14,
+        shadowRadius: 24,
+        elevation: 8,
     },
-    accent: { width: 5 },
-    body: { flex: 1, paddingHorizontal: 14, paddingTop: 14, paddingBottom: 0 },
-    headerRow: {
-        flexDirection: 'row',
+    heroIcon: {
+        width: 48,
+        height: 48,
+        borderRadius: 16,
         alignItems: 'center',
-        justifyContent: 'space-between',
+        justifyContent: 'center',
+    },
+    name: {
+        fontSize: 18,
+        fontWeight: '800',
         marginBottom: 6,
     },
-    name: { fontSize: 15, fontWeight: '700', flex: 1, marginRight: 8 },
-    badges: { flexDirection: 'row', alignItems: 'center', gap: 6, flexShrink: 0 },
-    fullBadge: {
-        backgroundColor: '#FFEBEE',
-        paddingHorizontal: 7,
-        paddingVertical: 3,
-        borderRadius: 6,
+    subtext: {
+        fontSize: 13,
+        lineHeight: 20,
     },
-    fullBadgeText: { fontSize: 10, fontWeight: '700', color: '#C62828' },
+    fullBadge: {
+        borderRadius: 999,
+        paddingHorizontal: 10,
+        paddingVertical: 6,
+    },
+    fullBadgeText: {
+        fontSize: 11,
+        fontWeight: '800',
+        textTransform: 'uppercase',
+        letterSpacing: 0.5,
+    },
     genderChip: {
         flexDirection: 'row',
         alignItems: 'center',
-        gap: 3,
-        paddingHorizontal: 8,
-        paddingVertical: 4,
-        borderRadius: 20,
+        gap: 4,
+        borderRadius: 999,
+        paddingHorizontal: 10,
+        paddingVertical: 6,
     },
-    genderChipText: { fontSize: 11, fontWeight: '600' },
-    desc: { fontSize: 12, lineHeight: 17, marginBottom: 10 },
-    statsRow: {
+    genderChipText: {
+        fontSize: 11,
+        fontWeight: '800',
+    },
+    metricRow: {
         flexDirection: 'row',
-        alignItems: 'center',
-        gap: 6,
+        gap: 10,
+        marginTop: 18,
+        marginBottom: 16,
+    },
+    metricCard: {
+        flex: 1,
+        borderRadius: 18,
+        borderWidth: 1,
+        paddingHorizontal: 14,
+        paddingVertical: 14,
+    },
+    metricLabel: {
+        fontSize: 11,
+        fontWeight: '700',
+        textTransform: 'uppercase',
+        letterSpacing: 0.8,
         marginBottom: 8,
     },
-    statItem: { flexDirection: 'row', alignItems: 'center', gap: 4 },
-    statText: { fontSize: 12 },
-    statDot: { width: 3, height: 3, borderRadius: 1.5, backgroundColor: '#BDBDBD' },
-    barTrack: { height: 5, borderRadius: 3, marginBottom: 10, overflow: 'hidden' },
-    barFill: { height: 5, borderRadius: 3 },
-    amenities: { flexDirection: 'row', flexWrap: 'wrap', gap: 5, marginBottom: 10 },
-    amenityTag: { paddingHorizontal: 8, paddingVertical: 3, borderRadius: 6 },
-    amenityText: { fontSize: 10, fontWeight: '500' },
+    metricValue: {
+        fontSize: 15,
+        fontWeight: '800',
+    },
+    progressHeader: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginBottom: 8,
+    },
+    progressLabel: {
+        fontSize: 12,
+        fontWeight: '700',
+    },
+    progressValue: {
+        fontSize: 12,
+        fontWeight: '800',
+    },
+    barTrack: {
+        height: 8,
+        borderRadius: 999,
+        overflow: 'hidden',
+        marginBottom: 16,
+    },
+    barFill: {
+        height: '100%',
+        borderRadius: 999,
+    },
+    amenities: {
+        flexDirection: 'row',
+        flexWrap: 'wrap',
+        gap: 8,
+    },
+    amenityTag: {
+        borderRadius: 999,
+        borderWidth: 1,
+        paddingHorizontal: 10,
+        paddingVertical: 6,
+    },
+    amenityText: {
+        fontSize: 11,
+        fontWeight: '700',
+    },
     footer: {
+        marginTop: 18,
+        paddingTop: 16,
+        borderTopWidth: 1,
         flexDirection: 'row',
         alignItems: 'center',
-        justifyContent: 'flex-end',
-        gap: 4,
-        borderTopWidth: 1,
-        paddingVertical: 10,
-        marginTop: 2,
+        justifyContent: 'space-between',
     },
-    footerText: { fontSize: 13, fontWeight: '600' },
+    footerText: {
+        fontSize: 14,
+        fontWeight: '800',
+    },
+    footerArrow: {
+        width: 34,
+        height: 34,
+        borderRadius: 17,
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
 });

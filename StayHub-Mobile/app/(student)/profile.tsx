@@ -4,12 +4,16 @@ import * as ImagePicker from 'expo-image-picker';
 import { Text, TextInput, ActivityIndicator, Divider, useTheme, } from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAuthStore } from '../../store/authStore';
 import { studentAPI, authAPI } from '../../services/api';
 import { APP_CONFIG } from '../../constants/config';
+import { LoadingSpinner } from '../../components/LoadingSpinner';
+import { getStudentPalette } from '../../constants/design';
 import { useThemeStore } from '../../store/themeStore';
 import type { NotificationPreferences, NotificationSettings } from '../../types';
 import { Reveal } from '../../components/ui/Reveal';
+import { StudentHero } from '../../components/ui/StudentHero';
 import { getPushNotificationsUnavailableReason, isPushNotificationsSupported, registerForPushNotificationsAsync, unregisterStoredPushTokenAsync, } from '../../services/pushNotifications';
 const DEFAULT_NOTIFICATION_PREFERENCES: NotificationPreferences = {
     pushEnabled: true,
@@ -36,11 +40,17 @@ export default function ProfileScreen() {
     const logout = useAuthStore((state) => state.logout);
     const router = useRouter();
     const theme = useTheme();
+    const palette = getStudentPalette(theme.dark);
+    const insets = useSafeAreaInsets();
     const isDark = useThemeStore((s) => s.isDark);
     const setTheme = useThemeStore((s) => s.setTheme);
-    const dynText = { color: theme.colors.onSurface };
-    const dynTextSec = { color: theme.colors.onSurfaceVariant };
-    const dynSep = { backgroundColor: theme.colors.surfaceVariant };
+    const primaryTint = palette.primarySoft;
+    const warningTint = palette.warningSoft;
+    const successTint = palette.successSoft;
+    const dangerTint = palette.dangerSoft;
+    const dynText = { color: palette.textPrimary };
+    const dynTextSec = { color: palette.textSecondary };
+    const dynSep = { backgroundColor: palette.divider };
     const getDeptName = (dept: any): string => {
         if (!dept)
             return '';
@@ -432,20 +442,24 @@ export default function ProfileScreen() {
             ? `${notificationSettings.registeredDevicesCount} device${notificationSettings.registeredDevicesCount === 1 ? '' : 's'} linked`
             : 'Needs setup';
     if (loading) {
-        return (<View style={styles.center}>
-        <ActivityIndicator size="large" color="#1565C0"/>
-      </View>);
+        return (
+            <LoadingSpinner
+                title="Loading your profile"
+                message="We are preparing your account details, preferences, and notification settings."
+            />
+        );
     }
     return (<>
-      <StatusBar barStyle="light-content" backgroundColor="#1565C0"/>
+      <StatusBar barStyle="light-content" backgroundColor="#08162B"/>
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={styles.flex}>
-        <ScrollView style={[styles.container, { backgroundColor: theme.colors.background }]} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-          
-          <View style={styles.hero}>
-            <View style={styles.bubble1}/>
-            <View style={styles.bubble2}/>
-            <View style={styles.bubble3}/>
-
+        <ScrollView style={[styles.container, { backgroundColor: palette.pageBackground }]} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+          <StudentHero
+            insetTop={insets.top}
+            eyebrow="Student profile"
+            title={`${user?.firstName ?? ''} ${user?.lastName ?? ''}`.trim() || 'StayHub student'}
+            subtitle="Manage your account, update your profile details, and keep notification preferences exactly the way you want them."
+            align="center"
+          >
             <TouchableOpacity onPress={handleAvatarPress} activeOpacity={0.85} disabled={uploading} style={styles.avatarWrap}>
               <View style={styles.avatarRing}>
                 {user?.profilePicture ? (<Image source={{ uri: user.profilePicture }} style={styles.avatarImage}/>) : (<View style={styles.avatar}>
@@ -453,7 +467,6 @@ export default function ProfileScreen() {
                   </View>)}
               </View>
 
-              
               {uploading ? (<View style={styles.avatarOverlay}>
                   <ActivityIndicator size="small" color="#fff"/>
                 </View>) : (<View style={styles.cameraBadge}>
@@ -461,7 +474,6 @@ export default function ProfileScreen() {
                 </View>)}
             </TouchableOpacity>
 
-            <Text style={styles.heroName}>{user?.firstName} {user?.lastName}</Text>
             <Text style={styles.heroMatric}>{user?.matricNumber}</Text>
             {user?.email ? <Text style={styles.heroEmail}>{user.email}</Text> : null}
             <View style={styles.heroPillRow}>
@@ -475,29 +487,31 @@ export default function ProfileScreen() {
                 <Text style={styles.heroPillText}>{isDark ? 'Dark mode' : 'Light mode'}</Text>
               </View>
             </View>
-          </View>
+          </StudentHero>
 
           <Reveal delay={60}>
             <View style={styles.summaryGrid}>
-              <View style={[styles.summaryCard, { backgroundColor: theme.colors.surface }]}>
+              <View style={[styles.summaryCard, { backgroundColor: palette.surface, borderColor: palette.border, shadowColor: palette.shadow }]}>
                 <Text style={[styles.summaryLabel, dynTextSec]}>Department</Text>
                 <Text style={[styles.summaryValue, dynText]} numberOfLines={2}>
                   {deptName || 'Add department'}
                 </Text>
               </View>
 
-              <View style={[styles.summaryCard, { backgroundColor: theme.colors.surface }]}>
+              <View style={[styles.summaryCard, { backgroundColor: palette.surface, borderColor: palette.border, shadowColor: palette.shadow }]}>
                 <Text style={[styles.summaryLabel, dynTextSec]}>Level</Text>
                 <Text style={[styles.summaryValue, dynText]}>
                   {user?.level ? `${user.level} Level` : 'Add level'}
                 </Text>
               </View>
 
-              <View style={[styles.summaryCardWide, { backgroundColor: theme.colors.surface }]}>
+              <View style={[styles.summaryCardWide, { backgroundColor: palette.surface, borderColor: palette.border, shadowColor: palette.shadow }]}>
                 <View style={styles.summaryWideHeader}>
                   <Text style={[styles.summaryLabel, dynTextSec]}>Notification status</Text>
-                  <View style={styles.summaryBadge}>
-                    <Text style={styles.summaryBadgeText}>{notificationPreferences.pushEnabled ? 'LIVE' : 'OFF'}</Text>
+                  <View style={[styles.summaryBadge, { backgroundColor: primaryTint }]}>
+                    <Text style={[styles.summaryBadgeText, { color: palette.primary }]}>
+                        {notificationPreferences.pushEnabled ? 'LIVE' : 'OFF'}
+                    </Text>
                   </View>
                 </View>
                 <Text style={[styles.summaryValue, dynText]}>{notificationSummary}</Text>
@@ -508,7 +522,7 @@ export default function ProfileScreen() {
 
           
           <Reveal delay={130}>
-            <View style={[styles.card, { backgroundColor: theme.colors.surface }]}>
+            <View style={[styles.card, { backgroundColor: palette.surface, borderColor: palette.border, shadowColor: palette.shadow }]}>
               <View style={styles.cardHeader}>
                 <Text style={[styles.cardTitle, dynText]}>Student Information</Text>
                 {!editing && (<TouchableOpacity style={styles.editBtn} onPress={() => setEditing(true)}>
@@ -536,9 +550,9 @@ export default function ProfileScreen() {
             <View style={[styles.sep, dynSep]}/>
 
               {editing ? (<View style={styles.editBlock}>
-                  <TextInput mode="outlined" label="Phone Number" value={phone} onChangeText={setPhone} keyboardType="phone-pad" style={styles.input} disabled={saving} outlineColor="#E0E0E0" activeOutlineColor="#1565C0"/>
-                  <TextInput mode="outlined" label="Department" value={department} onChangeText={setDepartment} style={styles.input} disabled={saving} outlineColor="#E0E0E0" activeOutlineColor="#1565C0"/>
-                  <TextInput mode="outlined" label="Level" value={level} onChangeText={setLevel} keyboardType="numeric" style={styles.input} disabled={saving} placeholder="e.g. 300" outlineColor="#E0E0E0" activeOutlineColor="#1565C0"/>
+                  <TextInput mode="outlined" label="Phone Number" value={phone} onChangeText={setPhone} keyboardType="phone-pad" style={styles.input} disabled={saving} outlineColor={palette.border} activeOutlineColor={palette.primary}/>
+                  <TextInput mode="outlined" label="Department" value={department} onChangeText={setDepartment} style={styles.input} disabled={saving} outlineColor={palette.border} activeOutlineColor={palette.primary}/>
+                  <TextInput mode="outlined" label="Level" value={level} onChangeText={setLevel} keyboardType="numeric" style={styles.input} disabled={saving} placeholder="e.g. 300" outlineColor={palette.border} activeOutlineColor={palette.primary}/>
                   <View style={styles.editActions}>
                     <TouchableOpacity style={styles.cancelBtn} onPress={() => setEditing(false)} disabled={saving}>
                       <Text style={styles.cancelBtnText}>Cancel</Text>
@@ -567,7 +581,7 @@ export default function ProfileScreen() {
 
           
           <Reveal delay={210}>
-            <View style={[styles.card, { backgroundColor: theme.colors.surface }]}>
+            <View style={[styles.card, { backgroundColor: palette.surface, borderColor: palette.border, shadowColor: palette.shadow }]}>
               <View style={styles.cardHeader}>
                 <Text style={[styles.cardTitle, dynText]}>Settings</Text>
               </View>
@@ -576,11 +590,11 @@ export default function ProfileScreen() {
             <Text style={[styles.settingSection, dynTextSec]}>Security</Text>
 
             <TouchableOpacity style={styles.settingRow} onPress={() => setPwModalVisible(true)} activeOpacity={0.7}>
-              <View style={[styles.settingIconWrap, { backgroundColor: '#E3F2FD' }]}>
-                <MaterialCommunityIcons name="lock-outline" size={18} color="#1565C0"/>
+              <View style={[styles.settingIconWrap, { backgroundColor: primaryTint }]}>
+                <MaterialCommunityIcons name="lock-outline" size={18} color={palette.primary}/>
               </View>
               <Text style={[styles.settingLabel, dynText]}>Change Password</Text>
-              <MaterialCommunityIcons name="chevron-right" size={20} color="#BDBDBD"/>
+              <MaterialCommunityIcons name="chevron-right" size={20} color={palette.textMuted}/>
             </TouchableOpacity>
 
             <View style={[styles.sep, dynSep]}/>
@@ -589,11 +603,11 @@ export default function ProfileScreen() {
             <Text style={[styles.settingSection, dynTextSec, { marginTop: 14 }]}>Appearance</Text>
 
             <View style={styles.settingRow}>
-              <View style={[styles.settingIconWrap, { backgroundColor: isDark ? '#1A237E' : '#E8EAF6' }]}>
-                <MaterialCommunityIcons name={isDark ? 'weather-night' : 'white-balance-sunny'} size={18} color={isDark ? '#7986CB' : '#3949AB'}/>
+              <View style={[styles.settingIconWrap, { backgroundColor: primaryTint }]}>
+                <MaterialCommunityIcons name={isDark ? 'weather-night' : 'white-balance-sunny'} size={18} color={palette.primary}/>
               </View>
               <Text style={[styles.settingLabel, dynText]}>Dark Mode</Text>
-              <Switch value={isDark} onValueChange={handleThemeToggle} trackColor={{ false: '#E0E0E0', true: '#42A5F5' }} thumbColor={isDark ? '#1565C0' : '#f4f3f4'}/>
+              <Switch value={isDark} onValueChange={handleThemeToggle} trackColor={{ false: '#D5DDE7', true: '#8EC5FF' }} thumbColor={isDark ? palette.primary : '#f4f3f4'}/>
             </View>
 
             <View style={[styles.sep, dynSep]}/>
@@ -601,34 +615,34 @@ export default function ProfileScreen() {
             <Text style={[styles.settingSection, dynTextSec, { marginTop: 14 }]}>Notifications</Text>
 
             <View style={styles.settingRow}>
-              <View style={[styles.settingIconWrap, { backgroundColor: '#E8F5E9' }]}>
-                <MaterialCommunityIcons name="bell-ring-outline" size={18} color="#2E7D32"/>
+              <View style={[styles.settingIconWrap, { backgroundColor: successTint }]}>
+                <MaterialCommunityIcons name="bell-ring-outline" size={18} color={palette.success}/>
               </View>
               <View style={styles.settingCopy}>
                 <Text style={[styles.settingLabel, dynText]}>Push Alerts</Text>
                 <Text style={[styles.settingHint, dynTextSec]}>{notificationStatusText}</Text>
               </View>
-              <Switch value={notificationPreferences.pushEnabled} onValueChange={(value) => handleNotificationToggle('pushEnabled', value)} trackColor={{ false: '#E0E0E0', true: '#66BB6A' }} thumbColor={notificationPreferences.pushEnabled ? '#2E7D32' : '#f4f3f4'} disabled={notificationBusy === 'pushEnabled'}/>
+              <Switch value={notificationPreferences.pushEnabled} onValueChange={(value) => handleNotificationToggle('pushEnabled', value)} trackColor={{ false: '#D5DDE7', true: '#9CD7A7' }} thumbColor={notificationPreferences.pushEnabled ? palette.success : '#f4f3f4'} disabled={notificationBusy === 'pushEnabled'}/>
             </View>
 
             <View style={[styles.sep, dynSep]}/>
 
             <TouchableOpacity style={styles.settingRow} activeOpacity={0.7} onPress={handleReconnectDevice} disabled={notificationBusy === 'reconnect'}>
-              <View style={[styles.settingIconWrap, { backgroundColor: '#E3F2FD' }]}>
-                <MaterialCommunityIcons name="cellphone-link" size={18} color="#1565C0"/>
+              <View style={[styles.settingIconWrap, { backgroundColor: primaryTint }]}>
+                <MaterialCommunityIcons name="cellphone-link" size={18} color={palette.primary}/>
               </View>
               <View style={styles.settingCopy}>
                 <Text style={[styles.settingLabel, dynText]}>Reconnect This Device</Text>
                 <Text style={[styles.settingHint, dynTextSec]}>{notificationMetaText}</Text>
               </View>
-              {notificationBusy === 'reconnect' ? (<ActivityIndicator size={18} color="#1565C0"/>) : (<MaterialCommunityIcons name="chevron-right" size={20} color="#BDBDBD"/>)}
+              {notificationBusy === 'reconnect' ? (<ActivityIndicator size={18} color={palette.primary}/>) : (<MaterialCommunityIcons name="chevron-right" size={20} color={palette.textMuted}/>)}
             </TouchableOpacity>
 
             <View style={[styles.sep, dynSep]}/>
 
             <View style={styles.settingRow}>
-              <View style={[styles.settingIconWrap, { backgroundColor: '#FFF3E0' }]}>
-                <MaterialCommunityIcons name="email-sync-outline" size={18} color="#EF6C00"/>
+              <View style={[styles.settingIconWrap, { backgroundColor: warningTint }]}>
+                <MaterialCommunityIcons name="email-sync-outline" size={18} color={palette.warning}/>
               </View>
               <View style={styles.settingCopy}>
                 <Text style={[styles.settingLabel, dynText]}>Email Backup</Text>
@@ -636,14 +650,14 @@ export default function ProfileScreen() {
                   Send email too when push is unavailable or an invitation is urgent.
                 </Text>
               </View>
-              <Switch value={notificationPreferences.emailEscalationEnabled} onValueChange={(value) => handleNotificationToggle('emailEscalationEnabled', value)} trackColor={{ false: '#E0E0E0', true: '#FFB74D' }} thumbColor={notificationPreferences.emailEscalationEnabled ? '#EF6C00' : '#f4f3f4'} disabled={notificationBusy === 'emailEscalationEnabled'}/>
+              <Switch value={notificationPreferences.emailEscalationEnabled} onValueChange={(value) => handleNotificationToggle('emailEscalationEnabled', value)} trackColor={{ false: '#D5DDE7', true: '#FFD08A' }} thumbColor={notificationPreferences.emailEscalationEnabled ? palette.warning : '#f4f3f4'} disabled={notificationBusy === 'emailEscalationEnabled'}/>
             </View>
 
             <View style={[styles.sep, dynSep]}/>
 
             <View style={styles.settingRow}>
-              <View style={[styles.settingIconWrap, { backgroundColor: '#E8EAF6' }]}>
-                <MaterialCommunityIcons name="account-multiple-outline" size={18} color="#3949AB"/>
+              <View style={[styles.settingIconWrap, { backgroundColor: primaryTint }]}>
+                <MaterialCommunityIcons name="account-multiple-outline" size={18} color={palette.primary}/>
               </View>
               <View style={styles.settingCopy}>
                 <Text style={[styles.settingLabel, dynText]}>Room Invite Alerts</Text>
@@ -651,14 +665,14 @@ export default function ProfileScreen() {
                   Get notified immediately when a friend reserves a bed for you.
                 </Text>
               </View>
-              <Switch value={notificationPreferences.invitationCreated} onValueChange={(value) => handleNotificationToggle('invitationCreated', value)} trackColor={{ false: '#E0E0E0', true: '#9FA8DA' }} thumbColor={notificationPreferences.invitationCreated ? '#3949AB' : '#f4f3f4'} disabled={notificationBusy === 'invitationCreated'}/>
+              <Switch value={notificationPreferences.invitationCreated} onValueChange={(value) => handleNotificationToggle('invitationCreated', value)} trackColor={{ false: '#D5DDE7', true: '#8EC5FF' }} thumbColor={notificationPreferences.invitationCreated ? palette.primary : '#f4f3f4'} disabled={notificationBusy === 'invitationCreated'}/>
             </View>
 
             <View style={[styles.sep, dynSep]}/>
 
             <View style={styles.settingRow}>
-              <View style={[styles.settingIconWrap, { backgroundColor: '#FCE4EC' }]}>
-                <MaterialCommunityIcons name="account-check-outline" size={18} color="#C2185B"/>
+              <View style={[styles.settingIconWrap, { backgroundColor: primaryTint }]}>
+                <MaterialCommunityIcons name="account-check-outline" size={18} color={palette.primary}/>
               </View>
               <View style={styles.settingCopy}>
                 <Text style={[styles.settingLabel, dynText]}>Invite Responses & Expiry</Text>
@@ -666,16 +680,16 @@ export default function ProfileScreen() {
                   See when friends approve, reject, or allow an invite to expire.
                 </Text>
               </View>
-              <Switch value={notificationPreferences.invitationUpdates && notificationPreferences.invitationExpired} onValueChange={(value) => handleNotificationPairToggle('invitationUpdates', 'invitationExpired', value)} trackColor={{ false: '#E0E0E0', true: '#F48FB1' }} thumbColor={notificationPreferences.invitationUpdates && notificationPreferences.invitationExpired
-            ? '#C2185B'
+              <Switch value={notificationPreferences.invitationUpdates && notificationPreferences.invitationExpired} onValueChange={(value) => handleNotificationPairToggle('invitationUpdates', 'invitationExpired', value)} trackColor={{ false: '#D5DDE7', true: '#8EC5FF' }} thumbColor={notificationPreferences.invitationUpdates && notificationPreferences.invitationExpired
+            ? palette.primary
             : '#f4f3f4'} disabled={notificationBusy === 'invitationUpdates'}/>
             </View>
 
             <View style={[styles.sep, dynSep]}/>
 
             <View style={styles.settingRow}>
-              <View style={[styles.settingIconWrap, { backgroundColor: '#E0F2F1' }]}>
-                <MaterialCommunityIcons name="credit-card-check-outline" size={18} color="#00796B"/>
+              <View style={[styles.settingIconWrap, { backgroundColor: primaryTint }]}>
+                <MaterialCommunityIcons name="credit-card-check-outline" size={18} color={palette.primary}/>
               </View>
               <View style={styles.settingCopy}>
                 <Text style={[styles.settingLabel, dynText]}>Payment & Reservation Updates</Text>
@@ -683,8 +697,8 @@ export default function ProfileScreen() {
                   Keep payment confirmation and confirmed-room updates on this phone.
                 </Text>
               </View>
-              <Switch value={notificationPreferences.paymentUpdates && notificationPreferences.reservationUpdates} onValueChange={(value) => handleNotificationPairToggle('paymentUpdates', 'reservationUpdates', value)} trackColor={{ false: '#E0E0E0', true: '#80CBC4' }} thumbColor={notificationPreferences.paymentUpdates && notificationPreferences.reservationUpdates
-            ? '#00796B'
+              <Switch value={notificationPreferences.paymentUpdates && notificationPreferences.reservationUpdates} onValueChange={(value) => handleNotificationPairToggle('paymentUpdates', 'reservationUpdates', value)} trackColor={{ false: '#D5DDE7', true: '#8EC5FF' }} thumbColor={notificationPreferences.paymentUpdates && notificationPreferences.reservationUpdates
+            ? palette.primary
             : '#f4f3f4'} disabled={notificationBusy === 'paymentUpdates'}/>
             </View>
 
@@ -692,21 +706,21 @@ export default function ProfileScreen() {
             <Text style={[styles.settingSection, dynTextSec, { marginTop: 14 }]}>Support & Info</Text>
 
             <TouchableOpacity style={styles.settingRow} activeOpacity={0.7} onPress={() => Alert.alert('Help & Support', 'For assistance, please contact us:\n\nEmail: support@stayhub.com\n\nOffice hours:\nMon - Fri, 8:00am - 5:00pm')}>
-              <View style={[styles.settingIconWrap, { backgroundColor: '#E8F5E9' }]}>
-                <MaterialCommunityIcons name="headset" size={18} color="#2E7D32"/>
+              <View style={[styles.settingIconWrap, { backgroundColor: primaryTint }]}>
+                <MaterialCommunityIcons name="headset" size={18} color={palette.primary}/>
               </View>
               <Text style={[styles.settingLabel, dynText]}>Help & Support</Text>
-              <MaterialCommunityIcons name="chevron-right" size={20} color="#BDBDBD"/>
+              <MaterialCommunityIcons name="chevron-right" size={20} color={palette.textMuted}/>
             </TouchableOpacity>
 
             <View style={[styles.sep, dynSep]}/>
 
             <TouchableOpacity style={styles.settingRow} activeOpacity={0.7} onPress={() => Alert.alert('About StayHub', `StayHub Mobile\nVersion ${APP_CONFIG.VERSION}\n\nA smart hostel reservation platform for students. Book your room, manage reservations, and pay seamlessly in one place.`)}>
-              <View style={[styles.settingIconWrap, { backgroundColor: '#F3E5F5' }]}>
-                <MaterialCommunityIcons name="information-outline" size={18} color="#7B1FA2"/>
+              <View style={[styles.settingIconWrap, { backgroundColor: primaryTint }]}>
+                <MaterialCommunityIcons name="information-outline" size={18} color={palette.primary}/>
               </View>
               <Text style={[styles.settingLabel, dynText]}>About StayHub</Text>
-              <MaterialCommunityIcons name="chevron-right" size={20} color="#BDBDBD"/>
+              <MaterialCommunityIcons name="chevron-right" size={20} color={palette.textMuted}/>
             </TouchableOpacity>
 
             <View style={[styles.sep, dynSep]}/>
@@ -715,11 +729,11 @@ export default function ProfileScreen() {
             <Text style={[styles.settingSection, dynTextSec, { marginTop: 14 }]}>Account</Text>
 
               <TouchableOpacity style={styles.settingRow} onPress={handleLogout} activeOpacity={0.7}>
-                <View style={[styles.settingIconWrap, { backgroundColor: '#FFEBEE' }]}>
-                  <MaterialCommunityIcons name="logout" size={18} color="#C62828"/>
+                <View style={[styles.settingIconWrap, { backgroundColor: dangerTint }]}>
+                  <MaterialCommunityIcons name="logout" size={18} color={palette.danger}/>
                 </View>
-                <Text style={[styles.settingLabel, { color: '#C62828' }]}>Sign Out</Text>
-                <MaterialCommunityIcons name="chevron-right" size={20} color="#BDBDBD"/>
+                <Text style={[styles.settingLabel, { color: palette.danger }]}>Sign Out</Text>
+                <MaterialCommunityIcons name="chevron-right" size={20} color={palette.textMuted}/>
               </TouchableOpacity>
             </View>
           </Reveal>
@@ -730,17 +744,17 @@ export default function ProfileScreen() {
       <Modal visible={pwModalVisible} transparent animationType="slide" onRequestClose={closePwModal}>
         <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={styles.modalOverlay}>
           <TouchableOpacity style={styles.modalBackdrop} activeOpacity={1} onPress={closePwModal}/>
-          <View style={[styles.modalBox, { backgroundColor: theme.colors.surface }]}>
+          <View style={[styles.modalBox, { backgroundColor: palette.surface }]}>
             <View style={styles.modalHandle}/>
             <Text style={styles.modalTitle}>Change Password</Text>
             <Text style={styles.modalSubtitle}>Enter your current password, then choose a new one.</Text>
             <Divider style={{ marginBottom: 20, marginTop: 4 }}/>
 
-            <TextInput mode="outlined" label="Current Password" value={currentPw} onChangeText={setCurrentPw} secureTextEntry={!showCurrentPw} right={<TextInput.Icon icon={showCurrentPw ? 'eye-off-outline' : 'eye-outline'} onPress={() => setShowCurrentPw((v) => !v)}/>} style={styles.input} disabled={pwSaving} outlineColor="#E0E0E0" activeOutlineColor="#1565C0"/>
+            <TextInput mode="outlined" label="Current Password" value={currentPw} onChangeText={setCurrentPw} secureTextEntry={!showCurrentPw} right={<TextInput.Icon icon={showCurrentPw ? 'eye-off-outline' : 'eye-outline'} onPress={() => setShowCurrentPw((v) => !v)}/>} style={styles.input} disabled={pwSaving} outlineColor={palette.border} activeOutlineColor={palette.primary}/>
 
-            <TextInput mode="outlined" label="New Password" value={newPw} onChangeText={setNewPw} secureTextEntry={!showNewPw} right={<TextInput.Icon icon={showNewPw ? 'eye-off-outline' : 'eye-outline'} onPress={() => setShowNewPw((v) => !v)}/>} style={styles.input} disabled={pwSaving} outlineColor="#E0E0E0" activeOutlineColor="#1565C0"/>
+            <TextInput mode="outlined" label="New Password" value={newPw} onChangeText={setNewPw} secureTextEntry={!showNewPw} right={<TextInput.Icon icon={showNewPw ? 'eye-off-outline' : 'eye-outline'} onPress={() => setShowNewPw((v) => !v)}/>} style={styles.input} disabled={pwSaving} outlineColor={palette.border} activeOutlineColor={palette.primary}/>
 
-            <TextInput mode="outlined" label="Confirm New Password" value={confirmPw} onChangeText={setConfirmPw} secureTextEntry={!showConfirmPw} right={<TextInput.Icon icon={showConfirmPw ? 'eye-off-outline' : 'eye-outline'} onPress={() => setShowConfirmPw((v) => !v)}/>} style={styles.input} disabled={pwSaving} outlineColor="#E0E0E0" activeOutlineColor="#1565C0"/>
+            <TextInput mode="outlined" label="Confirm New Password" value={confirmPw} onChangeText={setConfirmPw} secureTextEntry={!showConfirmPw} right={<TextInput.Icon icon={showConfirmPw ? 'eye-off-outline' : 'eye-outline'} onPress={() => setShowConfirmPw((v) => !v)}/>} style={styles.input} disabled={pwSaving} outlineColor={palette.border} activeOutlineColor={palette.primary}/>
 
             <View style={styles.editActions}>
               <TouchableOpacity style={styles.cancelBtn} onPress={closePwModal} disabled={pwSaving}>
@@ -761,7 +775,7 @@ const styles = StyleSheet.create({
     flex: { flex: 1 },
     container: { flex: 1, backgroundColor: '#F5F7FA' },
     center: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-    content: { paddingBottom: 40 },
+    content: { paddingBottom: 144 },
     hero: {
         backgroundColor: '#1565C0',
         alignItems: 'center',
@@ -857,32 +871,33 @@ const styles = StyleSheet.create({
     heroPillText: { color: '#fff', fontSize: 12, fontWeight: '700' },
     summaryGrid: {
         paddingHorizontal: 18,
-        paddingTop: 22,
+        marginTop: -22,
+        paddingTop: 0,
         flexDirection: 'row',
         flexWrap: 'wrap',
         gap: 12,
     },
     summaryCard: {
         width: '47%',
-        borderRadius: 18,
+        borderRadius: 24,
+        borderWidth: 1,
         paddingHorizontal: 16,
         paddingVertical: 16,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.07,
-        shadowRadius: 12,
-        elevation: 3,
+        shadowOffset: { width: 0, height: 12 },
+        shadowOpacity: 0.14,
+        shadowRadius: 22,
+        elevation: 8,
     },
     summaryCardWide: {
         width: '100%',
-        borderRadius: 18,
+        borderRadius: 24,
+        borderWidth: 1,
         paddingHorizontal: 16,
         paddingVertical: 16,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.07,
-        shadowRadius: 12,
-        elevation: 3,
+        shadowOffset: { width: 0, height: 12 },
+        shadowOpacity: 0.14,
+        shadowRadius: 22,
+        elevation: 8,
     },
     summaryWideHeader: {
         flexDirection: 'row',
@@ -921,17 +936,16 @@ const styles = StyleSheet.create({
         letterSpacing: 0.6,
     },
     card: {
-        backgroundColor: '#fff',
-        borderRadius: 20,
+        borderRadius: 28,
+        borderWidth: 1,
         marginHorizontal: 18,
         marginTop: 22,
         paddingHorizontal: 18,
         paddingBottom: 18,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.07,
-        shadowRadius: 10,
-        elevation: 2,
+        shadowOffset: { width: 0, height: 14 },
+        shadowOpacity: 0.14,
+        shadowRadius: 24,
+        elevation: 10,
     },
     cardHeader: {
         flexDirection: 'row',
@@ -941,19 +955,19 @@ const styles = StyleSheet.create({
         paddingBottom: 14,
     },
     cardTitle: { fontSize: 15, fontWeight: '700', color: '#1A1A2E' },
-    editBtn: { flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: '#E3F2FD', paddingHorizontal: 10, paddingVertical: 5, borderRadius: 20 },
-    editBtnText: { fontSize: 12, color: '#1565C0', fontWeight: '600' },
+    editBtn: { flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: '#E8F1FF', paddingHorizontal: 12, paddingVertical: 8, borderRadius: 14 },
+    editBtnText: { fontSize: 12, color: '#0C4A8C', fontWeight: '700' },
     field: { paddingVertical: 12 },
     fieldLabel: { fontSize: 11, color: '#9E9E9E', marginBottom: 3, textTransform: 'uppercase', letterSpacing: 0.5 },
     fieldValue: { fontSize: 14, fontWeight: '600', color: '#1A1A2E' },
     sep: { height: 1, backgroundColor: '#F5F5F5' },
     editBlock: { paddingTop: 8 },
-    input: { marginBottom: 12, backgroundColor: '#fff', fontSize: 14 },
+    input: { marginBottom: 12, backgroundColor: 'transparent', fontSize: 14 },
     editActions: { flexDirection: 'row', gap: 10, marginTop: 4 },
     cancelBtn: {
         flex: 1,
         height: 46,
-        borderRadius: 12,
+        borderRadius: 16,
         borderWidth: 1.5,
         borderColor: '#E0E0E0',
         alignItems: 'center',
@@ -963,8 +977,8 @@ const styles = StyleSheet.create({
     saveBtn: {
         flex: 1,
         height: 46,
-        borderRadius: 12,
-        backgroundColor: '#1565C0',
+        borderRadius: 16,
+        backgroundColor: '#0C4A8C',
         alignItems: 'center',
         justifyContent: 'center',
     },
@@ -1014,7 +1028,6 @@ const styles = StyleSheet.create({
         backgroundColor: 'rgba(0,0,0,0.45)',
     },
     modalBox: {
-        backgroundColor: '#fff',
         borderTopLeftRadius: 24,
         borderTopRightRadius: 24,
         paddingHorizontal: 24,

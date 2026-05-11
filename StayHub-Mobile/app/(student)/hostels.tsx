@@ -1,5 +1,15 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { View, FlatList, StyleSheet, RefreshControl, TouchableOpacity, StatusBar, Platform, KeyboardAvoidingView, TextInput as RNTextInput, } from 'react-native';
+import {
+    FlatList,
+    KeyboardAvoidingView,
+    Platform,
+    RefreshControl,
+    StatusBar,
+    StyleSheet,
+    TextInput as RNTextInput,
+    TouchableOpacity,
+    View,
+} from 'react-native';
 import { Text, useTheme } from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -8,27 +18,10 @@ import { studentAPI } from '../../services/api';
 import { HostelCard } from '../../components/HostelCard';
 import { useAuthStore } from '../../store/authStore';
 import type { Hostel } from '../../types';
-function SkeletonCard({ surface }: {
-    surface: string;
-}) {
-    return (<View style={[skeletonStyles.card, { backgroundColor: surface }]}>
-      <View style={skeletonStyles.accent}/>
-      <View style={skeletonStyles.body}>
-        <View style={skeletonStyles.row}>
-          <View style={[skeletonStyles.box, { flex: 1, height: 16 }]}/>
-          <View style={[skeletonStyles.box, { width: 52, height: 22, borderRadius: 12 }]}/>
-        </View>
-        <View style={[skeletonStyles.box, { height: 11, marginTop: 8, width: '85%' }]}/>
-        <View style={[skeletonStyles.box, { height: 11, marginTop: 5, width: '60%' }]}/>
-        <View style={[skeletonStyles.box, { height: 5, marginTop: 12, borderRadius: 3 }]}/>
-        <View style={{ flexDirection: 'row', gap: 6, marginTop: 10 }}>
-          <View style={[skeletonStyles.box, { width: 44, height: 20, borderRadius: 6 }]}/>
-          <View style={[skeletonStyles.box, { width: 36, height: 20, borderRadius: 6 }]}/>
-          <View style={[skeletonStyles.box, { width: 52, height: 20, borderRadius: 6 }]}/>
-        </View>
-      </View>
-    </View>);
-}
+import { getStudentPalette } from '../../constants/design';
+import { StudentHero } from '../../components/ui/StudentHero';
+import { LoadingSpinner } from '../../components/LoadingSpinner';
+
 export default function HostelsScreen() {
     const [hostels, setHostels] = useState<Hostel[]>([]);
     const [loading, setLoading] = useState(true);
@@ -37,10 +30,12 @@ export default function HostelsScreen() {
     const [search, setSearch] = useState('');
     const router = useRouter();
     const theme = useTheme();
+    const palette = getStudentPalette(theme.dark);
     const insets = useSafeAreaInsets();
     const searchRef = useRef<RNTextInput>(null);
     const user = useAuthStore((s) => s.user);
     const studentGender = (user?.gender ?? 'male') as 'male' | 'female';
+
     const loadHostels = async () => {
         setError(false);
         try {
@@ -56,209 +51,397 @@ export default function HostelsScreen() {
             setRefreshing(false);
         }
     };
-    useEffect(() => { loadHostels(); }, []);
-    const onRefresh = () => { setRefreshing(true); loadHostels(); };
-    const filtered = hostels.filter((h) => {
-        const matchGender = h.gender === studentGender;
-        const matchSearch = !search.trim() || h.name.toLowerCase().includes(search.toLowerCase());
+
+    useEffect(() => {
+        loadHostels();
+    }, []);
+
+    const onRefresh = () => {
+        setRefreshing(true);
+        loadHostels();
+    };
+
+    const filtered = hostels.filter((hostel) => {
+        const matchGender = hostel.gender === studentGender;
+        const matchSearch =
+            !search.trim() || hostel.name.toLowerCase().includes(search.toLowerCase());
         return matchGender && matchSearch;
     });
-    const totalAvailable = filtered.reduce((sum, h) => sum + h.availableRooms, 0);
-    const ListHeader = () => (<>
-      
-      <View style={[styles.hero, { paddingTop: insets.top + 18 }]}>
-        <View style={styles.bubble1}/>
-        <View style={styles.bubble2}/>
-        <View style={styles.bubble3}/>
 
-        <Text style={styles.heroEyebrow}>Student Accommodation</Text>
-        <Text style={styles.heroTitle}>Available Hostels</Text>
+    const totalAvailable = filtered.reduce((sum, hostel) => sum + hostel.availableRooms, 0);
 
-        {!loading && !error && (<View style={styles.heroStats}>
-            <View style={styles.heroStat}>
-              <Text style={styles.heroStatNum}>{filtered.length}</Text>
-              <Text style={styles.heroStatLabel}>Hostels</Text>
-            </View>
-            <View style={styles.heroStatDivider}/>
-            <View style={styles.heroStat}>
-              <Text style={styles.heroStatNum}>{totalAvailable}</Text>
-              <Text style={styles.heroStatLabel}>Rooms Free</Text>
-            </View>
-            <View style={styles.heroStatDivider}/>
-            <View style={styles.heroStat}>
-              <MaterialCommunityIcons name={studentGender === 'male' ? 'human-male' : 'human-female'} size={18} color="#fff"/>
-              <Text style={styles.heroStatLabel}>
-                {studentGender === 'male' ? 'Male' : 'Female'} Only
-              </Text>
-            </View>
-          </View>)}
-      </View>
-
-      
-      <View style={[styles.controlsWrap, { backgroundColor: theme.colors.background }]}>
-        <View style={[styles.searchBar, { backgroundColor: theme.colors.surface }]}>
-          <MaterialCommunityIcons name="magnify" size={18} color={theme.colors.onSurfaceVariant}/>
-          <RNTextInput ref={searchRef} value={search} onChangeText={setSearch} placeholder="Search hostels..." placeholderTextColor={theme.colors.onSurfaceVariant} style={[styles.searchInput, { color: theme.colors.onSurface }]} returnKeyType="search"/>
-          {search.length > 0 && (<TouchableOpacity onPress={() => setSearch('')} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
-              <MaterialCommunityIcons name="close-circle" size={16} color={theme.colors.onSurfaceVariant}/>
-            </TouchableOpacity>)}
-        </View>
-      </View>
-
-      
-      {!loading && !error && (<View style={styles.sectionRow}>
-          <Text style={[styles.sectionLabel, { color: theme.colors.onSurfaceVariant }]}>
-            {studentGender === 'male' ? 'Male Hostels' : 'Female Hostels'}
-          </Text>
-          <Text style={[styles.sectionCount, { color: theme.colors.onSurfaceVariant }]}>
-            {filtered.length} {filtered.length === 1 ? 'hostel' : 'hostels'}
-          </Text>
-        </View>)}
-    </>);
-    if (!loading && error) {
-        return (<View style={[styles.screen, { backgroundColor: theme.colors.background }]}>
-        <StatusBar barStyle="light-content" backgroundColor="#1565C0" translucent={false}/>
-        <View style={[styles.hero, { paddingTop: insets.top + 18 }]}>
-          <View style={styles.bubble1}/>
-          <View style={styles.bubble2}/>
-          <Text style={styles.heroEyebrow}>Student Accommodation</Text>
-          <Text style={styles.heroTitle}>Available Hostels</Text>
-        </View>
-        <View style={styles.errorWrap}>
-          <View style={[styles.errorCard, { backgroundColor: theme.colors.surface }]}>
-            <MaterialCommunityIcons name="wifi-off" size={38} color="#BDBDBD"/>
-            <Text style={[styles.errorTitle, { color: theme.colors.onSurface }]}>
-              Could not load hostels
-            </Text>
-            <Text style={[styles.errorSub, { color: theme.colors.onSurfaceVariant }]}>
-              Check your connection and try again.
-            </Text>
-            <TouchableOpacity style={styles.retryBtn} onPress={() => { setLoading(true); loadHostels(); }} activeOpacity={0.82}>
-              <MaterialCommunityIcons name="refresh" size={15} color="#fff"/>
-              <Text style={styles.retryText}>Retry</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      </View>);
-    }
     if (loading) {
-        return (<View style={[styles.screen, { backgroundColor: theme.colors.background }]}>
-        <StatusBar barStyle="light-content" backgroundColor="#1565C0" translucent={false}/>
-        <View style={[styles.hero, { paddingTop: insets.top + 18 }]}>
-          <View style={styles.bubble1}/>
-          <View style={styles.bubble2}/>
-          <Text style={styles.heroEyebrow}>Student Accommodation</Text>
-          <Text style={styles.heroTitle}>Available Hostels</Text>
-        </View>
-        <View style={{ paddingHorizontal: 18, paddingTop: 18, gap: 14 }}>
-          {[1, 2, 3].map((i) => (<SkeletonCard key={i} surface={theme.colors.surface}/>))}
-        </View>
-      </View>);
+        return (
+            <LoadingSpinner
+                title="Checking hostel availability"
+                message="We are gathering the latest room openings and accommodation details for you."
+            />
+        );
     }
-    return (<View style={[styles.screen, { backgroundColor: theme.colors.background }]}>
-      <StatusBar barStyle="light-content" backgroundColor="#1565C0" translucent={false}/>
 
-      <KeyboardAvoidingView style={styles.flex} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-        <FlatList data={filtered} keyExtractor={(item) => item._id} contentContainerStyle={styles.listContent} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled" keyboardDismissMode="on-drag" refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#1565C0" colors={['#1565C0']}/>} ListHeaderComponent={<ListHeader />} renderItem={({ item }) => (<HostelCard hostel={item} onPress={() => router.push(`/(student)/rooms/${item._id}`)}/>)} ListEmptyComponent={<View style={styles.emptyWrap}>
-            <MaterialCommunityIcons name="home-search" size={48} color="#BDBDBD"/>
-            <Text style={[styles.emptyTitle, { color: theme.colors.onSurface }]}>
-              No hostels found
-            </Text>
-            <Text style={[styles.emptySub, { color: theme.colors.onSurfaceVariant }]}>
-              {search ? `No results for "${search}"` : 'No hostels available right now.'}
-            </Text>
-            {search.length > 0 && (<TouchableOpacity style={styles.clearBtn} onPress={() => setSearch('')} activeOpacity={0.8}>
-                <Text style={styles.clearBtnText}>Clear Search</Text>
-              </TouchableOpacity>)}
-          </View>}/>
-      </KeyboardAvoidingView>
-    </View>);
+    const listHeader = (
+        <>
+            <StudentHero
+                insetTop={insets.top}
+                eyebrow="Accommodation"
+                title="Available hostels"
+                subtitle="Browse approved hostels, compare room availability, and move into the right option for your session."
+            >
+                <View className="mt-6 flex-row gap-2.5">
+                    <View
+                        style={[
+                            styles.heroStatCard,
+                            {
+                                backgroundColor: palette.heroGlass,
+                                borderColor: palette.heroBorder,
+                            },
+                        ]}
+                    >
+                        <Text className="text-2xl font-extrabold text-white">{filtered.length}</Text>
+                        <Text className="text-[12px] font-bold leading-[18px] text-white/80">Hostels</Text>
+                    </View>
+                    <View
+                        style={[
+                            styles.heroStatCard,
+                            {
+                                backgroundColor: palette.heroGlass,
+                                borderColor: palette.heroBorder,
+                            },
+                        ]}
+                    >
+                        <Text className="text-2xl font-extrabold text-white">{totalAvailable}</Text>
+                        <Text className="text-[12px] font-bold leading-[18px] text-white/80">Beds open</Text>
+                    </View>
+                    <View
+                        style={[
+                            styles.heroStatCard,
+                            {
+                                backgroundColor: palette.heroGlass,
+                                borderColor: palette.heroBorder,
+                            },
+                        ]}
+                    >
+                        <MaterialCommunityIcons
+                            name={studentGender === 'male' ? 'human-male' : 'human-female'}
+                            size={18}
+                            color="#FFFFFF"
+                        />
+                        <Text className="text-[12px] font-bold leading-[18px] text-white/80">
+                            {studentGender === 'male' ? 'Male hostels' : 'Female hostels'}
+                        </Text>
+                    </View>
+                </View>
+            </StudentHero>
+
+            <View className="-mt-[22px] px-[18px]">
+                <View
+                    style={[
+                        styles.searchPanel,
+                        {
+                            backgroundColor: palette.surface,
+                            borderColor: palette.border,
+                            shadowColor: palette.shadow,
+                        },
+                    ]}
+                >
+                    <View
+                        style={[
+                            styles.searchBar,
+                            {
+                                backgroundColor: palette.surfaceMuted,
+                                borderColor: palette.border,
+                            },
+                        ]}
+                    >
+                        <MaterialCommunityIcons name="magnify" size={18} color={palette.textSecondary} />
+                        <RNTextInput
+                            ref={searchRef}
+                            value={search}
+                            onChangeText={setSearch}
+                            placeholder="Search hostels by name"
+                            placeholderTextColor={palette.textMuted}
+                            style={[styles.searchInput, { color: palette.textPrimary }]}
+                            returnKeyType="search"
+                        />
+                        {search.length > 0 ? (
+                            <TouchableOpacity
+                                onPress={() => setSearch('')}
+                                hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                            >
+                                <MaterialCommunityIcons
+                                    name="close-circle"
+                                    size={16}
+                                    color={palette.textSecondary}
+                                />
+                            </TouchableOpacity>
+                        ) : null}
+                    </View>
+
+                    <View className="mt-[14px] flex-row items-center justify-between gap-[10px]">
+                        <View style={[styles.genderPill, { backgroundColor: palette.primarySoft }]}>
+                            <MaterialCommunityIcons
+                                name={studentGender === 'male' ? 'human-male' : 'human-female'}
+                                size={14}
+                                color={palette.primary}
+                            />
+                            <Text style={[styles.genderPillText, { color: palette.primary }]}>
+                                {studentGender === 'male' ? 'Male accommodation' : 'Female accommodation'}
+                            </Text>
+                        </View>
+
+                        <Text style={[styles.resultMeta, { color: palette.textSecondary }]}>
+                            {filtered.length} result{filtered.length === 1 ? '' : 's'}
+                        </Text>
+                    </View>
+                </View>
+
+                <View className="mb-[14px] mt-[22px] flex-row items-end justify-between gap-3">
+                    <View>
+                        <Text className="mb-1.5 text-[11px] font-extrabold uppercase tracking-[1px]" style={{ color: palette.textMuted }}>
+                            Matching options
+                        </Text>
+                        <Text className="text-[22px] font-extrabold tracking-[-0.5px]" style={{ color: palette.textPrimary }}>
+                            {search ? `Results for "${search}"` : 'Hostels ready to explore'}
+                        </Text>
+                    </View>
+                    <Text className="text-right text-[12px] font-bold" style={{ color: palette.textSecondary }}>
+                        {totalAvailable} bed{totalAvailable === 1 ? '' : 's'} open
+                    </Text>
+                </View>
+            </View>
+        </>
+    );
+
+    if (error) {
+        return (
+            <View className="flex-1" style={{ backgroundColor: palette.pageBackground }}>
+                <StatusBar barStyle="light-content" backgroundColor={palette.hero} />
+                <FlatList
+                    data={[]}
+                    renderItem={null}
+                    ListHeaderComponent={listHeader}
+                    ListFooterComponent={
+                        <View className="px-[18px] pb-36 pt-2">
+                            <View
+                                style={[
+                                    styles.stateCard,
+                                    {
+                                        backgroundColor: palette.surface,
+                                        borderColor: palette.border,
+                                        shadowColor: palette.shadow,
+                                    },
+                                ]}
+                            >
+                                <View style={[styles.stateIcon, { backgroundColor: palette.dangerSoft }]}>
+                                    <MaterialCommunityIcons name="wifi-off" size={24} color={palette.danger} />
+                                </View>
+                                <Text style={[styles.stateTitle, { color: palette.textPrimary }]}>
+                                    Could not load hostels
+                                </Text>
+                                <Text style={[styles.stateCopy, { color: palette.textSecondary }]}>
+                                    Check your connection and try again to refresh accommodation availability.
+                                </Text>
+                                <TouchableOpacity
+                                    style={[styles.primaryButton, { backgroundColor: palette.primary }]}
+                                    onPress={() => {
+                                        setLoading(true);
+                                        loadHostels();
+                                    }}
+                                    activeOpacity={0.9}
+                                >
+                                    <MaterialCommunityIcons name="refresh" size={16} color="#FFFFFF" />
+                                    <Text style={styles.primaryButtonText}>Retry</Text>
+                                </TouchableOpacity>
+                            </View>
+                        </View>
+                    }
+                    keyExtractor={(_, index) => `empty-${index}`}
+                />
+            </View>
+        );
+    }
+
+    return (
+        <View className="flex-1" style={{ backgroundColor: palette.pageBackground }}>
+            <StatusBar barStyle="light-content" backgroundColor={palette.hero} />
+
+            <KeyboardAvoidingView
+                className="flex-1"
+                behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+            >
+                <FlatList
+                    data={filtered}
+                    keyExtractor={(item) => item._id}
+                    contentContainerStyle={{ paddingBottom: 144 }}
+                    showsVerticalScrollIndicator={false}
+                    keyboardShouldPersistTaps="handled"
+                    keyboardDismissMode="on-drag"
+                    refreshControl={
+                        <RefreshControl
+                            refreshing={refreshing}
+                            onRefresh={onRefresh}
+                            tintColor={palette.primary}
+                            colors={[palette.primary]}
+                        />
+                    }
+                    ListHeaderComponent={listHeader}
+                    renderItem={({ item }) => (
+                        <View className="px-[18px]">
+                            <HostelCard
+                                hostel={item}
+                                onPress={() => router.push(`/(student)/rooms/${item._id}`)}
+                            />
+                        </View>
+                    )}
+                    ListEmptyComponent={
+                        <View className="px-[18px] pt-1.5">
+                            <View
+                                style={[
+                                    styles.stateCard,
+                                    {
+                                        backgroundColor: palette.surface,
+                                        borderColor: palette.border,
+                                        shadowColor: palette.shadow,
+                                    },
+                                ]}
+                            >
+                                <View style={[styles.stateIcon, { backgroundColor: palette.primarySoft }]}>
+                                    <MaterialCommunityIcons name="home-search" size={24} color={palette.primary} />
+                                </View>
+                                <Text style={[styles.stateTitle, { color: palette.textPrimary }]}>
+                                    No hostels found
+                                </Text>
+                                <Text style={[styles.stateCopy, { color: palette.textSecondary }]}>
+                                    {search
+                                        ? `No hostels match "${search}" right now. Try a different keyword.`
+                                        : 'There are no hostels available for your profile at the moment.'}
+                                </Text>
+                                {search.length > 0 ? (
+                                    <TouchableOpacity
+                                        style={[styles.secondaryButton, { backgroundColor: palette.primarySoft }]}
+                                        onPress={() => setSearch('')}
+                                        activeOpacity={0.9}
+                                    >
+                                        <Text style={[styles.secondaryButtonText, { color: palette.primary }]}>
+                                            Clear search
+                                        </Text>
+                                    </TouchableOpacity>
+                                ) : null}
+                            </View>
+                        </View>
+                    }
+                />
+            </KeyboardAvoidingView>
+        </View>
+    );
 }
-const skeletonStyles = StyleSheet.create({
-    card: {
-        flexDirection: 'row', borderRadius: 18, overflow: 'hidden',
-        shadowColor: '#000', shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.06, shadowRadius: 8, elevation: 2,
-    },
-    accent: { width: 5, backgroundColor: '#E0E0E0' },
-    body: { flex: 1, padding: 14 },
-    row: { flexDirection: 'row', alignItems: 'center', gap: 10 },
-    box: { backgroundColor: '#EBEBEB', borderRadius: 6 },
-});
+
 const styles = StyleSheet.create({
-    screen: { flex: 1 },
-    flex: { flex: 1 },
-    hero: {
-        backgroundColor: '#1565C0',
-        paddingHorizontal: 22,
-        paddingBottom: 28,
-        overflow: 'hidden',
-    },
-    bubble1: {
-        position: 'absolute', width: 220, height: 220, borderRadius: 110,
-        backgroundColor: 'rgba(255,255,255,0.06)', top: -80, right: -60,
-    },
-    bubble2: {
-        position: 'absolute', width: 140, height: 140, borderRadius: 70,
-        backgroundColor: 'rgba(255,255,255,0.05)', bottom: -50, left: -30,
-    },
-    bubble3: {
-        position: 'absolute', width: 70, height: 70, borderRadius: 35,
-        backgroundColor: 'rgba(255,255,255,0.07)', top: 20, right: 120,
-    },
-    heroEyebrow: {
-        color: 'rgba(255,255,255,0.65)', fontSize: 11, fontWeight: '600',
-        letterSpacing: 1.2, textTransform: 'uppercase', marginBottom: 6,
-    },
-    heroTitle: { color: '#fff', fontSize: 24, fontWeight: '800', marginBottom: 18 },
-    heroStats: {
-        flexDirection: 'row',
+    heroStatCard: {
+        flex: 1,
+        minHeight: 88,
+        borderRadius: 22,
+        paddingHorizontal: 14,
+        paddingVertical: 14,
+        alignItems: 'flex-start',
+        justifyContent: 'space-between',
         backgroundColor: 'rgba(255,255,255,0.12)',
-        borderRadius: 16,
-        paddingVertical: 12,
-        paddingHorizontal: 8,
+        borderWidth: 1,
+        borderColor: 'rgba(255,255,255,0.16)',
     },
-    heroStat: { flex: 1, alignItems: 'center' },
-    heroStatNum: { color: '#fff', fontSize: 18, fontWeight: '800' },
-    heroStatLabel: { color: 'rgba(255,255,255,0.65)', fontSize: 10, marginTop: 2, fontWeight: '500' },
-    heroStatDivider: { width: 1, backgroundColor: 'rgba(255,255,255,0.2)', marginVertical: 4 },
-    controlsWrap: { paddingHorizontal: 18, paddingTop: 16, gap: 10 },
+    searchPanel: {
+        borderRadius: 28,
+        borderWidth: 1,
+        padding: 18,
+        shadowOffset: { width: 0, height: 14 },
+        shadowOpacity: 0.14,
+        shadowRadius: 24,
+        elevation: 10,
+    },
     searchBar: {
-        flexDirection: 'row', alignItems: 'center', gap: 8,
-        paddingHorizontal: 14, paddingVertical: 10,
-        borderRadius: 14,
-        shadowColor: '#000', shadowOffset: { width: 0, height: 1 },
-        shadowOpacity: 0.06, shadowRadius: 6, elevation: 2,
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 8,
+        borderRadius: 20,
+        borderWidth: 1,
+        paddingHorizontal: 14,
+        paddingVertical: 12,
     },
-    searchInput: { flex: 1, fontSize: 14, padding: 0 },
-    sectionRow: {
-        flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
-        paddingHorizontal: 18, paddingTop: 18, paddingBottom: 10,
+    searchInput: {
+        flex: 1,
+        fontSize: 14,
+        padding: 0,
     },
-    sectionLabel: { fontSize: 11, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 1.1 },
-    sectionCount: { fontSize: 12, fontWeight: '500' },
-    listContent: { paddingHorizontal: 18, paddingBottom: 32 },
-    emptyWrap: { alignItems: 'center', paddingTop: 40, gap: 8 },
-    emptyTitle: { fontSize: 16, fontWeight: '700', marginTop: 8 },
-    emptySub: { fontSize: 13, textAlign: 'center' },
-    clearBtn: {
-        flexDirection: 'row', alignItems: 'center',
-        marginTop: 10, backgroundColor: '#E3F2FD',
-        paddingHorizontal: 18, paddingVertical: 9, borderRadius: 20,
+    genderPill: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 6,
+        borderRadius: 999,
+        paddingHorizontal: 11,
+        paddingVertical: 8,
     },
-    clearBtnText: { color: '#1565C0', fontWeight: '700', fontSize: 13 },
-    errorWrap: { paddingHorizontal: 18, paddingTop: 22 },
-    errorCard: {
-        borderRadius: 18, padding: 28, alignItems: 'center', gap: 8,
-        shadowColor: '#000', shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.06, shadowRadius: 8, elevation: 2,
+    genderPillText: {
+        fontSize: 12,
+        fontWeight: '800',
     },
-    errorTitle: { fontSize: 15, fontWeight: '700', marginTop: 4 },
-    errorSub: { fontSize: 13, textAlign: 'center', lineHeight: 18 },
-    retryBtn: {
-        flexDirection: 'row', alignItems: 'center', gap: 6,
-        backgroundColor: '#1565C0', paddingHorizontal: 20,
-        paddingVertical: 10, borderRadius: 20, marginTop: 6,
+    resultMeta: {
+        fontSize: 12,
+        fontWeight: '700',
     },
-    retryText: { color: '#fff', fontWeight: '700', fontSize: 13 },
+    stateCard: {
+        borderRadius: 28,
+        borderWidth: 1,
+        paddingHorizontal: 24,
+        paddingVertical: 28,
+        alignItems: 'center',
+        shadowOffset: { width: 0, height: 14 },
+        shadowOpacity: 0.14,
+        shadowRadius: 24,
+        elevation: 10,
+    },
+    stateIcon: {
+        width: 54,
+        height: 54,
+        borderRadius: 18,
+        alignItems: 'center',
+        justifyContent: 'center',
+        marginBottom: 16,
+    },
+    stateTitle: {
+        fontSize: 20,
+        fontWeight: '800',
+        textAlign: 'center',
+        marginBottom: 8,
+    },
+    stateCopy: {
+        fontSize: 14,
+        lineHeight: 21,
+        textAlign: 'center',
+        marginBottom: 18,
+    },
+    primaryButton: {
+        minHeight: 50,
+        borderRadius: 18,
+        paddingHorizontal: 18,
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: 8,
+    },
+    primaryButtonText: {
+        color: '#FFFFFF',
+        fontSize: 14,
+        fontWeight: '800',
+    },
+    secondaryButton: {
+        minHeight: 48,
+        borderRadius: 18,
+        paddingHorizontal: 18,
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    secondaryButtonText: {
+        fontSize: 14,
+        fontWeight: '800',
+    },
 });

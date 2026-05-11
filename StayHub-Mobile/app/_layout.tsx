@@ -1,11 +1,14 @@
 import React, { useEffect, useRef } from 'react';
 import { Stack, useRouter, useSegments } from 'expo-router';
-import { PaperProvider, MD3LightTheme, MD3DarkTheme } from 'react-native-paper';
+import { View } from 'react-native';
+import { PaperProvider } from 'react-native-paper';
 import { useAuthStore } from '../store/authStore';
 import { useThemeStore } from '../store/themeStore';
 import { studentAPI } from '../services/api';
 import { addNotificationResponseListener, configureForegroundNotifications, getLastNotificationResponseAsync, registerForPushNotificationsAsync, } from '../services/pushNotifications';
 import { toMobileNotificationRoute } from '../utils/notificationRoutes';
+import { getPaperTheme, themeVars } from '../theme/tokens';
+import '../global.css';
 function AuthGate() {
     const { isAuthenticated, isLoading } = useAuthStore();
     const segments = useSegments();
@@ -95,22 +98,19 @@ export default function RootLayout() {
         loadAuth();
         loadTheme();
     }, []);
-    const paperTheme = isDark
-        ? {
-            ...MD3DarkTheme,
-            colors: { ...MD3DarkTheme.colors, primary: '#42A5F5', secondary: '#0288D1' },
-        }
-        : {
-            ...MD3LightTheme,
-            colors: { ...MD3LightTheme.colors, primary: '#1565C0', secondary: '#0288D1' },
-        };
+    const paperTheme = getPaperTheme(isDark);
     return (<PaperProvider theme={paperTheme}>
-      <AuthGate />
-      <PushNotificationBridge />
-      <Stack screenOptions={{ headerShown: false }}>
-        <Stack.Screen name="(auth)" options={{ headerShown: false }}/>
-        <Stack.Screen name="(student)" options={{ headerShown: false }}/>
-        <Stack.Screen name="index" options={{ headerShown: false }}/>
-      </Stack>
+      <View
+        style={isDark ? themeVars.dark : themeVars.light}
+        className={isDark ? 'dark flex-1 bg-background' : 'flex-1 bg-background'}
+      >
+        <AuthGate />
+        <PushNotificationBridge />
+        <Stack screenOptions={{ headerShown: false }}>
+          <Stack.Screen name="(auth)" options={{ headerShown: false }}/>
+          <Stack.Screen name="(student)" options={{ headerShown: false }}/>
+          <Stack.Screen name="index" options={{ headerShown: false }}/>
+        </Stack>
+      </View>
     </PaperProvider>);
 }

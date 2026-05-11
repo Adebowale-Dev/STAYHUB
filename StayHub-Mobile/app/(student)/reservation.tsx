@@ -5,6 +5,9 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { studentAPI } from '../../services/api';
+import { LoadingSpinner } from '../../components/LoadingSpinner';
+import { getStudentPalette } from '../../constants/design';
+import { StudentHero } from '../../components/ui/StudentHero';
 import type { GroupMember, InvitationHistoryEntry, Reservation, ReservationInviteTrackerItem } from '../../types';
 
 type IconName = React.ComponentProps<typeof MaterialCommunityIcons>['name'];
@@ -16,89 +19,14 @@ type Tone = {
     icon: IconName;
 };
 
-const RESERVATION_STATUS_META: Record<Reservation['status'], Tone> = {
-    temporary: {
-        label: 'Invite pending',
-        color: '#F57C00',
-        backgroundColor: '#FFF3E0',
-        icon: 'clock-outline',
-    },
-    confirmed: {
-        label: 'Confirmed',
-        color: '#2E7D32',
-        backgroundColor: '#E8F5E9',
-        icon: 'check-circle-outline',
-    },
-    pending: {
-        label: 'Pending',
-        color: '#EF6C00',
-        backgroundColor: '#FFF3E0',
-        icon: 'progress-clock',
-    },
-    cancelled: {
-        label: 'Cancelled',
-        color: '#C62828',
-        backgroundColor: '#FFEBEE',
-        icon: 'close-circle-outline',
-    },
-    checked_in: {
-        label: 'Checked in',
-        color: '#1565C0',
-        backgroundColor: '#E3F2FD',
-        icon: 'home-city-outline',
-    },
-    expired: {
-        label: 'Expired',
-        color: '#6D4C41',
-        backgroundColor: '#EFEBE9',
-        icon: 'timer-off-outline',
-    },
-};
-
-const MEMBER_STATUS_META: Record<string, Tone> = {
-    approved: {
-        label: 'Approved',
-        color: '#2E7D32',
-        backgroundColor: '#E8F5E9',
-        icon: 'check-circle-outline',
-    },
-    confirmed: {
-        label: 'Confirmed',
-        color: '#2E7D32',
-        backgroundColor: '#E8F5E9',
-        icon: 'check-circle-outline',
-    },
-    invited: {
-        label: 'Invited',
-        color: '#EF6C00',
-        backgroundColor: '#FFF3E0',
-        icon: 'email-fast-outline',
-    },
-    temporary: {
-        label: 'Awaiting approval',
-        color: '#F57C00',
-        backgroundColor: '#FFF3E0',
-        icon: 'clock-outline',
-    },
-    pending: {
-        label: 'Pending',
-        color: '#EF6C00',
-        backgroundColor: '#FFF3E0',
-        icon: 'progress-clock',
-    },
-    rejected: {
-        label: 'Rejected',
-        color: '#C62828',
-        backgroundColor: '#FFEBEE',
-        icon: 'close-circle-outline',
-    },
-    expired: {
-        label: 'Expired',
-        color: '#6D4C41',
-        backgroundColor: '#EFEBE9',
-        icon: 'timer-off-outline',
-    },
-};
+function buildTone(
+    label: string,
+    icon: IconName,
+    color: string,
+    backgroundColor: string,
+): Tone {
+    return { label, icon, color, backgroundColor };
+}
 
 function formatDateLabel(value?: string | null) {
     if (!value) {
@@ -146,8 +74,34 @@ export default function ReservationScreen() {
     const [newMatrics, setNewMatrics] = useState<string[]>(['']);
     const [addingMembers, setAddingMembers] = useState(false);
     const theme = useTheme();
+    const palette = getStudentPalette(theme.dark);
     const insets = useSafeAreaInsets();
     const router = useRouter();
+    const primaryTone = buildTone('Ready', 'home-city-outline', palette.primary, palette.primarySoft);
+    const successTone = buildTone('Approved', 'check-circle-outline', palette.success, palette.successSoft);
+    const warningTone = buildTone('Pending', 'clock-outline', palette.warning, palette.warningSoft);
+    const infoTone = buildTone('Seen', 'eye-outline', palette.primary, palette.primarySoft);
+    const dangerTone = buildTone('Rejected', 'close-circle-outline', palette.danger, palette.dangerSoft);
+    const neutralTone = buildTone('Expired', 'timer-off-outline', palette.textSecondary, palette.surfaceMuted);
+
+    const RESERVATION_STATUS_META: Record<Reservation['status'], Tone> = {
+        temporary: { ...warningTone, label: 'Invite pending' },
+        confirmed: { ...successTone, label: 'Confirmed' },
+        pending: { ...warningTone, label: 'Pending', icon: 'progress-clock' },
+        cancelled: { ...dangerTone, label: 'Cancelled' },
+        checked_in: { ...primaryTone, label: 'Checked in' },
+        expired: neutralTone,
+    };
+
+    const MEMBER_STATUS_META: Record<string, Tone> = {
+        approved: successTone,
+        confirmed: { ...successTone, label: 'Confirmed' },
+        invited: { ...warningTone, label: 'Invited', icon: 'email-fast-outline' },
+        temporary: { ...warningTone, label: 'Awaiting approval' },
+        pending: { ...warningTone, label: 'Pending', icon: 'progress-clock' },
+        rejected: dangerTone,
+        expired: neutralTone,
+    };
 
     const load = async () => {
         try {
@@ -359,46 +313,21 @@ export default function ReservationScreen() {
 
     const getHistoryMeta = (entry: InvitationHistoryEntry): Tone => {
         if (entry.action === 'viewed') {
-            return {
-                label: 'Seen',
-                color: '#1565C0',
-                backgroundColor: '#E3F2FD',
-                icon: 'eye-outline',
-            };
+            return infoTone;
         }
         if (entry.action === 'approved') {
-            return {
-                label: 'Approved',
-                color: '#2E7D32',
-                backgroundColor: '#E8F5E9',
-                icon: 'check-circle-outline',
-            };
+            return successTone;
         }
 
         if (entry.action === 'rejected') {
-            return {
-                label: 'Rejected',
-                color: '#C62828',
-                backgroundColor: '#FFEBEE',
-                icon: 'close-circle-outline',
-            };
+            return dangerTone;
         }
 
         if (entry.action === 'expired') {
-            return {
-                label: 'Expired',
-                color: '#6D4C41',
-                backgroundColor: '#EFEBE9',
-                icon: 'timer-off-outline',
-            };
+            return neutralTone;
         }
 
-        return {
-            label: 'Pending',
-            color: '#EF6C00',
-            backgroundColor: '#FFF3E0',
-            icon: 'clock-outline',
-        };
+        return warningTone;
     };
 
     const getHistoryTitle = (entry: InvitationHistoryEntry) => {
@@ -463,18 +392,18 @@ export default function ReservationScreen() {
         }
 
         return (
-            <View style={[styles.panel, { backgroundColor: theme.colors.surface }]}>
+            <View style={[styles.panel, { backgroundColor: palette.surface, borderColor: palette.border, shadowColor: palette.shadow }]}>
                 <View style={styles.panelHeader}>
                     <View>
-                        <Text style={[styles.panelEyebrow, { color: theme.colors.onSurfaceVariant }]}>Timeline</Text>
-                        <Text style={[styles.panelTitle, { color: theme.colors.onSurface }]}>Invitation history</Text>
+                        <Text style={[styles.panelEyebrow, { color: palette.textMuted }]}>Timeline</Text>
+                        <Text style={[styles.panelTitle, { color: palette.textPrimary }]}>Invitation history</Text>
                     </View>
-                    <View style={styles.headerBadge}>
+                    <View style={[styles.headerBadge, { backgroundColor: palette.primary }]}>
                         <Text style={styles.headerBadgeText}>{invitationHistory.length}</Text>
                     </View>
                 </View>
 
-                <Divider style={{ backgroundColor: theme.colors.surfaceVariant }} />
+                <Divider style={{ backgroundColor: palette.divider }} />
 
                 <View style={styles.timelineList}>
                     {invitationHistory.slice(0, 8).map((entry, index) => {
@@ -487,22 +416,22 @@ export default function ReservationScreen() {
                                     <View style={[styles.timelineIconBox, { backgroundColor: meta.backgroundColor }]}>
                                         <MaterialCommunityIcons name={meta.icon} size={18} color={meta.color} />
                                     </View>
-                                    {!isLast ? <View style={[styles.timelineLine, { backgroundColor: theme.colors.surfaceVariant }]} /> : null}
+                                    {!isLast ? <View style={[styles.timelineLine, { backgroundColor: palette.divider }]} /> : null}
                                 </View>
 
                                 <View style={styles.timelineBody}>
                                     <View style={styles.timelineHeader}>
-                                        <Text style={[styles.timelineTitle, { color: theme.colors.onSurface }]}>
+                                        <Text style={[styles.timelineTitle, { color: palette.textPrimary }]}>
                                             {getHistoryTitle(entry)}
                                         </Text>
                                         <View style={[styles.statusPill, { backgroundColor: meta.backgroundColor }]}>
                                             <Text style={[styles.statusPillText, { color: meta.color }]}>{meta.label}</Text>
                                         </View>
                                     </View>
-                                    <Text style={[styles.timelineDescription, { color: theme.colors.onSurfaceVariant }]}>
+                                    <Text style={[styles.timelineDescription, { color: palette.textSecondary }]}>
                                         {getHistoryDescription(entry)}
                                     </Text>
-                                    <Text style={[styles.timelineTimestamp, { color: theme.colors.onSurfaceVariant }]}>
+                                    <Text style={[styles.timelineTimestamp, { color: palette.textSecondary }]}>
                                         {formatDateTimeLabel(entry.createdAt)}
                                     </Text>
                                 </View>
@@ -515,43 +444,18 @@ export default function ReservationScreen() {
     };
     const getTrackerTone = (status?: ReservationInviteTrackerItem['status']): Tone => {
         if (status === 'seen') {
-            return {
-                label: 'Seen',
-                color: '#1565C0',
-                backgroundColor: '#E3F2FD',
-                icon: 'eye-outline',
-            };
+            return infoTone;
         }
         if (status === 'approved') {
-            return {
-                label: 'Approved',
-                color: '#2E7D32',
-                backgroundColor: '#E8F5E9',
-                icon: 'check-circle-outline',
-            };
+            return successTone;
         }
         if (status === 'rejected') {
-            return {
-                label: 'Rejected',
-                color: '#C62828',
-                backgroundColor: '#FFEBEE',
-                icon: 'close-circle-outline',
-            };
+            return dangerTone;
         }
         if (status === 'expired') {
-            return {
-                label: 'Expired',
-                color: '#6D4C41',
-                backgroundColor: '#EFEBE9',
-                icon: 'timer-off-outline',
-            };
+            return neutralTone;
         }
-        return {
-            label: 'Sent',
-            color: '#EF6C00',
-            backgroundColor: '#FFF3E0',
-            icon: 'email-fast-outline',
-        };
+        return { ...warningTone, label: 'Sent', icon: 'email-fast-outline' };
     };
     const renderInviteTrackerCard = () => {
         const tracker = reservation?.inviteTracker ?? [];
@@ -559,18 +463,18 @@ export default function ReservationScreen() {
             return null;
         }
         return (
-            <View style={[styles.panel, { backgroundColor: theme.colors.surface }]}>
+            <View style={[styles.panel, { backgroundColor: palette.surface, borderColor: palette.border, shadowColor: palette.shadow }]}>
                 <View style={styles.panelHeader}>
                     <View>
-                        <Text style={[styles.panelEyebrow, { color: theme.colors.onSurfaceVariant }]}>Tracker</Text>
-                        <Text style={[styles.panelTitle, { color: theme.colors.onSurface }]}>Friend invite tracker</Text>
+                        <Text style={[styles.panelEyebrow, { color: palette.textMuted }]}>Tracker</Text>
+                        <Text style={[styles.panelTitle, { color: palette.textPrimary }]}>Friend invite tracker</Text>
                     </View>
-                    <View style={styles.headerBadge}>
+                    <View style={[styles.headerBadge, { backgroundColor: palette.primary }]}>
                         <Text style={styles.headerBadgeText}>{tracker.length}</Text>
                     </View>
                 </View>
 
-                <Divider style={{ backgroundColor: theme.colors.surfaceVariant }} />
+                <Divider style={{ backgroundColor: palette.divider }} />
 
                 <View style={styles.trackerList}>
                     {tracker.map((item, index) => {
@@ -593,7 +497,7 @@ export default function ReservationScreen() {
                                     getInitials(item.student?.firstName, item.student?.lastName, 'FR'),
                                     tone.color,
                                 )}
-                                <Text style={[styles.trackerMessage, { color: theme.colors.onSurfaceVariant }]}>
+                                <Text style={[styles.trackerMessage, { color: palette.textSecondary }]}>
                                     {item.message || 'Invite created and waiting for a response.'}
                                 </Text>
                                 {item.requiresPaymentBeforeApproval &&
@@ -620,15 +524,15 @@ export default function ReservationScreen() {
         initials: string,
         highlightColor: string,
     ) => (
-        <View style={[styles.memberCard, { backgroundColor: theme.colors.background }]}>
+        <View style={[styles.memberCard, { backgroundColor: palette.surfaceMuted, borderColor: palette.border }]}>
             <View style={[styles.memberAvatar, { backgroundColor: highlightColor }]}>
                 <Text style={styles.memberAvatarText}>{initials}</Text>
             </View>
             <View style={styles.memberCopy}>
-                <Text style={[styles.memberName, { color: theme.colors.onSurface }]} numberOfLines={1}>
+                <Text style={[styles.memberName, { color: palette.textPrimary }]} numberOfLines={1}>
                     {name}
                 </Text>
-                <Text style={[styles.memberSubtitle, { color: theme.colors.onSurfaceVariant }]} numberOfLines={2}>
+                <Text style={[styles.memberSubtitle, { color: palette.textSecondary }]} numberOfLines={2}>
                     {subtitle}
                 </Text>
             </View>
@@ -640,58 +544,48 @@ export default function ReservationScreen() {
 
     if (loading) {
         return (
-            <View style={[styles.loadingScreen, { backgroundColor: theme.colors.background }]}>
-                <StatusBar barStyle="light-content" backgroundColor="#1565C0" />
-                <View style={[styles.hero, { paddingTop: insets.top + 20 }]}>
-                    <View style={styles.bubbleLarge} />
-                    <View style={styles.bubbleSmall} />
-                    <View style={styles.bubbleMid} />
-                </View>
-                <View style={styles.loadingBody}>
-                    <ActivityIndicator size="large" color="#1565C0" />
-                </View>
-            </View>
+            <LoadingSpinner
+                title="Loading reservation details"
+                message="We are pulling your room assignment, invite history, and current approval status."
+            />
         );
     }
 
     if (!reservation) {
         return (
-            <View style={[styles.screen, { backgroundColor: theme.colors.background }]}>
-                <StatusBar barStyle="light-content" backgroundColor="#1565C0" />
+            <View style={[styles.screen, { backgroundColor: palette.pageBackground }]}>
+                <StatusBar barStyle="light-content" backgroundColor="#08162B" />
                 <ScrollView
                     style={styles.flex}
                     contentContainerStyle={styles.content}
-                    refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#1565C0" colors={['#1565C0']} />}
+                    refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={palette.primary} colors={[palette.primary]} />}
                     showsVerticalScrollIndicator={false}
                 >
-                    <View style={[styles.hero, { paddingTop: insets.top + 20 }]}>
-                        <View style={styles.bubbleLarge} />
-                        <View style={styles.bubbleSmall} />
-                        <View style={styles.bubbleMid} />
-                        <Text style={styles.heroEyebrow}>My reservation</Text>
-                        <Text style={styles.heroTitle}>No room reserved yet</Text>
-                        <Text style={styles.heroCopy}>
-                            Browse hostels, compare available rooms, and reserve the best space before it fills up.
-                        </Text>
+                    <StudentHero
+                        insetTop={insets.top}
+                        eyebrow="My reservation"
+                        title="No room reserved yet"
+                        subtitle="Browse hostels, compare available rooms, and reserve the best space before it fills up."
+                    >
                         <TouchableOpacity style={styles.heroButton} activeOpacity={0.85} onPress={() => router.push('/(student)/hostels')}>
-                            <MaterialCommunityIcons name="home-search-outline" size={18} color="#1565C0" />
-                            <Text style={styles.heroButtonText}>Browse hostels</Text>
+                            <MaterialCommunityIcons name="home-search-outline" size={18} color={palette.primary} />
+                            <Text style={[styles.heroButtonText, { color: palette.primary }]}>Browse hostels</Text>
                         </TouchableOpacity>
-                    </View>
+                    </StudentHero>
 
-                    <View style={styles.section}>
-                        <View style={[styles.emptyPanel, { backgroundColor: theme.colors.surface }]}>
-                            <View style={styles.emptyIconWrap}>
-                                <MaterialCommunityIcons name="bed-empty" size={34} color="#1565C0" />
+                    <View style={styles.body}>
+                        <View style={[styles.emptyPanel, { backgroundColor: palette.surface, borderColor: palette.border, shadowColor: palette.shadow }]}>
+                            <View style={[styles.emptyIconWrap, { backgroundColor: palette.primarySoft }]}>
+                                <MaterialCommunityIcons name="bed-empty" size={34} color={palette.primary} />
                             </View>
-                            <Text style={[styles.emptyTitle, { color: theme.colors.onSurface }]}>Nothing reserved yet</Text>
-                            <Text style={[styles.emptyCopy, { color: theme.colors.onSurfaceVariant }]}>
+                            <Text style={[styles.emptyTitle, { color: palette.textPrimary }]}>Nothing reserved yet</Text>
+                            <Text style={[styles.emptyCopy, { color: palette.textSecondary }]}>
                                 When you reserve a room or receive an invite from a friend, it will show up here.
                             </Text>
                         </View>
-                    </View>
 
-                    <View style={styles.section}>{renderHistoryCard()}</View>
+                        <View style={styles.section}>{renderHistoryCard()}</View>
+                    </View>
                 </ScrollView>
             </View>
         );
@@ -719,30 +613,25 @@ export default function ReservationScreen() {
 
     return (
         <>
-            <View style={[styles.screen, { backgroundColor: theme.colors.background }]}>
-                <StatusBar barStyle="light-content" backgroundColor="#1565C0" />
+            <View style={[styles.screen, { backgroundColor: palette.pageBackground }]}>
+                <StatusBar barStyle="light-content" backgroundColor="#08162B" />
 
                 <ScrollView
                     style={styles.flex}
                     contentContainerStyle={styles.content}
-                    refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#1565C0" colors={['#1565C0']} />}
+                    refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={palette.primary} colors={[palette.primary]} />}
                     showsVerticalScrollIndicator={false}
                 >
-                    <View style={[styles.hero, { paddingTop: insets.top + 20 }]}>
-                        <View style={styles.bubbleLarge} />
-                        <View style={styles.bubbleSmall} />
-                        <View style={styles.bubbleMid} />
-
-                        <Text style={styles.heroEyebrow}>My reservation</Text>
-                        <Text style={styles.heroTitle}>
-                            {reservation.room?.roomNumber ? `Room ${reservation.room.roomNumber}` : 'Reserved room'}
-                        </Text>
-                        <Text style={styles.heroCopy}>
-                            {isTemporaryInvite
+                    <StudentHero
+                        insetTop={insets.top}
+                        eyebrow="My reservation"
+                        title={reservation.room?.roomNumber ? `Room ${reservation.room.roomNumber}` : 'Reserved room'}
+                        subtitle={
+                            isTemporaryInvite
                                 ? `${reservedByName} reserved this room for you. Review it before the approval window closes.`
-                                : `${reservation.hostel?.name ?? 'Your hostel'} is currently assigned to you.`}
-                        </Text>
-
+                                : `${reservation.hostel?.name ?? 'Your hostel'} is currently assigned to you.`
+                        }
+                    >
                         <View style={styles.heroMetaRow}>
                             <View style={[styles.heroMetaChip, { backgroundColor: statusMeta.backgroundColor }]}>
                                 <MaterialCommunityIcons name={statusMeta.icon} size={14} color={statusMeta.color} />
@@ -753,29 +642,30 @@ export default function ReservationScreen() {
                                 <Text style={styles.heroGhostChipText}>{reservation.hostel?.name ?? 'Hostel'}</Text>
                             </View>
                         </View>
-                    </View>
+                    </StudentHero>
 
-                    <View style={styles.section}>
+                    <View style={styles.body}>
+                        <View style={styles.section}>
                         {isTemporaryInvite ? (
-                            <View style={styles.inviteBanner}>
+                            <View style={[styles.inviteBanner, { backgroundColor: palette.primarySoft }]}>
                                 <View style={styles.inviteBannerTop}>
-                                    <View style={styles.inviteBannerIcon}>
-                                        <MaterialCommunityIcons name="email-fast-outline" size={20} color="#1565C0" />
+                                    <View style={[styles.inviteBannerIcon, { backgroundColor: palette.surface }]}>
+                                        <MaterialCommunityIcons name="email-fast-outline" size={20} color={palette.primary} />
                                     </View>
                                     <View style={styles.inviteBannerCopy}>
-                                        <Text style={styles.inviteBannerTitle}>Waiting for your approval</Text>
-                                        <Text style={styles.inviteBannerText}>
+                                        <Text style={[styles.inviteBannerTitle, { color: palette.primaryStrong }]}>Waiting for your approval</Text>
+                                        <Text style={[styles.inviteBannerText, { color: palette.textSecondary }]}>
                                             Accept this room once your payment or network issue is sorted out.
                                         </Text>
                                         {approvalDeadline ? (
-                                            <Text style={styles.inviteBannerDeadline}>Approval ends {approvalDeadline}</Text>
+                                            <Text style={[styles.inviteBannerDeadline, { color: palette.primary }]}>Approval ends {approvalDeadline}</Text>
                                         ) : null}
                                     </View>
                                 </View>
 
                                 <View style={styles.inviteActionRow}>
                                     <TouchableOpacity
-                                        style={[styles.primaryAction, responding !== null && styles.disabledAction]}
+                                        style={[styles.primaryAction, { backgroundColor: palette.primary }, responding !== null && styles.disabledAction]}
                                         activeOpacity={0.85}
                                         onPress={() => handleInvitationResponse('approve')}
                                         disabled={responding !== null}
@@ -791,17 +681,24 @@ export default function ReservationScreen() {
                                     </TouchableOpacity>
 
                                     <TouchableOpacity
-                                        style={[styles.secondaryAction, responding !== null && styles.disabledAction]}
+                                        style={[
+                                            styles.secondaryAction,
+                                            {
+                                                backgroundColor: palette.surface,
+                                                borderColor: palette.dangerSoft,
+                                            },
+                                            responding !== null && styles.disabledAction,
+                                        ]}
                                         activeOpacity={0.85}
                                         onPress={() => handleInvitationResponse('reject')}
                                         disabled={responding !== null}
                                     >
                                         {responding === 'reject' ? (
-                                            <ActivityIndicator size="small" color="#C62828" />
+                                            <ActivityIndicator size="small" color={palette.danger} />
                                         ) : (
                                             <>
-                                                <MaterialCommunityIcons name="close-circle-outline" size={18} color="#C62828" />
-                                                <Text style={styles.secondaryActionText}>Reject</Text>
+                                                <MaterialCommunityIcons name="close-circle-outline" size={18} color={palette.danger} />
+                                                <Text style={[styles.secondaryActionText, { color: palette.danger }]}>Reject</Text>
                                             </>
                                         )}
                                     </TouchableOpacity>
@@ -813,25 +710,41 @@ export default function ReservationScreen() {
                             <View style={[
                                 styles.feedbackBanner,
                                 actionFeedback.tone === 'success' ? styles.feedbackBannerSuccess : styles.feedbackBannerInfo,
+                                {
+                                    backgroundColor: actionFeedback.tone === 'success'
+                                        ? palette.successSoft
+                                        : palette.primarySoft,
+                                },
                             ]}>
-                                <View style={styles.feedbackBannerIcon}>
+                                <View style={[styles.feedbackBannerIcon, { backgroundColor: palette.surface }]}>
                                     <MaterialCommunityIcons
                                         name={actionFeedback.tone === 'success' ? 'check-circle-outline' : 'information-outline'}
                                         size={18}
-                                        color={actionFeedback.tone === 'success' ? '#2E7D32' : '#1565C0'}
+                                        color={actionFeedback.tone === 'success' ? palette.success : palette.primary}
                                     />
                                 </View>
-                                <Text style={actionFeedback.tone === 'success' ? styles.feedbackBannerTextSuccess : styles.feedbackBannerTextInfo}>
+                                <Text
+                                    style={[
+                                        actionFeedback.tone === 'success'
+                                            ? styles.feedbackBannerTextSuccess
+                                            : styles.feedbackBannerTextInfo,
+                                        {
+                                            color: actionFeedback.tone === 'success'
+                                                ? palette.success
+                                                : palette.primaryStrong,
+                                        },
+                                    ]}
+                                >
                                     {actionFeedback.message}
                                 </Text>
                             </View>
                         ) : null}
 
-                        <View style={[styles.panel, { backgroundColor: theme.colors.surface }]}>
+                        <View style={[styles.panel, { backgroundColor: palette.surface, borderColor: palette.border, shadowColor: palette.shadow }]}>
                             <View style={styles.panelHeader}>
                                 <View>
-                                    <Text style={[styles.panelEyebrow, { color: theme.colors.onSurfaceVariant }]}>Overview</Text>
-                                    <Text style={[styles.panelTitle, { color: theme.colors.onSurface }]}>Accommodation details</Text>
+                                    <Text style={[styles.panelEyebrow, { color: palette.textMuted }]}>Overview</Text>
+                                    <Text style={[styles.panelTitle, { color: palette.textPrimary }]}>Accommodation details</Text>
                                 </View>
                                 <View style={[styles.statusPill, { backgroundColor: statusMeta.backgroundColor }]}>
                                     <Text style={[styles.statusPillText, { color: statusMeta.color }]}>{statusMeta.label}</Text>
@@ -839,42 +752,42 @@ export default function ReservationScreen() {
                             </View>
 
                             <View style={styles.statGrid}>
-                                <View style={[styles.statCard, { backgroundColor: theme.colors.background }]}>
-                                    <View style={[styles.statIconBox, { backgroundColor: '#E3F2FD' }]}>
-                                        <MaterialCommunityIcons name="home-city-outline" size={18} color="#1565C0" />
+                                <View style={[styles.statCard, { backgroundColor: palette.surfaceMuted, borderColor: palette.border }]}>
+                                    <View style={[styles.statIconBox, { backgroundColor: palette.primarySoft }]}>
+                                        <MaterialCommunityIcons name="home-city-outline" size={18} color={palette.primary} />
                                     </View>
-                                    <Text style={[styles.statLabel, { color: theme.colors.onSurfaceVariant }]}>Hostel</Text>
-                                    <Text style={[styles.statValue, { color: theme.colors.onSurface }]} numberOfLines={2}>
+                                    <Text style={[styles.statLabel, { color: palette.textMuted }]}>Hostel</Text>
+                                    <Text style={[styles.statValue, { color: palette.textPrimary }]} numberOfLines={2}>
                                         {reservation.hostel?.name ?? '-'}
                                     </Text>
                                 </View>
 
-                                <View style={[styles.statCard, { backgroundColor: theme.colors.background }]}>
-                                    <View style={[styles.statIconBox, { backgroundColor: '#E0F2F1' }]}>
-                                        <MaterialCommunityIcons name="bed-outline" size={18} color="#00796B" />
+                                <View style={[styles.statCard, { backgroundColor: palette.surfaceMuted, borderColor: palette.border }]}>
+                                    <View style={[styles.statIconBox, { backgroundColor: palette.successSoft }]}>
+                                        <MaterialCommunityIcons name="bed-outline" size={18} color={palette.success} />
                                     </View>
-                                    <Text style={[styles.statLabel, { color: theme.colors.onSurfaceVariant }]}>Room</Text>
-                                    <Text style={[styles.statValue, { color: theme.colors.onSurface }]}>
+                                    <Text style={[styles.statLabel, { color: palette.textMuted }]}>Room</Text>
+                                    <Text style={[styles.statValue, { color: palette.textPrimary }]}>
                                         {reservation.room?.roomNumber ?? '-'}
                                     </Text>
                                 </View>
 
-                                <View style={[styles.statCard, { backgroundColor: theme.colors.background }]}>
-                                    <View style={[styles.statIconBox, { backgroundColor: '#FFF3E0' }]}>
-                                        <MaterialCommunityIcons name="account-group-outline" size={18} color="#EF6C00" />
+                                <View style={[styles.statCard, { backgroundColor: palette.surfaceMuted, borderColor: palette.border }]}>
+                                    <View style={[styles.statIconBox, { backgroundColor: palette.warningSoft }]}>
+                                        <MaterialCommunityIcons name="account-group-outline" size={18} color={palette.warning} />
                                     </View>
-                                    <Text style={[styles.statLabel, { color: theme.colors.onSurfaceVariant }]}>Capacity</Text>
-                                    <Text style={[styles.statValue, { color: theme.colors.onSurface }]}>
+                                    <Text style={[styles.statLabel, { color: palette.textMuted }]}>Capacity</Text>
+                                    <Text style={[styles.statValue, { color: palette.textPrimary }]}>
                                         {reservation.room?.capacity ?? '-'} students
                                     </Text>
                                 </View>
 
-                                <View style={[styles.statCard, { backgroundColor: theme.colors.background }]}>
-                                    <View style={[styles.statIconBox, { backgroundColor: '#F3E5F5' }]}>
-                                        <MaterialCommunityIcons name="calendar-check-outline" size={18} color="#7B1FA2" />
+                                <View style={[styles.statCard, { backgroundColor: palette.surfaceMuted, borderColor: palette.border }]}>
+                                    <View style={[styles.statIconBox, { backgroundColor: palette.primarySoft }]}>
+                                        <MaterialCommunityIcons name="calendar-check-outline" size={18} color={palette.primary} />
                                     </View>
-                                    <Text style={[styles.statLabel, { color: theme.colors.onSurfaceVariant }]}>Reserved on</Text>
-                                    <Text style={[styles.statValue, { color: theme.colors.onSurface }]}>
+                                    <Text style={[styles.statLabel, { color: palette.textMuted }]}>Reserved on</Text>
+                                    <Text style={[styles.statValue, { color: palette.textPrimary }]}>
                                         {formatDateLabel(reservation.createdAt)}
                                     </Text>
                                 </View>
@@ -884,30 +797,30 @@ export default function ReservationScreen() {
 
                     {reservation.status === 'confirmed' && isFriendReservedRoom ? (
                         <View style={styles.section}>
-                            <View style={[styles.panel, { backgroundColor: theme.colors.surface }]}>
+                            <View style={[styles.panel, { backgroundColor: palette.surface, borderColor: palette.border, shadowColor: palette.shadow }]}>
                                 <View style={styles.panelHeader}>
                                     <View>
-                                        <Text style={[styles.panelEyebrow, { color: theme.colors.onSurfaceVariant }]}>Next step</Text>
-                                        <Text style={[styles.panelTitle, { color: theme.colors.onSurface }]}>Porter check-in guidance</Text>
+                                        <Text style={[styles.panelEyebrow, { color: palette.textMuted }]}>Next step</Text>
+                                        <Text style={[styles.panelTitle, { color: palette.textPrimary }]}>Porter check-in guidance</Text>
                                     </View>
                                 </View>
 
                                 <View style={styles.nextStepsList}>
-                                    <View style={[styles.nextStepCard, { backgroundColor: theme.colors.background }]}>
-                                        <Text style={[styles.nextStepTitle, { color: theme.colors.onSurface }]}>1. Wait for check-in to open</Text>
-                                        <Text style={[styles.nextStepCopy, { color: theme.colors.onSurfaceVariant }]}>
+                                    <View style={[styles.nextStepCard, { backgroundColor: palette.surfaceMuted, borderColor: palette.border }]}>
+                                        <Text style={[styles.nextStepTitle, { color: palette.textPrimary }]}>1. Wait for check-in to open</Text>
+                                        <Text style={[styles.nextStepCopy, { color: palette.textSecondary }]}>
                                             Your bed space is confirmed in StayHub already, so you do not need to reserve again.
                                         </Text>
                                     </View>
-                                    <View style={[styles.nextStepCard, { backgroundColor: theme.colors.background }]}>
-                                        <Text style={[styles.nextStepTitle, { color: theme.colors.onSurface }]}>2. Go to your hostel porter desk</Text>
-                                        <Text style={[styles.nextStepCopy, { color: theme.colors.onSurfaceVariant }]}>
+                                    <View style={[styles.nextStepCard, { backgroundColor: palette.surfaceMuted, borderColor: palette.border }]}>
+                                        <Text style={[styles.nextStepTitle, { color: palette.textPrimary }]}>2. Go to your hostel porter desk</Text>
+                                        <Text style={[styles.nextStepCopy, { color: palette.textSecondary }]}>
                                             Tell the porter your matric number and that your room approval is already recorded in StayHub.
                                         </Text>
                                     </View>
-                                    <View style={[styles.nextStepCard, { backgroundColor: theme.colors.background }]}>
-                                        <Text style={[styles.nextStepTitle, { color: theme.colors.onSurface }]}>3. Complete physical check-in</Text>
-                                        <Text style={[styles.nextStepCopy, { color: theme.colors.onSurfaceVariant }]}>
+                                    <View style={[styles.nextStepCard, { backgroundColor: palette.surfaceMuted, borderColor: palette.border }]}>
+                                        <Text style={[styles.nextStepTitle, { color: palette.textPrimary }]}>3. Complete physical check-in</Text>
+                                        <Text style={[styles.nextStepCopy, { color: palette.textSecondary }]}>
                                             Once the porter verifies you, your reservation moves from confirmed to checked in.
                                         </Text>
                                     </View>
@@ -917,13 +830,13 @@ export default function ReservationScreen() {
                     ) : null}
 
                     <View style={styles.section}>
-                        <View style={[styles.panel, { backgroundColor: theme.colors.surface }]}>
+                        <View style={[styles.panel, { backgroundColor: palette.surface, borderColor: palette.border, shadowColor: palette.shadow }]}>
                             <View style={styles.panelHeader}>
                                 <View>
-                                    <Text style={[styles.panelEyebrow, { color: theme.colors.onSurfaceVariant }]}>Occupants</Text>
-                                    <Text style={[styles.panelTitle, { color: theme.colors.onSurface }]}>Room members</Text>
+                                    <Text style={[styles.panelEyebrow, { color: palette.textMuted }]}>Occupants</Text>
+                                    <Text style={[styles.panelTitle, { color: palette.textPrimary }]}>Room members</Text>
                                 </View>
-                                <Text style={[styles.panelSummary, { color: theme.colors.onSurfaceVariant }]}>
+                                <Text style={[styles.panelSummary, { color: palette.textSecondary }]}>
                                     {canAddFriends
                                         ? `${availableSpaces} bed${availableSpaces === 1 ? '' : 's'} available`
                                         : `${1 + roomMembers.length} assigned`}
@@ -935,12 +848,12 @@ export default function ReservationScreen() {
                                 ownerSubtitle,
                                 {
                                     label: isReservationOwner ? 'Host' : 'You',
-                                    color: '#1565C0',
-                                    backgroundColor: '#E3F2FD',
+                                    color: palette.primary,
+                                    backgroundColor: palette.primarySoft,
                                     icon: 'account-star-outline',
                                 },
                                 getInitials(reservation.student?.firstName, reservation.student?.lastName, 'YO'),
-                                '#1565C0',
+                                palette.primary,
                             )}
 
                             {roomMembers.map((member, index) => {
@@ -967,12 +880,12 @@ export default function ReservationScreen() {
                             {canAddFriends ? (
                                 <View style={styles.openSlotsWrap}>
                                     {Array.from({ length: availableSpaces }).map((_, index) => (
-                                        <View key={index} style={[styles.openSlotCard, { borderColor: theme.colors.surfaceVariant }]}>
-                                            <View style={styles.openSlotIcon}>
-                                                <MaterialCommunityIcons name="account-plus-outline" size={18} color="#90A4AE" />
+                                        <View key={index} style={[styles.openSlotCard, { borderColor: palette.border }]}>
+                                            <View style={[styles.openSlotIcon, { backgroundColor: palette.surfaceMuted }]}>
+                                                <MaterialCommunityIcons name="account-plus-outline" size={18} color={palette.textMuted} />
                                             </View>
-                                            <Text style={[styles.openSlotTitle, { color: theme.colors.onSurface }]}>Open bed</Text>
-                                            <Text style={[styles.openSlotCopy, { color: theme.colors.onSurfaceVariant }]}>
+                                            <Text style={[styles.openSlotTitle, { color: palette.textPrimary }]}>Open bed</Text>
+                                            <Text style={[styles.openSlotCopy, { color: palette.textSecondary }]}>
                                                 Invite a friend into this room.
                                             </Text>
                                         </View>
@@ -981,9 +894,13 @@ export default function ReservationScreen() {
                             ) : null}
 
                             {canAddFriends ? (
-                                <TouchableOpacity style={styles.addFriendsButton} activeOpacity={0.85} onPress={openAddModal}>
-                                    <MaterialCommunityIcons name="account-multiple-plus-outline" size={18} color="#1565C0" />
-                                    <Text style={styles.addFriendsButtonText}>Add friends to this room</Text>
+                                <TouchableOpacity
+                                    style={[styles.addFriendsButton, { backgroundColor: palette.primarySoft }]}
+                                    activeOpacity={0.85}
+                                    onPress={openAddModal}
+                                >
+                                    <MaterialCommunityIcons name="account-multiple-plus-outline" size={18} color={palette.primary} />
+                                    <Text style={[styles.addFriendsButtonText, { color: palette.primary }]}>Add friends to this room</Text>
                                 </TouchableOpacity>
                             ) : null}
                         </View>
@@ -997,15 +914,15 @@ export default function ReservationScreen() {
                     reservation.status !== 'cancelled' &&
                     reservation.status !== 'checked_in' ? (
                         <View style={styles.section}>
-                            <View style={styles.dangerPanel}>
+                            <View style={[styles.dangerPanel, { backgroundColor: palette.dangerSoft }]}>
                                 <View style={styles.dangerCopy}>
-                                    <Text style={styles.dangerTitle}>Need to release this room?</Text>
-                                    <Text style={styles.dangerText}>
+                                    <Text style={[styles.dangerTitle, { color: palette.danger }]}>Need to release this room?</Text>
+                                    <Text style={[styles.dangerText, { color: palette.textSecondary }]}>
                                         Cancelling will remove your reservation and reopen the space for someone else.
                                     </Text>
                                 </View>
                                 <TouchableOpacity
-                                    style={[styles.dangerButton, cancelling && styles.disabledAction]}
+                                    style={[styles.dangerButton, { backgroundColor: palette.danger }, cancelling && styles.disabledAction]}
                                     activeOpacity={0.85}
                                     onPress={handleCancel}
                                     disabled={cancelling || responding !== null}
@@ -1022,33 +939,34 @@ export default function ReservationScreen() {
                             </View>
                         </View>
                     ) : null}
+                    </View>
                 </ScrollView>
             </View>
 
             <Modal visible={addModalVisible} transparent animationType="slide" onRequestClose={() => setAddModalVisible(false)}>
                 <View style={styles.modalOverlay}>
                     <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={styles.modalWrap}>
-                        <View style={[styles.modalSheet, { backgroundColor: theme.colors.surface }]}>
-                            <View style={styles.modalHandle} />
+                        <View style={[styles.modalSheet, { backgroundColor: palette.surface }]}>
+                            <View style={[styles.modalHandle, { backgroundColor: palette.border }]} />
 
                             <ScrollView showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
                                 <View style={styles.modalHero}>
-                                    <View style={styles.modalHeroIcon}>
-                                        <MaterialCommunityIcons name="account-multiple-plus-outline" size={22} color="#1565C0" />
+                                    <View style={[styles.modalHeroIcon, { backgroundColor: palette.primarySoft }]}>
+                                        <MaterialCommunityIcons name="account-multiple-plus-outline" size={22} color={palette.primary} />
                                     </View>
                                     <View style={styles.modalHeroCopy}>
-                                        <Text style={[styles.modalTitle, { color: theme.colors.onSurface }]}>
+                                        <Text style={[styles.modalTitle, { color: palette.textPrimary }]}>
                                             Add friends to room {reservation.room?.roomNumber}
                                         </Text>
-                                        <Text style={[styles.modalSubtitle, { color: theme.colors.onSurfaceVariant }]}>
+                                        <Text style={[styles.modalSubtitle, { color: palette.textSecondary }]}>
                                             {availableSpaces} bed{availableSpaces === 1 ? '' : 's'} still open. Each friend gets a 24-hour approval invite.
                                         </Text>
                                     </View>
                                 </View>
 
-                                <Divider style={{ backgroundColor: theme.colors.surfaceVariant, marginBottom: 18 }} />
+                                <Divider style={{ backgroundColor: palette.divider, marginBottom: 18 }} />
 
-                                <Text style={[styles.modalLabel, { color: theme.colors.onSurfaceVariant }]}>Matric numbers</Text>
+                                <Text style={[styles.modalLabel, { color: palette.textMuted }]}>Matric numbers</Text>
 
                                 {newMatrics.map((matric, index) => (
                                     <View key={index} style={styles.matricRow}>
@@ -1059,27 +977,27 @@ export default function ReservationScreen() {
                                             placeholder={`Friend ${index + 1} matric number`}
                                             autoCapitalize="characters"
                                             autoCorrect={false}
-                                            style={styles.matricInput}
-                                            outlineColor={theme.colors.surfaceVariant}
-                                            activeOutlineColor="#1565C0"
+                                        style={styles.matricInput}
+                                            outlineColor={palette.border}
+                                            activeOutlineColor={palette.primary}
                                             left={<TextInput.Icon icon="account-outline" />}
                                         />
-                                        <IconButton icon="close-circle" iconColor="#E53935" size={22} onPress={() => removeMatricField(index)} />
+                                        <IconButton icon="close-circle" iconColor={palette.danger} size={22} onPress={() => removeMatricField(index)} />
                                     </View>
                                 ))}
 
                                 {newMatrics.length < availableSpaces ? (
-                                    <TouchableOpacity style={styles.addAnotherRow} activeOpacity={0.85} onPress={addMatricField}>
-                                        <MaterialCommunityIcons name="plus-circle-outline" size={18} color="#1565C0" />
-                                        <Text style={styles.addAnotherText}>Add another friend</Text>
+                                    <TouchableOpacity style={[styles.addAnotherRow, { backgroundColor: palette.primarySoft }]} activeOpacity={0.85} onPress={addMatricField}>
+                                        <MaterialCommunityIcons name="plus-circle-outline" size={18} color={palette.primary} />
+                                        <Text style={[styles.addAnotherText, { color: palette.primary }]}>Add another friend</Text>
                                     </TouchableOpacity>
                                 ) : null}
 
-                                <View style={styles.summaryBanner}>
-                                    <View style={styles.summaryBannerIcon}>
-                                        <MaterialCommunityIcons name="information-outline" size={16} color="#1565C0" />
+                                <View style={[styles.summaryBanner, { backgroundColor: palette.surfaceMuted }]}>
+                                    <View style={[styles.summaryBannerIcon, { backgroundColor: palette.surface }]}>
+                                        <MaterialCommunityIcons name="information-outline" size={16} color={palette.primary} />
                                     </View>
-                                    <Text style={styles.summaryBannerText}>
+                                    <Text style={[styles.summaryBannerText, { color: palette.textSecondary }]}>
                                         {newMatrics.filter((matric) => matric.trim()).length === 0
                                             ? 'Enter a matric number above to invite a friend into this room.'
                                             : `${newMatrics.filter((matric) => matric.trim()).length} friend${
@@ -1091,15 +1009,19 @@ export default function ReservationScreen() {
 
                             <View style={styles.modalActionRow}>
                                 <TouchableOpacity
-                                    style={[styles.modalCancelButton, addingMembers && styles.disabledAction]}
+                                    style={[
+                                        styles.modalCancelButton,
+                                        { borderColor: palette.border },
+                                        addingMembers && styles.disabledAction,
+                                    ]}
                                     activeOpacity={0.85}
                                     onPress={() => setAddModalVisible(false)}
                                     disabled={addingMembers}
                                 >
-                                    <Text style={styles.modalCancelButtonText}>Cancel</Text>
+                                    <Text style={[styles.modalCancelButtonText, { color: palette.textSecondary }]}>Cancel</Text>
                                 </TouchableOpacity>
                                 <TouchableOpacity
-                                    style={[styles.modalPrimaryButton, addingMembers && styles.disabledAction]}
+                                    style={[styles.modalPrimaryButton, { backgroundColor: palette.primary }, addingMembers && styles.disabledAction]}
                                     activeOpacity={0.85}
                                     onPress={handleAddMembers}
                                     disabled={addingMembers}
@@ -1138,7 +1060,10 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
     },
     content: {
-        paddingBottom: 28,
+        paddingBottom: 144,
+    },
+    body: {
+        marginTop: -22,
     },
     hero: {
         backgroundColor: '#1565C0',
@@ -1249,14 +1174,14 @@ const styles = StyleSheet.create({
         paddingTop: 22,
     },
     panel: {
+        borderWidth: 1,
         borderRadius: 22,
         paddingHorizontal: 18,
         paddingVertical: 18,
-        shadowColor: '#000000',
         shadowOffset: { width: 0, height: 10 },
-        shadowOpacity: 0.07,
-        shadowRadius: 18,
-        elevation: 4,
+        shadowOpacity: 0.12,
+        shadowRadius: 22,
+        elevation: 8,
     },
     panelHeader: {
         flexDirection: 'row',
@@ -1296,15 +1221,15 @@ const styles = StyleSheet.create({
         fontWeight: '800',
     },
     emptyPanel: {
+        borderWidth: 1,
         borderRadius: 22,
         paddingHorizontal: 24,
         paddingVertical: 28,
         alignItems: 'center',
-        shadowColor: '#000000',
         shadowOffset: { width: 0, height: 10 },
-        shadowOpacity: 0.07,
-        shadowRadius: 18,
-        elevation: 4,
+        shadowOpacity: 0.12,
+        shadowRadius: 22,
+        elevation: 8,
     },
     emptyIconWrap: {
         width: 68,
@@ -1457,6 +1382,7 @@ const styles = StyleSheet.create({
     statCard: {
         width: '48%',
         borderRadius: 18,
+        borderWidth: 1,
         paddingHorizontal: 14,
         paddingVertical: 14,
         minHeight: 118,
@@ -1483,6 +1409,7 @@ const styles = StyleSheet.create({
     },
     memberCard: {
         borderRadius: 18,
+        borderWidth: 1,
         paddingHorizontal: 14,
         paddingVertical: 14,
         flexDirection: 'row',
@@ -1591,6 +1518,7 @@ const styles = StyleSheet.create({
     },
     nextStepCard: {
         borderRadius: 18,
+        borderWidth: 1,
         paddingHorizontal: 14,
         paddingVertical: 14,
     },

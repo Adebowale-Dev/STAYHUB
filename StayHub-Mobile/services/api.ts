@@ -233,7 +233,7 @@ api.interceptors.response.use((response) => response, async (error) => {
 });
 export const authAPI = {
     login: (data: {
-        matricNumber: string;
+        identifier: string;
         password: string;
     }) => api.post<AuthResponse>('/auth/login', data),
     logout: () => api.post('/auth/logout'),
