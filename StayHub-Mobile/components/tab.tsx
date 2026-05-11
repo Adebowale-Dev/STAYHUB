@@ -1,152 +1,264 @@
 import { Ionicons } from '@expo/vector-icons';
 import type { BottomTabBarProps } from '@react-navigation/bottom-tabs';
-import React, { useEffect } from 'react';
-import { Dimensions, Pressable, StyleSheet, View } from 'react-native';
-import Animated, {
-    useAnimatedStyle,
-    useSharedValue,
-    withSpring,
-} from 'react-native-reanimated';
+import React, { useEffect, useMemo, useRef } from 'react';
+import {
+    Animated,
+    Dimensions,
+    Pressable,
+    StyleSheet,
+    View,
+} from 'react-native';
 import { Text } from 'react-native-paper';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { getStudentPalette } from '../constants/design';
 import { useThemeStore } from '../store/themeStore';
 
 type IconName = React.ComponentProps<typeof Ionicons>['name'];
 
-const { width: SCREEN_WIDTH } = Dimensions.get('window');
-
-const TAB_META: Record<string, { focused: IconName; unfocused: IconName; label: string }> = {
-    dashboard: { focused: 'home', unfocused: 'home-outline', label: 'Home' },
-    hostels: { focused: 'business', unfocused: 'business-outline', label: 'Hostels' },
-    reservation: { focused: 'calendar', unfocused: 'calendar-outline', label: 'Reserve' },
-    payment: { focused: 'card', unfocused: 'card-outline', label: 'Payment' },
-    profile: { focused: 'person', unfocused: 'person-outline', label: 'Profile' },
+type TabConfig = {
+    label: string;
+    focusedIcon: IconName;
+    unfocusedIcon: IconName;
 };
 
-export function AnimatedTabBar({ state, descriptors, navigation }: BottomTabBarProps) {
-    const isDark = useThemeStore((s) => s.isDark);
+const TAB_CONFIG: Record<string, TabConfig> = {
+    dashboard: {
+        label: 'Home',
+        focusedIcon: 'home',
+        unfocusedIcon: 'home-outline',
+    },
+    hostels: {
+        label: 'Hostels',
+        focusedIcon: 'business',
+        unfocusedIcon: 'business-outline',
+    },
+    reservation: {
+        label: 'Reserve',
+        focusedIcon: 'calendar',
+        unfocusedIcon: 'calendar-outline',
+    },
+    payment: {
+        label: 'Payment',
+        focusedIcon: 'card',
+        unfocusedIcon: 'card-outline',
+    },
+    profile: {
+        label: 'Profile',
+        focusedIcon: 'person',
+        unfocusedIcon: 'person-outline',
+    },
+};
+
+const INDICATOR_WIDTH = 26;
+const HORIZONTAL_PADDING = 14;
+const { width: screenWidth } = Dimensions.get('window');
+
+type VisibleRoute = BottomTabBarProps['state']['routes'][number] & {
+    visibleIndex: number;
+    config: TabConfig;
+};
+
+function isVisibleTab(routeName: string): routeName is keyof typeof TAB_CONFIG {
+    return routeName in TAB_CONFIG;
+}
+
+export function AnimatedTabBar({
+    state,
+    descriptors,
+    navigation,
+}: BottomTabBarProps) {
+    const isDark = useThemeStore((store) => store.isDark);
     const palette = getStudentPalette(isDark);
-    const tabWidth = (SCREEN_WIDTH - 28) / Math.max(state.routes.length, 1);
-    const slideAnim = useSharedValue(0);
+    const insets = useSafeAreaInsets();
+    const indicatorX = useRef(new Animated.Value(0)).current;
+    const glassSurface = isDark ? 'rgba(16,28,45,0.86)' : 'rgba(255,255,255,0.82)';
+    const glassBorder = isDark ? 'rgba(255,255,255,0.08)' : 'rgba(255,255,255,0.65)';
+    const activePlate = isDark ? 'rgba(66,165,245,0.14)' : 'rgba(12,74,140,0.08)';
+
+    const visibleRoutes = useMemo<VisibleRoute[]>(
+        () =>
+            state.routes
+                .filter((route) => isVisibleTab(route.name))
+                .map((route, visibleIndex) => ({
+                    ...route,
+                    visibleIndex,
+                    config: TAB_CONFIG[route.name],
+                })),
+        [state.routes]
+    );
+
+    const currentVisibleIndex = useMemo(() => {
+        const activeKey = state.routes[state.index]?.key;
+        const visibleIndex = visibleRoutes.findIndex((route) => route.key === activeKey);
+        return visibleIndex >= 0 ? visibleIndex : 0;
+    }, [state.index, state.routes, visibleRoutes]);
+
+    const tabWidth = useMemo(() => {
+        const availableWidth = screenWidth - HORIZONTAL_PADDING * 2;
+        return availableWidth / Math.max(visibleRoutes.length, 1);
+    }, [visibleRoutes.length]);
 
     useEffect(() => {
-        slideAnim.value = withSpring(state.index * tabWidth, {
-            damping: 18,
-            stiffness: 185,
-            mass: 0.55,
-            overshootClamping: false,
-        });
-    }, [slideAnim, state.index, tabWidth]);
+        indicatorX.setValue(currentVisibleIndex * tabWidth);
+    }, [currentVisibleIndex, indicatorX, tabWidth]);
 
-    const animatedStyle = useAnimatedStyle(() => ({
-        transform: [{ translateX: slideAnim.value }],
-    }));
+    useEffect(() => {
+        Animated.spring(indicatorX, {
+            toValue: currentVisibleIndex * tabWidth,
+            damping: 20,
+            stiffness: 220,
+            mass: 0.7,
+            useNativeDriver: true,
+        }).start();
+    }, [currentVisibleIndex, indicatorX, tabWidth]);
 
     return (
-        <SafeAreaView edges={['bottom']} className="bg-transparent">
-            <View className="bg-transparent px-3 pb-1 pt-2">
+        <View style={styles.safeArea}>
+            <View style={[styles.outer, { paddingBottom: Math.max(insets.bottom, 8) }]}>
                 <View
-                    className="overflow-hidden rounded-[28px] border bg-surface/95 px-1.5 pb-1.5 pt-2"
                     style={[
-                        styles.shell,
+                        styles.inner,
                         {
-                            borderColor: palette.border,
+                            backgroundColor: glassSurface,
+                            borderColor: glassBorder,
                             shadowColor: palette.shadow,
-                            backgroundColor: palette.surface,
                         },
                     ]}
                 >
-                    <Animated.View
-                        className="absolute top-0 rounded-full bg-primary"
-                        style={[
-                            {
-                                height: 3,
-                                width: tabWidth * 0.34,
-                                marginLeft: tabWidth * 0.33,
-                            },
-                            animatedStyle,
-                        ]}
-                    />
+                <Animated.View
+                    pointerEvents="none"
+                    style={[
+                        styles.indicator,
+                        {
+                            backgroundColor: palette.primary,
+                            marginLeft: (tabWidth - INDICATOR_WIDTH) / 2,
+                            transform: [{ translateX: indicatorX }],
+                        },
+                    ]}
+                />
 
-                    <View className="flex-row items-center justify-around">
-                        {state.routes.map((route, index) => {
-                            const meta = TAB_META[route.name];
-                            if (!meta) {
-                                return null;
+                <View style={styles.row}>
+                    {visibleRoutes.map((route) => {
+                        const descriptor = descriptors[route.key];
+                        const isFocused = state.index === state.routes.findIndex((item) => item.key === route.key);
+                        const iconName = isFocused
+                            ? route.config.focusedIcon
+                            : route.config.unfocusedIcon;
+                        const iconColor = isFocused ? palette.primary : palette.textMuted;
+                        const labelColor = isFocused ? palette.primary : palette.textSecondary;
+
+                        const onPress = () => {
+                            const event = navigation.emit({
+                                type: 'tabPress',
+                                target: route.key,
+                                canPreventDefault: true,
+                            });
+
+                            if (!isFocused && !event.defaultPrevented) {
+                                navigation.navigate(route.name);
                             }
+                        };
 
-                            const { options } = descriptors[route.key];
-                            const isFocused = state.index === index;
+                        const onLongPress = () => {
+                            navigation.emit({
+                                type: 'tabLongPress',
+                                target: route.key,
+                            });
+                        };
 
-                            const onPress = () => {
-                                const event = navigation.emit({
-                                    type: 'tabPress',
-                                    target: route.key,
-                                    canPreventDefault: true,
-                                });
-
-                                if (!isFocused && !event.defaultPrevented) {
-                                    navigation.navigate(route.name);
-                                }
-                            };
-
-                            const onLongPress = () => {
-                                navigation.emit({
-                                    type: 'tabLongPress',
-                                    target: route.key,
-                                });
-                            };
-
-                            return (
-                                <Pressable
-                                    key={route.key}
-                                    accessibilityRole="button"
-                                    accessibilityState={isFocused ? { selected: true } : {}}
-                                    accessibilityLabel={options.tabBarAccessibilityLabel}
-                                    onPress={onPress}
-                                    onLongPress={onLongPress}
-                                    className="flex-1 items-center justify-center"
+                        return (
+                            <Pressable
+                                key={route.key}
+                                accessibilityRole="button"
+                                accessibilityState={isFocused ? { selected: true } : {}}
+                                accessibilityLabel={descriptor.options.tabBarAccessibilityLabel}
+                                hitSlop={8}
+                                onLongPress={onLongPress}
+                                onPress={onPress}
+                                style={styles.pressable}
+                            >
+                                <View
+                                    style={[
+                                        styles.tabContent,
+                                        isFocused && {
+                                            backgroundColor: activePlate,
+                                            borderColor: isDark
+                                                ? 'rgba(255,255,255,0.08)'
+                                                : 'rgba(12,74,140,0.08)',
+                                        },
+                                    ]}
                                 >
-                                    <View
-                                        className="min-h-[52px] w-[92%] items-center justify-center rounded-2xl border px-1 py-2"
-                                        style={{
-                                            borderColor: isFocused
-                                                ? isDark
-                                                    ? 'rgba(148,163,184,0.16)'
-                                                    : 'rgba(12,74,140,0.1)'
-                                                : 'transparent',
-                                            backgroundColor: isFocused ? palette.primarySoft : 'transparent',
-                                        }}
+                                    <Ionicons name={iconName} size={20} color={iconColor} />
+                                    <Text
+                                        numberOfLines={1}
+                                        style={[
+                                            styles.label,
+                                            {
+                                                color: labelColor,
+                                                fontFamily: undefined,
+                                                fontWeight: isFocused ? '700' : '600',
+                                            },
+                                        ]}
                                     >
-                                        <Ionicons
-                                            name={isFocused ? meta.focused : meta.unfocused}
-                                            size={21}
-                                            color={isFocused ? palette.primary : palette.textMuted}
-                                        />
-                                        <Text
-                                            className="mt-1 text-[10px] font-extrabold"
-                                            style={{ color: isFocused ? palette.primary : palette.textMuted }}
-                                            numberOfLines={1}
-                                        >
-                                            {meta.label}
-                                        </Text>
-                                    </View>
-                                </Pressable>
-                            );
-                        })}
-                    </View>
+                                        {route.config.label}
+                                    </Text>
+                                </View>
+                            </Pressable>
+                        );
+                    })}
+                </View>
                 </View>
             </View>
-        </SafeAreaView>
+        </View>
     );
 }
 
 const styles = StyleSheet.create({
-    shell: {
-        shadowOffset: { width: 0, height: -10 },
-        shadowOpacity: 0.14,
-        shadowRadius: 22,
-        elevation: 16,
+    safeArea: {
+        backgroundColor: 'transparent',
+    },
+    outer: {
+        paddingHorizontal: HORIZONTAL_PADDING,
+        paddingTop: 6,
+    },
+    inner: {
+        borderWidth: 1,
+        borderRadius: 26,
+        paddingHorizontal: 6,
+        paddingTop: 8,
+        paddingBottom: 6,
+        shadowOffset: { width: 0, height: 10 },
+        shadowOpacity: 0.16,
+        shadowRadius: 24,
+        elevation: 10,
+    },
+    indicator: {
+        position: 'absolute',
+        top: 0,
+        left: 6,
+        width: INDICATOR_WIDTH,
+        height: 2.5,
+        borderRadius: 999,
+    },
+    row: {
+        flexDirection: 'row',
+        alignItems: 'stretch',
+        justifyContent: 'space-between',
+    },
+    pressable: {
+        flex: 1,
+    },
+    tabContent: {
+        minHeight: 56,
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: 3,
+        borderRadius: 18,
+        borderWidth: 1,
+        borderColor: 'transparent',
+    },
+    label: {
+        fontSize: 11,
+        letterSpacing: 0.15,
     },
 });

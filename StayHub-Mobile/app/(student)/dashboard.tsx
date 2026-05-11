@@ -20,8 +20,7 @@ import type { DashboardData } from '../../types';
 import { getStudentPalette } from '../../constants/design';
 import { StudentHero } from '../../components/ui/StudentHero';
 import { LoadingSpinner } from '../../components/LoadingSpinner';
-
-type IconName = React.ComponentProps<typeof MaterialCommunityIcons>['name'];
+import { useStudentTabSwipe } from '../../components/ui/StudentTabSwipe';
 
 function getGreeting() {
     const hour = new Date().getHours();
@@ -57,60 +56,7 @@ export default function DashboardScreen() {
     const insets = useSafeAreaInsets();
     const theme = useTheme();
     const palette = getStudentPalette(theme.dark);
-    const actions: {
-        icon: IconName;
-        label: string;
-        sub: string;
-        route:
-            | '/(student)/hostels'
-            | '/(student)/notifications'
-            | '/(student)/payment'
-            | '/(student)/reservation'
-            | '/(student)/profile';
-        color: string;
-        backgroundColor: string;
-    }[] = [
-        {
-            icon: 'home-city-outline',
-            label: 'Hostels',
-            sub: 'Browse available spaces',
-            route: '/(student)/hostels',
-            color: palette.primary,
-            backgroundColor: palette.primarySoft,
-        },
-        {
-            icon: 'bell-ring-outline',
-            label: 'Alerts',
-            sub: 'Stay ahead of updates',
-            route: '/(student)/notifications',
-            color: palette.warning,
-            backgroundColor: palette.warningSoft,
-        },
-        {
-            icon: 'credit-card-check-outline',
-            label: 'Payment',
-            sub: 'Review hostel fees',
-            route: '/(student)/payment',
-            color: palette.success,
-            backgroundColor: palette.successSoft,
-        },
-        {
-            icon: 'calendar-check-outline',
-            label: 'Reserve',
-            sub: 'See your room status',
-            route: '/(student)/reservation',
-            color: palette.primary,
-            backgroundColor: palette.surfaceMuted,
-        },
-        {
-            icon: 'account-circle-outline',
-            label: 'Profile',
-            sub: 'Manage your account',
-            route: '/(student)/profile',
-            color: palette.primaryStrong,
-            backgroundColor: palette.primarySoft,
-        },
-    ];
+    const swipeHandlers = useStudentTabSwipe('dashboard');
 
     const loadDashboard = async () => {
         setError(false);
@@ -194,6 +140,7 @@ export default function DashboardScreen() {
                 className="flex-1"
                 contentContainerStyle={{ paddingBottom: 144 }}
                 showsVerticalScrollIndicator={false}
+                {...swipeHandlers}
                 refreshControl={
                     <RefreshControl
                         refreshing={refreshing}
@@ -205,46 +152,8 @@ export default function DashboardScreen() {
             >
                 <StudentHero
                     insetTop={insets.top}
-                    eyebrow="Student dashboard"
                     title={`${getGreeting()}, ${user?.firstName ?? 'Student'}`}
-                    subtitle="Everything you need for hostel life is lined up here, from live room availability to payments and reservation updates."
-                >
-                    <View style={styles.heroIdentityRow}>
-                        <View style={styles.heroIdentityCopy}>
-                            <View style={styles.heroMetaChips}>
-                                {department ? (
-                                    <View style={styles.heroMetaPill}>
-                                        <MaterialCommunityIcons
-                                            name="school-outline"
-                                            size={14}
-                                            color="#FFFFFF"
-                                        />
-                                        <Text style={styles.heroMetaText}>
-                                            {department}
-                                            {user?.level ? ` | ${user.level} Level` : ''}
-                                        </Text>
-                                    </View>
-                                ) : null}
-
-                                {user?.matricNumber ? (
-                                    <View style={styles.heroMetaPill}>
-                                        <MaterialCommunityIcons
-                                            name="card-account-details-outline"
-                                            size={14}
-                                            color="#FFFFFF"
-                                        />
-                                        <Text style={styles.heroMetaText}>{user.matricNumber}</Text>
-                                    </View>
-                                ) : null}
-                            </View>
-
-                            {dashboard?.currentSession ? (
-                                <View style={styles.sessionPill}>
-                                    <Text style={styles.sessionText}>{dashboard.currentSession}</Text>
-                                </View>
-                            ) : null}
-                        </View>
-
+                    titleAccessory={
                         <View style={styles.avatarRing}>
                             {user?.profilePicture ? (
                                 <Image source={{ uri: user.profilePicture }} style={styles.avatarImage} />
@@ -254,9 +163,50 @@ export default function DashboardScreen() {
                                 </View>
                             )}
                         </View>
+                    }
+                >
+                    <View className="mb-[18px] mt-4 gap-3">
+                        <View className="flex-row flex-wrap gap-2.5">
+                            {department ? (
+                                <View style={styles.heroMetaPill}>
+                                    <MaterialCommunityIcons
+                                        name="school-outline"
+                                        size={14}
+                                        color="#FFFFFF"
+                                    />
+                                    <Text style={styles.heroMetaText}>
+                                        {department}
+                                        {user?.level ? ` | ${user.level} Level` : ''}
+                                    </Text>
+                                </View>
+                            ) : null}
+
+                            {user?.matricNumber ? (
+                                <View style={styles.heroMetaPill}>
+                                    <MaterialCommunityIcons
+                                        name="card-account-details-outline"
+                                        size={14}
+                                        color="#FFFFFF"
+                                    />
+                                    <Text style={styles.heroMetaText}>{user.matricNumber}</Text>
+                                </View>
+                            ) : null}
+                        </View>
+
+                        {dashboard?.currentSession ? (
+                            <View style={styles.sessionPill}>
+                                <Text
+                                    style={styles.sessionPillText}
+                                    numberOfLines={1}
+                                    ellipsizeMode="tail"
+                                >
+                                    {dashboard.currentSession}
+                                </Text>
+                            </View>
+                        ) : null}
                     </View>
 
-                    <View style={styles.heroStatusRow}>
+                    <View className="flex-row gap-3">
                         <View style={styles.heroStatusCard}>
                             <MaterialCommunityIcons
                                 name={paymentPaid ? 'check-circle-outline' : 'clock-outline'}
@@ -299,7 +249,7 @@ export default function DashboardScreen() {
                     </View>
                 </StudentHero>
 
-                <View className="-mt-6 px-[18px]">
+                <View className="mt-3 px-[18px]">
                     {error ? (
                         <View
                             style={[
@@ -347,20 +297,10 @@ export default function DashboardScreen() {
                                 >
                                     <View style={styles.spotlightHeader}>
                                         <View>
-                                            <Text
-                                                style={[
-                                                    styles.sectionEyebrow,
-                                                    { color: palette.textMuted },
-                                                ]}
-                                            >
+                                            <Text className="mb-1.5 text-[11px] font-extrabold uppercase tracking-[1px]" style={{ color: palette.textMuted }}>
                                                 At a glance
                                             </Text>
-                                            <Text
-                                                style={[
-                                                    styles.sectionTitle,
-                                                    { color: palette.textPrimary },
-                                                ]}
-                                            >
+                                            <Text className="text-[22px] font-extrabold tracking-[-0.5px]" style={{ color: palette.textPrimary }}>
                                                 StayHub snapshot
                                             </Text>
                                         </View>
@@ -474,12 +414,10 @@ export default function DashboardScreen() {
                                 </View>
                             ) : null}
 
-                            <View style={styles.section}>
                             <View className="mt-[22px]">
                                 <Reveal delay={150}>
                                     <AlertsCard />
                                 </Reveal>
-                            </View>
                             </View>
 
                             <View className="mt-[22px]">
@@ -682,75 +620,6 @@ export default function DashboardScreen() {
                                     )}
                                 </Reveal>
                             </View>
-
-                            <View className="mt-[22px]">
-                                <Reveal delay={260}>
-                                    <View className="mb-[14px]">
-                                        <View>
-                                            <Text className="mb-1.5 text-[11px] font-extrabold uppercase tracking-[1px]" style={{ color: palette.textMuted }}>
-                                                Quick actions
-                                            </Text>
-                                            <Text className="text-[22px] font-extrabold tracking-[-0.5px]" style={{ color: palette.textPrimary }}>
-                                                Move through StayHub faster
-                                            </Text>
-                                        </View>
-                                    </View>
-
-                                    <View style={styles.actionGrid}>
-                                        {actions.map((action) => (
-                                            <TouchableOpacity
-                                                key={action.label}
-                                                style={[
-                                                    styles.actionCard,
-                                                    {
-                                                        backgroundColor: palette.surface,
-                                                        borderColor: palette.border,
-                                                        shadowColor: palette.shadow,
-                                                    },
-                                                ]}
-                                                onPress={() => router.push(action.route)}
-                                                activeOpacity={0.9}
-                                            >
-                                                <View
-                                                    style={[
-                                                        styles.actionIconWrap,
-                                                        { backgroundColor: action.backgroundColor },
-                                                    ]}
-                                                >
-                                                    <MaterialCommunityIcons
-                                                        name={action.icon}
-                                                        size={22}
-                                                        color={action.color}
-                                                    />
-                                                </View>
-                                                <Text style={[styles.actionLabel, { color: palette.textPrimary }]}>
-                                                    {action.label}
-                                                </Text>
-                                                <Text style={[styles.actionSub, { color: palette.textSecondary }]}>
-                                                    {action.sub}
-                                                </Text>
-                                                <View style={styles.actionArrowRow}>
-                                                    <Text style={[styles.actionArrowText, { color: palette.primary }]}>
-                                                        Open
-                                                    </Text>
-                                                    <View
-                                                        style={[
-                                                            styles.inlineArrowWrap,
-                                                            { backgroundColor: palette.primarySoft },
-                                                        ]}
-                                                    >
-                                                        <MaterialCommunityIcons
-                                                            name="arrow-right"
-                                                            size={15}
-                                                            color={palette.primary}
-                                                        />
-                                                    </View>
-                                                </View>
-                                            </TouchableOpacity>
-                                        ))}
-                                    </View>
-                                </Reveal>
-                            </View>
                         </>
                     )}
                 </View>
@@ -760,23 +629,6 @@ export default function DashboardScreen() {
 }
 
 const styles = StyleSheet.create({
-    heroIdentityRow: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'flex-start',
-        gap: 14,
-        marginTop: 24,
-        marginBottom: 18,
-    },
-    heroIdentityCopy: {
-        flex: 1,
-        gap: 12,
-    },
-    heroMetaChips: {
-        flexDirection: 'row',
-        flexWrap: 'wrap',
-        gap: 10,
-    },
     heroMetaPill: {
         flexDirection: 'row',
         alignItems: 'center',
@@ -796,15 +648,19 @@ const styles = StyleSheet.create({
     sessionPill: {
         alignSelf: 'flex-start',
         borderRadius: 999,
-        paddingHorizontal: 12,
+        maxWidth: '100%',
+        minHeight: 36,
+        paddingHorizontal: 14,
         paddingVertical: 8,
         backgroundColor: 'rgba(255,255,255,0.1)',
         borderWidth: 1,
         borderColor: 'rgba(255,255,255,0.14)',
+        justifyContent: 'center',
     },
-    sessionText: {
+    sessionPillText: {
         color: '#DCEBFF',
         fontSize: 12,
+        lineHeight: 16,
         fontWeight: '700',
     },
     avatarRing: {
@@ -832,10 +688,6 @@ const styles = StyleSheet.create({
         color: '#FFFFFF',
         fontSize: 20,
         fontWeight: '800',
-    },
-    heroStatusRow: {
-        flexDirection: 'row',
-        gap: 12,
     },
     heroStatusCard: {
         flex: 1,
@@ -1096,49 +948,5 @@ const styles = StyleSheet.create({
         borderRadius: 15,
         alignItems: 'center',
         justifyContent: 'center',
-    },
-    actionGrid: {
-        flexDirection: 'row',
-        flexWrap: 'wrap',
-        gap: 12,
-    },
-    actionCard: {
-        width: '47%',
-        borderRadius: 24,
-        borderWidth: 1,
-        paddingHorizontal: 16,
-        paddingVertical: 16,
-        shadowOffset: { width: 0, height: 12 },
-        shadowOpacity: 0.12,
-        shadowRadius: 20,
-        elevation: 8,
-    },
-    actionIconWrap: {
-        width: 48,
-        height: 48,
-        borderRadius: 16,
-        alignItems: 'center',
-        justifyContent: 'center',
-        marginBottom: 14,
-    },
-    actionLabel: {
-        fontSize: 15,
-        fontWeight: '800',
-        marginBottom: 4,
-    },
-    actionSub: {
-        fontSize: 12,
-        lineHeight: 18,
-        minHeight: 36,
-    },
-    actionArrowRow: {
-        marginTop: 12,
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-    },
-    actionArrowText: {
-        fontSize: 12,
-        fontWeight: '800',
     },
 });

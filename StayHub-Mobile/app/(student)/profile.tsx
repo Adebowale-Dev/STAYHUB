@@ -14,6 +14,7 @@ import { useThemeStore } from '../../store/themeStore';
 import type { NotificationPreferences, NotificationSettings } from '../../types';
 import { Reveal } from '../../components/ui/Reveal';
 import { StudentHero } from '../../components/ui/StudentHero';
+import { useStudentTabSwipe } from '../../components/ui/StudentTabSwipe';
 import { getPushNotificationsUnavailableReason, isPushNotificationsSupported, registerForPushNotificationsAsync, unregisterStoredPushTokenAsync, } from '../../services/pushNotifications';
 const DEFAULT_NOTIFICATION_PREFERENCES: NotificationPreferences = {
     pushEnabled: true,
@@ -51,6 +52,7 @@ export default function ProfileScreen() {
     const dynText = { color: palette.textPrimary };
     const dynTextSec = { color: palette.textSecondary };
     const dynSep = { backgroundColor: palette.divider };
+    const swipeHandlers = useStudentTabSwipe('profile');
     const getDeptName = (dept: any): string => {
         if (!dept)
             return '';
@@ -452,12 +454,12 @@ export default function ProfileScreen() {
     return (<>
       <StatusBar barStyle="light-content" backgroundColor="#08162B"/>
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={styles.flex}>
-        <ScrollView style={[styles.container, { backgroundColor: palette.pageBackground }]} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+        <ScrollView style={[styles.container, { backgroundColor: palette.pageBackground }]} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false} {...swipeHandlers}>
           <StudentHero
             insetTop={insets.top}
             eyebrow="Student profile"
             title={`${user?.firstName ?? ''} ${user?.lastName ?? ''}`.trim() || 'StayHub student'}
-            subtitle="Manage your account, update your profile details, and keep notification preferences exactly the way you want them."
+            // subtitle="Manage your account, update your profile details, and keep notification preferences exactly the way you want them."
             align="center"
           >
             <TouchableOpacity onPress={handleAvatarPress} activeOpacity={0.85} disabled={uploading} style={styles.avatarWrap}>

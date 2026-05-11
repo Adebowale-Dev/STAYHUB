@@ -21,6 +21,7 @@ import type { PaymentStatus } from '../../types';
 import { getStudentPalette } from '../../constants/design';
 import { StudentHero } from '../../components/ui/StudentHero';
 import { LoadingSpinner } from '../../components/LoadingSpinner';
+import { useStudentTabSwipe } from '../../components/ui/StudentTabSwipe';
 
 type IconName = React.ComponentProps<typeof MaterialCommunityIcons>['name'];
 
@@ -41,6 +42,7 @@ export default function PaymentScreen() {
     const insets = useSafeAreaInsets();
     const paystackWebViewRef = useRef<paystackProps.PayStackRef>(null);
     const useBrowserCheckout = APP_CONFIG.IS_EXPO_GO;
+    const swipeHandlers = useStudentTabSwipe('payment');
 
     const loadData = async () => {
         setError(false);
@@ -195,6 +197,7 @@ export default function PaymentScreen() {
                 className="flex-1"
                 contentContainerStyle={{ paddingBottom: 144 }}
                 showsVerticalScrollIndicator={false}
+                {...swipeHandlers}
                 refreshControl={
                     <RefreshControl
                         refreshing={refreshing}
@@ -208,7 +211,7 @@ export default function PaymentScreen() {
                     insetTop={insets.top}
                     eyebrow="Hostel fee payment"
                     title={formattedAmount}
-                    subtitle="Pay securely, verify offline codes, and keep your reservation moving without delays."
+                    // subtitle="Pay securely, verify offline codes, and keep your reservation moving without delays."
                     align="center"
                 >
                     <View style={styles.heroStatusWrap}>
@@ -251,7 +254,7 @@ export default function PaymentScreen() {
                     </View>
                 </StudentHero>
 
-                <View className="-mt-[22px] px-[18px]">
+                <View className="-mt-[6px] px-[18px]">
                     {error ? (
                         <Reveal delay={60}>
                             <View
@@ -588,7 +591,7 @@ const styles = StyleSheet.create({
     heroStatusWrap: {
         alignItems: 'center',
         gap: 12,
-        marginTop: 22,
+        marginTop: 30,
     },
     statusChip: {
         flexDirection: 'row',

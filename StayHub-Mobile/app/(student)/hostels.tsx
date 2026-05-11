@@ -21,6 +21,7 @@ import type { Hostel } from '../../types';
 import { getStudentPalette } from '../../constants/design';
 import { StudentHero } from '../../components/ui/StudentHero';
 import { LoadingSpinner } from '../../components/LoadingSpinner';
+import { useStudentTabSwipe } from '../../components/ui/StudentTabSwipe';
 
 export default function HostelsScreen() {
     const [hostels, setHostels] = useState<Hostel[]>([]);
@@ -35,6 +36,7 @@ export default function HostelsScreen() {
     const searchRef = useRef<RNTextInput>(null);
     const user = useAuthStore((s) => s.user);
     const studentGender = (user?.gender ?? 'male') as 'male' | 'female';
+    const swipeHandlers = useStudentTabSwipe('hostels');
 
     const loadHostels = async () => {
         setError(false);
@@ -85,7 +87,7 @@ export default function HostelsScreen() {
                 insetTop={insets.top}
                 eyebrow="Accommodation"
                 title="Available hostels"
-                subtitle="Browse approved hostels, compare room availability, and move into the right option for your session."
+                // subtitle="Browse approved hostels, compare room availability, and move into the right option for your session."
             >
                 <View className="mt-6 flex-row gap-2.5">
                     <View
@@ -218,6 +220,7 @@ export default function HostelsScreen() {
                 <StatusBar barStyle="light-content" backgroundColor={palette.hero} />
                 <FlatList
                     data={[]}
+                    {...swipeHandlers}
                     renderItem={null}
                     ListHeaderComponent={listHeader}
                     ListFooterComponent={
@@ -271,6 +274,7 @@ export default function HostelsScreen() {
             >
                 <FlatList
                     data={filtered}
+                    {...swipeHandlers}
                     keyExtractor={(item) => item._id}
                     contentContainerStyle={{ paddingBottom: 144 }}
                     showsVerticalScrollIndicator={false}

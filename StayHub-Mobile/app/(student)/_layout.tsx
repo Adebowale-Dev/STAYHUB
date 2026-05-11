@@ -8,6 +8,17 @@ export default function StudentLayout() {
             tabBar={(props) => <AnimatedTabBar {...props} />}
             screenOptions={{
                 headerShown: false,
+                tabBarStyle: {
+                    backgroundColor: 'transparent',
+                    borderTopWidth: 0,
+                    elevation: 0,
+                    shadowOpacity: 0,
+                    position: 'absolute',
+                },
+                tabBarBackground: () => null,
+                sceneStyle: {
+                    backgroundColor: 'transparent',
+                },
             }}
         >
             <Tabs.Screen name="dashboard" options={{ title: 'Home' }} />

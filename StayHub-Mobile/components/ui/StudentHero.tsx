@@ -19,6 +19,7 @@ interface StudentHeroProps {
     contentStyle?: StyleProp<ViewStyle>;
     titleStyle?: StyleProp<TextStyle>;
     subtitleStyle?: StyleProp<TextStyle>;
+    titleAccessory?: React.ReactNode;
     children?: React.ReactNode;
 }
 
@@ -31,6 +32,7 @@ export function StudentHero({
     contentStyle,
     titleStyle,
     subtitleStyle,
+    titleAccessory,
     children,
 }: StudentHeroProps) {
     const centered = align === 'center';
@@ -66,22 +68,28 @@ export function StudentHero({
                         </View>
                     ) : null}
 
-                    <Text
-                        style={[
-                            {
-                                color: '#FFFFFF',
-                                fontSize: 31,
-                                lineHeight: 37,
-                                fontWeight: '800',
-                                letterSpacing: -0.7,
-                                marginBottom: 10,
-                                textAlign: centered ? 'center' : 'left',
-                            },
-                            titleStyle,
-                        ]}
+                    <View
+                        className={centered ? 'mb-[10px] items-center gap-3' : 'mb-[10px] flex-row items-center justify-between gap-4'}
                     >
-                        {title}
-                    </Text>
+                        <Text
+                            style={[
+                                {
+                                    color: '#FFFFFF',
+                                    fontSize: 31,
+                                    lineHeight: 37,
+                                    fontWeight: '800',
+                                    letterSpacing: -0.7,
+                                    textAlign: centered ? 'center' : 'left',
+                                    flexShrink: 1,
+                                },
+                                titleStyle,
+                            ]}
+                        >
+                            {title}
+                        </Text>
+
+                        {titleAccessory}
+                    </View>
 
                     {subtitle ? (
                         <Text

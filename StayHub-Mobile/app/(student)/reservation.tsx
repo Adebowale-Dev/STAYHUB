@@ -8,6 +8,7 @@ import { studentAPI } from '../../services/api';
 import { LoadingSpinner } from '../../components/LoadingSpinner';
 import { getStudentPalette } from '../../constants/design';
 import { StudentHero } from '../../components/ui/StudentHero';
+import { useStudentTabSwipe } from '../../components/ui/StudentTabSwipe';
 import type { GroupMember, InvitationHistoryEntry, Reservation, ReservationInviteTrackerItem } from '../../types';
 
 type IconName = React.ComponentProps<typeof MaterialCommunityIcons>['name'];
@@ -77,6 +78,7 @@ export default function ReservationScreen() {
     const palette = getStudentPalette(theme.dark);
     const insets = useSafeAreaInsets();
     const router = useRouter();
+    const swipeHandlers = useStudentTabSwipe('reservation');
     const primaryTone = buildTone('Ready', 'home-city-outline', palette.primary, palette.primarySoft);
     const successTone = buildTone('Approved', 'check-circle-outline', palette.success, palette.successSoft);
     const warningTone = buildTone('Pending', 'clock-outline', palette.warning, palette.warningSoft);
@@ -393,7 +395,7 @@ export default function ReservationScreen() {
 
         return (
             <View style={[styles.panel, { backgroundColor: palette.surface, borderColor: palette.border, shadowColor: palette.shadow }]}>
-                <View style={styles.panelHeader}>
+                <View className="mb-[18px] flex-row items-center justify-between gap-3">
                     <View>
                         <Text style={[styles.panelEyebrow, { color: palette.textMuted }]}>Timeline</Text>
                         <Text style={[styles.panelTitle, { color: palette.textPrimary }]}>Invitation history</Text>
@@ -405,22 +407,22 @@ export default function ReservationScreen() {
 
                 <Divider style={{ backgroundColor: palette.divider }} />
 
-                <View style={styles.timelineList}>
+                <View className="gap-[14px] pt-4">
                     {invitationHistory.slice(0, 8).map((entry, index) => {
                         const meta = getHistoryMeta(entry);
                         const isLast = index === Math.min(invitationHistory.length, 8) - 1;
 
                         return (
-                            <View key={entry._id ?? `${entry.action}-${entry.role}-${index}`} style={styles.timelineItem}>
-                                <View style={styles.timelineRail}>
+                            <View key={entry._id ?? `${entry.action}-${entry.role}-${index}`} className="flex-row gap-[14px]">
+                                <View className="w-[38px] items-center">
                                     <View style={[styles.timelineIconBox, { backgroundColor: meta.backgroundColor }]}>
                                         <MaterialCommunityIcons name={meta.icon} size={18} color={meta.color} />
                                     </View>
                                     {!isLast ? <View style={[styles.timelineLine, { backgroundColor: palette.divider }]} /> : null}
                                 </View>
 
-                                <View style={styles.timelineBody}>
-                                    <View style={styles.timelineHeader}>
+                                <View className="flex-1 pt-0.5">
+                                    <View className="mb-1.5 flex-row items-start justify-between gap-[10px]">
                                         <Text style={[styles.timelineTitle, { color: palette.textPrimary }]}>
                                             {getHistoryTitle(entry)}
                                         </Text>
@@ -464,7 +466,7 @@ export default function ReservationScreen() {
         }
         return (
             <View style={[styles.panel, { backgroundColor: palette.surface, borderColor: palette.border, shadowColor: palette.shadow }]}>
-                <View style={styles.panelHeader}>
+                <View className="mb-[18px] flex-row items-center justify-between gap-3">
                     <View>
                         <Text style={[styles.panelEyebrow, { color: palette.textMuted }]}>Tracker</Text>
                         <Text style={[styles.panelTitle, { color: palette.textPrimary }]}>Friend invite tracker</Text>
@@ -476,7 +478,7 @@ export default function ReservationScreen() {
 
                 <Divider style={{ backgroundColor: palette.divider }} />
 
-                <View style={styles.trackerList}>
+                <View className="gap-1 pt-4">
                     {tracker.map((item, index) => {
                         const tone = getTrackerTone(item.status);
                         const studentName = getHistoryParticipantName(item.student, 'Invited friend');
@@ -489,7 +491,7 @@ export default function ReservationScreen() {
                             .join(' | ');
 
                         return (
-                            <View key={item.student?._id ?? `${item.status}-${index}`} style={styles.memberSpacer}>
+                            <View key={item.student?._id ?? `${item.status}-${index}`} className="mt-[10px]">
                                 {renderMemberCard(
                                     studentName,
                                     subtitle,
@@ -553,11 +555,11 @@ export default function ReservationScreen() {
 
     if (!reservation) {
         return (
-            <View style={[styles.screen, { backgroundColor: palette.pageBackground }]}>
-                <StatusBar barStyle="light-content" backgroundColor="#08162B" />
+            <View className="flex-1" style={{ backgroundColor: palette.pageBackground }}>
+                <StatusBar barStyle="light-content" backgroundColor={palette.hero} />
                 <ScrollView
-                    style={styles.flex}
-                    contentContainerStyle={styles.content}
+                    className="flex-1"
+                    contentContainerStyle={{ paddingBottom: 144 }}
                     refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={palette.primary} colors={[palette.primary]} />}
                     showsVerticalScrollIndicator={false}
                 >
@@ -573,7 +575,7 @@ export default function ReservationScreen() {
                         </TouchableOpacity>
                     </StudentHero>
 
-                    <View style={styles.body}>
+                    <View className="-mt-[22px]">
                         <View style={[styles.emptyPanel, { backgroundColor: palette.surface, borderColor: palette.border, shadowColor: palette.shadow }]}>
                             <View style={[styles.emptyIconWrap, { backgroundColor: palette.primarySoft }]}>
                                 <MaterialCommunityIcons name="bed-empty" size={34} color={palette.primary} />
@@ -584,7 +586,7 @@ export default function ReservationScreen() {
                             </Text>
                         </View>
 
-                        <View style={styles.section}>{renderHistoryCard()}</View>
+                        <View className="px-[18px] pt-[22px]">{renderHistoryCard()}</View>
                     </View>
                 </ScrollView>
             </View>
@@ -613,12 +615,13 @@ export default function ReservationScreen() {
 
     return (
         <>
-            <View style={[styles.screen, { backgroundColor: palette.pageBackground }]}>
-                <StatusBar barStyle="light-content" backgroundColor="#08162B" />
+            <View className="flex-1" style={{ backgroundColor: palette.pageBackground }}>
+                <StatusBar barStyle="light-content" backgroundColor={palette.hero} />
 
                 <ScrollView
-                    style={styles.flex}
-                    contentContainerStyle={styles.content}
+                    className="flex-1"
+                    contentContainerStyle={{ paddingBottom: 144 }}
+                    {...swipeHandlers}
                     refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={palette.primary} colors={[palette.primary]} />}
                     showsVerticalScrollIndicator={false}
                 >
@@ -632,7 +635,7 @@ export default function ReservationScreen() {
                                 : `${reservation.hostel?.name ?? 'Your hostel'} is currently assigned to you.`
                         }
                     >
-                        <View style={styles.heroMetaRow}>
+                        <View className="mt-[18px] flex-row flex-wrap gap-[10px]">
                             <View style={[styles.heroMetaChip, { backgroundColor: statusMeta.backgroundColor }]}>
                                 <MaterialCommunityIcons name={statusMeta.icon} size={14} color={statusMeta.color} />
                                 <Text style={[styles.heroMetaText, { color: statusMeta.color }]}>{statusMeta.label}</Text>
@@ -644,15 +647,15 @@ export default function ReservationScreen() {
                         </View>
                     </StudentHero>
 
-                    <View style={styles.body}>
-                        <View style={styles.section}>
+                    <View className="-mt-[22px]">
+                        <View className="px-[18px] pt-[22px]">
                         {isTemporaryInvite ? (
                             <View style={[styles.inviteBanner, { backgroundColor: palette.primarySoft }]}>
-                                <View style={styles.inviteBannerTop}>
+                                <View className="flex-row gap-[14px]">
                                     <View style={[styles.inviteBannerIcon, { backgroundColor: palette.surface }]}>
                                         <MaterialCommunityIcons name="email-fast-outline" size={20} color={palette.primary} />
                                     </View>
-                                    <View style={styles.inviteBannerCopy}>
+                                    <View className="flex-1 gap-1">
                                         <Text style={[styles.inviteBannerTitle, { color: palette.primaryStrong }]}>Waiting for your approval</Text>
                                         <Text style={[styles.inviteBannerText, { color: palette.textSecondary }]}>
                                             Accept this room once your payment or network issue is sorted out.
@@ -663,7 +666,7 @@ export default function ReservationScreen() {
                                     </View>
                                 </View>
 
-                                <View style={styles.inviteActionRow}>
+                                <View className="mt-4 flex-row gap-[10px]">
                                     <TouchableOpacity
                                         style={[styles.primaryAction, { backgroundColor: palette.primary }, responding !== null && styles.disabledAction]}
                                         activeOpacity={0.85}
@@ -741,7 +744,7 @@ export default function ReservationScreen() {
                         ) : null}
 
                         <View style={[styles.panel, { backgroundColor: palette.surface, borderColor: palette.border, shadowColor: palette.shadow }]}>
-                            <View style={styles.panelHeader}>
+                            <View className="mb-[18px] flex-row items-center justify-between gap-3">
                                 <View>
                                     <Text style={[styles.panelEyebrow, { color: palette.textMuted }]}>Overview</Text>
                                     <Text style={[styles.panelTitle, { color: palette.textPrimary }]}>Accommodation details</Text>
@@ -751,7 +754,7 @@ export default function ReservationScreen() {
                                 </View>
                             </View>
 
-                            <View style={styles.statGrid}>
+                            <View className="flex-row flex-wrap gap-3">
                                 <View style={[styles.statCard, { backgroundColor: palette.surfaceMuted, borderColor: palette.border }]}>
                                     <View style={[styles.statIconBox, { backgroundColor: palette.primarySoft }]}>
                                         <MaterialCommunityIcons name="home-city-outline" size={18} color={palette.primary} />
@@ -796,16 +799,16 @@ export default function ReservationScreen() {
                     </View>
 
                     {reservation.status === 'confirmed' && isFriendReservedRoom ? (
-                        <View style={styles.section}>
+                        <View className="px-[18px] pt-[22px]">
                             <View style={[styles.panel, { backgroundColor: palette.surface, borderColor: palette.border, shadowColor: palette.shadow }]}>
-                                <View style={styles.panelHeader}>
+                                <View className="mb-[18px] flex-row items-center justify-between gap-3">
                                     <View>
                                         <Text style={[styles.panelEyebrow, { color: palette.textMuted }]}>Next step</Text>
                                         <Text style={[styles.panelTitle, { color: palette.textPrimary }]}>Porter check-in guidance</Text>
                                     </View>
                                 </View>
 
-                                <View style={styles.nextStepsList}>
+                                <View className="mt-2 gap-3">
                                     <View style={[styles.nextStepCard, { backgroundColor: palette.surfaceMuted, borderColor: palette.border }]}>
                                         <Text style={[styles.nextStepTitle, { color: palette.textPrimary }]}>1. Wait for check-in to open</Text>
                                         <Text style={[styles.nextStepCopy, { color: palette.textSecondary }]}>
@@ -829,9 +832,9 @@ export default function ReservationScreen() {
                         </View>
                     ) : null}
 
-                    <View style={styles.section}>
+                    <View className="px-[18px] pt-[22px]">
                         <View style={[styles.panel, { backgroundColor: palette.surface, borderColor: palette.border, shadowColor: palette.shadow }]}>
-                            <View style={styles.panelHeader}>
+                            <View className="mb-[18px] flex-row items-center justify-between gap-3">
                                 <View>
                                     <Text style={[styles.panelEyebrow, { color: palette.textMuted }]}>Occupants</Text>
                                     <Text style={[styles.panelTitle, { color: palette.textPrimary }]}>Room members</Text>
@@ -865,7 +868,7 @@ export default function ReservationScreen() {
                                 ].join(' | ');
 
                                 return (
-                                    <View key={`${member.matricNumber}-${index}`} style={styles.memberSpacer}>
+                                    <View key={`${member.matricNumber}-${index}`} className="mt-[10px]">
                                         {renderMemberCard(
                                             fullName || member.matricNumber,
                                             subtitle,
@@ -878,7 +881,7 @@ export default function ReservationScreen() {
                             })}
 
                             {canAddFriends ? (
-                                <View style={styles.openSlotsWrap}>
+                                <View className="mt-[14px] flex-row flex-wrap gap-[10px]">
                                     {Array.from({ length: availableSpaces }).map((_, index) => (
                                         <View key={index} style={[styles.openSlotCard, { borderColor: palette.border }]}>
                                             <View style={[styles.openSlotIcon, { backgroundColor: palette.surfaceMuted }]}>
@@ -906,14 +909,14 @@ export default function ReservationScreen() {
                         </View>
                     </View>
 
-                    {(reservation?.inviteTracker?.length ?? 0) > 0 ? <View style={styles.section}>{renderInviteTrackerCard()}</View> : null}
+                    {(reservation?.inviteTracker?.length ?? 0) > 0 ? <View className="px-[18px] pt-[22px]">{renderInviteTrackerCard()}</View> : null}
 
-                    <View style={styles.section}>{renderHistoryCard()}</View>
+                    <View className="px-[18px] pt-[22px]">{renderHistoryCard()}</View>
 
                     {reservation.status !== 'temporary' &&
                     reservation.status !== 'cancelled' &&
                     reservation.status !== 'checked_in' ? (
-                        <View style={styles.section}>
+                        <View className="px-[18px] pt-[22px]">
                             <View style={[styles.dangerPanel, { backgroundColor: palette.dangerSoft }]}>
                                 <View style={styles.dangerCopy}>
                                     <Text style={[styles.dangerTitle, { color: palette.danger }]}>Need to release this room?</Text>
@@ -950,11 +953,11 @@ export default function ReservationScreen() {
                             <View style={[styles.modalHandle, { backgroundColor: palette.border }]} />
 
                             <ScrollView showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
-                                <View style={styles.modalHero}>
+                                <View className="mb-4 flex-row gap-[14px]">
                                     <View style={[styles.modalHeroIcon, { backgroundColor: palette.primarySoft }]}>
                                         <MaterialCommunityIcons name="account-multiple-plus-outline" size={22} color={palette.primary} />
                                     </View>
-                                    <View style={styles.modalHeroCopy}>
+                                    <View className="flex-1 gap-1">
                                         <Text style={[styles.modalTitle, { color: palette.textPrimary }]}>
                                             Add friends to room {reservation.room?.roomNumber}
                                         </Text>
@@ -966,10 +969,10 @@ export default function ReservationScreen() {
 
                                 <Divider style={{ backgroundColor: palette.divider, marginBottom: 18 }} />
 
-                                <Text style={[styles.modalLabel, { color: palette.textMuted }]}>Matric numbers</Text>
+                                <Text className="mb-[10px] text-[11px] font-bold uppercase tracking-[1px]" style={{ color: palette.textMuted }}>Matric numbers</Text>
 
                                 {newMatrics.map((matric, index) => (
-                                    <View key={index} style={styles.matricRow}>
+                                    <View key={index} className="mb-[10px] flex-row items-center">
                                         <TextInput
                                             mode="outlined"
                                             value={matric}
@@ -1007,7 +1010,7 @@ export default function ReservationScreen() {
                                 </View>
                             </ScrollView>
 
-                            <View style={styles.modalActionRow}>
+                            <View className="mt-5 flex-row gap-[10px]">
                                 <TouchableOpacity
                                     style={[
                                         styles.modalCancelButton,
@@ -1045,12 +1048,6 @@ export default function ReservationScreen() {
 }
 
 const styles = StyleSheet.create({
-    flex: {
-        flex: 1,
-    },
-    screen: {
-        flex: 1,
-    },
     loadingScreen: {
         flex: 1,
     },
@@ -1058,12 +1055,6 @@ const styles = StyleSheet.create({
         flex: 1,
         alignItems: 'center',
         justifyContent: 'center',
-    },
-    content: {
-        paddingBottom: 144,
-    },
-    body: {
-        marginTop: -22,
     },
     hero: {
         backgroundColor: '#1565C0',
@@ -1121,12 +1112,6 @@ const styles = StyleSheet.create({
         lineHeight: 21,
         maxWidth: 330,
     },
-    heroMetaRow: {
-        flexDirection: 'row',
-        flexWrap: 'wrap',
-        gap: 10,
-        marginTop: 18,
-    },
     heroMetaChip: {
         flexDirection: 'row',
         alignItems: 'center',
@@ -1169,10 +1154,6 @@ const styles = StyleSheet.create({
         fontWeight: '700',
         fontSize: 14,
     },
-    section: {
-        paddingHorizontal: 18,
-        paddingTop: 22,
-    },
     panel: {
         borderWidth: 1,
         borderRadius: 22,
@@ -1182,13 +1163,6 @@ const styles = StyleSheet.create({
         shadowOpacity: 0.12,
         shadowRadius: 22,
         elevation: 8,
-    },
-    panelHeader: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        gap: 12,
-        marginBottom: 18,
     },
     panelEyebrow: {
         textTransform: 'uppercase',
@@ -1256,10 +1230,6 @@ const styles = StyleSheet.create({
         padding: 18,
         marginBottom: 22,
     },
-    inviteBannerTop: {
-        flexDirection: 'row',
-        gap: 14,
-    },
     inviteBannerIcon: {
         width: 44,
         height: 44,
@@ -1267,10 +1237,6 @@ const styles = StyleSheet.create({
         backgroundColor: '#FFFFFF',
         alignItems: 'center',
         justifyContent: 'center',
-    },
-    inviteBannerCopy: {
-        flex: 1,
-        gap: 4,
     },
     inviteBannerTitle: {
         fontSize: 17,
@@ -1287,11 +1253,6 @@ const styles = StyleSheet.create({
         color: '#1565C0',
         fontWeight: '700',
         marginTop: 2,
-    },
-    inviteActionRow: {
-        flexDirection: 'row',
-        gap: 10,
-        marginTop: 16,
     },
     primaryAction: {
         flex: 1,
@@ -1374,11 +1335,6 @@ const styles = StyleSheet.create({
         textTransform: 'uppercase',
         letterSpacing: 0.5,
     },
-    statGrid: {
-        flexDirection: 'row',
-        flexWrap: 'wrap',
-        gap: 12,
-    },
     statCard: {
         width: '48%',
         borderRadius: 18,
@@ -1415,13 +1371,6 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         gap: 12,
-    },
-    memberSpacer: {
-        marginTop: 10,
-    },
-    trackerList: {
-        paddingTop: 16,
-        gap: 4,
     },
     trackerMessage: {
         fontSize: 12,
@@ -1461,12 +1410,6 @@ const styles = StyleSheet.create({
     memberChipText: {
         fontSize: 11,
         fontWeight: '800',
-    },
-    openSlotsWrap: {
-        flexDirection: 'row',
-        flexWrap: 'wrap',
-        gap: 10,
-        marginTop: 14,
     },
     openSlotCard: {
         width: '48%',
@@ -1512,10 +1455,6 @@ const styles = StyleSheet.create({
         fontSize: 14,
         fontWeight: '800',
     },
-    nextStepsList: {
-        gap: 12,
-        marginTop: 8,
-    },
     nextStepCard: {
         borderRadius: 18,
         borderWidth: 1,
@@ -1547,18 +1486,6 @@ const styles = StyleSheet.create({
         fontSize: 12,
         lineHeight: 18,
     },
-    timelineList: {
-        paddingTop: 16,
-        gap: 14,
-    },
-    timelineItem: {
-        flexDirection: 'row',
-        gap: 14,
-    },
-    timelineRail: {
-        width: 38,
-        alignItems: 'center',
-    },
     timelineIconBox: {
         width: 38,
         height: 38,
@@ -1571,17 +1498,6 @@ const styles = StyleSheet.create({
         flex: 1,
         marginTop: 8,
         borderRadius: 999,
-    },
-    timelineBody: {
-        flex: 1,
-        paddingTop: 2,
-    },
-    timelineHeader: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'flex-start',
-        gap: 10,
-        marginBottom: 6,
     },
     timelineTitle: {
         flex: 1,
@@ -1656,11 +1572,6 @@ const styles = StyleSheet.create({
         backgroundColor: '#D7DCE5',
         marginBottom: 18,
     },
-    modalHero: {
-        flexDirection: 'row',
-        gap: 14,
-        marginBottom: 16,
-    },
     modalHeroIcon: {
         width: 48,
         height: 48,
@@ -1668,10 +1579,6 @@ const styles = StyleSheet.create({
         backgroundColor: '#EAF3FF',
         alignItems: 'center',
         justifyContent: 'center',
-    },
-    modalHeroCopy: {
-        flex: 1,
-        gap: 4,
     },
     modalTitle: {
         fontSize: 20,
@@ -1681,18 +1588,6 @@ const styles = StyleSheet.create({
     modalSubtitle: {
         fontSize: 13,
         lineHeight: 19,
-    },
-    modalLabel: {
-        textTransform: 'uppercase',
-        letterSpacing: 1,
-        fontSize: 11,
-        fontWeight: '700',
-        marginBottom: 10,
-    },
-    matricRow: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        marginBottom: 10,
     },
     matricInput: {
         flex: 1,
@@ -1737,11 +1632,6 @@ const styles = StyleSheet.create({
         fontSize: 13,
         lineHeight: 19,
         color: '#355F90',
-    },
-    modalActionRow: {
-        flexDirection: 'row',
-        gap: 10,
-        marginTop: 20,
     },
     modalCancelButton: {
         flex: 1,

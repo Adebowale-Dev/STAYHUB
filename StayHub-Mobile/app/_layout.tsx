@@ -1,5 +1,6 @@
 import React, { useEffect, useRef } from 'react';
 import { Stack, useRouter, useSegments } from 'expo-router';
+import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
 import { View } from 'react-native';
 import { PaperProvider } from 'react-native-paper';
 import { useAuthStore } from '../store/authStore';
@@ -7,7 +8,7 @@ import { useThemeStore } from '../store/themeStore';
 import { studentAPI } from '../services/api';
 import { addNotificationResponseListener, configureForegroundNotifications, getLastNotificationResponseAsync, registerForPushNotificationsAsync, } from '../services/pushNotifications';
 import { toMobileNotificationRoute } from '../utils/notificationRoutes';
-import { getPaperTheme, themeVars } from '../theme/tokens';
+import { getAppPalette, getPaperTheme, themeVars } from '../theme/tokens';
 import '../global.css';
 function AuthGate() {
     const { isAuthenticated, isLoading } = useAuthStore();
@@ -99,18 +100,30 @@ export default function RootLayout() {
         loadTheme();
     }, []);
     const paperTheme = getPaperTheme(isDark);
-    return (<PaperProvider theme={paperTheme}>
-      <View
-        style={isDark ? themeVars.dark : themeVars.light}
-        className={isDark ? 'dark flex-1 bg-background' : 'flex-1 bg-background'}
-      >
-        <AuthGate />
-        <PushNotificationBridge />
-        <Stack screenOptions={{ headerShown: false }}>
-          <Stack.Screen name="(auth)" options={{ headerShown: false }}/>
-          <Stack.Screen name="(student)" options={{ headerShown: false }}/>
-          <Stack.Screen name="index" options={{ headerShown: false }}/>
-        </Stack>
-      </View>
-    </PaperProvider>);
+    const palette = getAppPalette(isDark);
+    const navigationTheme = {
+        ...(isDark ? DarkTheme : DefaultTheme),
+        dark: isDark,
+        colors: {
+            ...(isDark ? DarkTheme.colors : DefaultTheme.colors),
+            primary: palette.primary,
+            background: palette.pageBackground,
+            card: palette.pageBackground,
+            text: palette.textPrimary,
+            border: 'transparent',
+            notification: palette.primary,
+        },
+    };
+    return (<ThemeProvider value={navigationTheme}>
+      <PaperProvider theme={paperTheme}>
+        <View
+          style={isDark ? themeVars.dark : themeVars.light}
+          className={isDark ? 'dark flex-1 bg-background' : 'flex-1 bg-background'}
+        >
+          <AuthGate />
+          <PushNotificationBridge />
+          <Stack screenOptions={{ headerShown: false }} />
+        </View>
+      </PaperProvider>
+    </ThemeProvider>);
 }
