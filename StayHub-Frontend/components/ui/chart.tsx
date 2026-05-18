@@ -70,12 +70,26 @@ function ChartContainer({
 
 const ChartTooltip = RechartsPrimitive.Tooltip;
 
+type ChartTooltipPayloadItem = {
+  dataKey?: string | number;
+  name?: React.ReactNode;
+  value?: React.ReactNode;
+  color?: string;
+  payload?: {
+    month?: string;
+    [key: string]: unknown;
+  };
+};
+
 function ChartTooltipContent({
   active,
   payload,
   className,
   hideLabel = false,
-}: React.ComponentProps<typeof RechartsPrimitive.Tooltip> & {
+}: {
+  active?: boolean;
+  payload?: ChartTooltipPayloadItem[];
+  className?: string;
   hideLabel?: boolean;
 }) {
   const { config } = useChart();
