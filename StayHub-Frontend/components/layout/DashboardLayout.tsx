@@ -1,15 +1,23 @@
 'use client';
 import { useEffect, useState } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
-import { Menu, X, Bell, Search, AlertCircle, CheckCircle2, Info, TriangleAlert } from 'lucide-react';
+import { Bell, AlertCircle, CheckCircle2, Info, TriangleAlert } from 'lucide-react';
 import useAuthStore from '../../store/useAuthStore';
-import { authAPI, studentAPI } from '../../services/api';
+import { studentAPI } from '../../services/api';
 import { Button } from '@/components/ui/button';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { resolveMediaUrl } from '@/lib/media';
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, } from '@/components/ui/dropdown-menu';
 import { AppSidebar } from '@/components/app-sidebar';
 import { AnimatedThemeToggler } from '../themetoggler';
+import { SidebarInset, SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
+import {
+    Breadcrumb,
+    BreadcrumbItem,
+    BreadcrumbLink,
+    BreadcrumbList,
+    BreadcrumbPage,
+    BreadcrumbSeparator,
+} from '@/components/ui/breadcrumb';
+import { Separator } from '@/components/ui/separator';
 interface DashboardLayoutProps {
     children: React.ReactNode;
 }
@@ -69,10 +77,7 @@ const getAlertVisuals = (type: StudentNotification['type']) => {
 export default function DashboardLayout({ children }: DashboardLayoutProps) {
     const router = useRouter();
     const pathname = usePathname();
-    const { user, logout } = useAuthStore();
-    const profilePictureUrl = resolveMediaUrl(user?.profilePicture);
-    const userDisplayName = user?.firstName || 'User';
-    const [sidebarOpen, setSidebarOpen] = useState(false);
+    const { user } = useAuthStore();
     const [notifications, setNotifications] = useState<StudentNotification[]>([]);
     const [loadingAlerts, setLoadingAlerts] = useState(false);
     const [unreadCount, setUnreadCount] = useState(0);
@@ -136,47 +141,6 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
             mounted = false;
         };
     }, [pathname, user?.role]);
-    const handleLogout = async () => {
-        try {
-            await authAPI.logout();
-        }
-        catch (error) {
-            console.error('Logout error:', error);
-        }
-        finally {
-            logout();
-            router.replace('/login');
-        }
-    };
-    const getInitials = () => {
-        if (!user)
-            return 'U';
-        return `${user.firstName?.[0] || ''}${user.lastName?.[0] || ''}`.toUpperCase();
-    };
-    const getProfilePath = () => {
-        switch (user?.role) {
-            case 'student':
-                return '/student/profile';
-            case 'porter':
-                return '/porter/profile';
-            case 'admin':
-                return '/admin/profile';
-            default:
-                return '/profile';
-        }
-    };
-    const getSettingsPath = () => {
-        switch (user?.role) {
-            case 'student':
-                return '/student/settings';
-            case 'porter':
-                return '/porter/settings';
-            case 'admin':
-                return '/admin/settings';
-            default:
-                return '/settings';
-        }
-    };
     const formatAlertTimestamp = (value?: string) => {
         if (!value)
             return 'Now';
@@ -223,51 +187,48 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
             console.error('Failed to mark all notifications as read:', error);
         }
     };
-    return (<div className="flex h-screen overflow-hidden bg-background">
-      
-      <aside className="hidden lg:block">
-        <AppSidebar />
-      </aside>
-
-      
-      <>
-        
-        <div className={`fixed inset-0 z-40 bg-black/50 lg:hidden transition-opacity duration-300 ${sidebarOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'}`} onClick={() => setSidebarOpen(false)}/>
-
-        
-        <aside className={`fixed inset-y-0 left-0 z-50 lg:hidden transform transition-transform duration-300 ease-in-out ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}>
-          <AppSidebar />
-        </aside>
-      </>
-
-      
-      <div className="flex flex-1 flex-col overflow-hidden">
-        
-        <header className="flex h-16 items-center border-b bg-card px-4 lg:px-6 shadow-sm">
-          
-          <Button variant="ghost" size="sm" className="lg:hidden h-9 w-9 p-0 shrink-0 mr-2" onClick={() => setSidebarOpen(!sidebarOpen)}>
-            {sidebarOpen ? (<X className="h-5 w-5"/>) : (<Menu className="h-5 w-5"/>)}
-            <span className="sr-only">Toggle menu</span>
-          </Button>
-
-          
-          <div className="flex-1 flex justify-center">
-            <div className="relative hidden sm:flex w-full max-w-md">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground"/>
-              <input type="text" placeholder="Search..." className="w-full rounded-xl border border-border bg-background pl-10 pr-4 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/50 transition-all"/>
-            </div>
+    const pathSegments = pathname.split('/').filter(Boolean);
+    const breadcrumbItems = pathSegments.map((segment, index) => {
+        const href = `/${pathSegments.slice(0, index + 1).join('/')}`;
+        const label = segment
+            .replace(/-/g, ' ')
+            .replace(/\b\w/g, (char) => char.toUpperCase());
+        return { href, label };
+    });
+    return (<SidebarProvider defaultOpen>
+      <AppSidebar />
+      <SidebarInset className="bg-muted/30">
+        <header className="flex h-16 shrink-0 items-center gap-2 border-b bg-background/80 backdrop-blur-sm">
+          <div className="flex items-center gap-2 px-4">
+            <SidebarTrigger className="-ml-1" />
+            <Separator orientation="vertical" className="mr-2 data-[orientation=vertical]:h-4" />
+            <Breadcrumb>
+              <BreadcrumbList>
+                {breadcrumbItems.length > 1 && (<>
+                    <BreadcrumbItem className="hidden md:block">
+                      <BreadcrumbLink href={breadcrumbItems[0].href}>
+                        {breadcrumbItems[0].label}
+                      </BreadcrumbLink>
+                    </BreadcrumbItem>
+                    <BreadcrumbSeparator className="hidden md:block" />
+                  </>)}
+                <BreadcrumbItem>
+                  <BreadcrumbPage>
+                    {breadcrumbItems[breadcrumbItems.length - 1]?.label || 'Dashboard'}
+                  </BreadcrumbPage>
+                </BreadcrumbItem>
+              </BreadcrumbList>
+            </Breadcrumb>
           </div>
 
-          
-          <div className="flex items-center gap-2 shrink-0">
+          <div className="ml-auto flex items-center gap-2 px-4">
             <AnimatedThemeToggler />
 
-            
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="sm" className="relative h-9 w-9 p-0 rounded-xl hover:bg-accent">
+                <Button variant="ghost" size="sm" className="relative h-9 w-9 rounded-xl p-0 hover:bg-accent">
                   <Bell className="h-5 w-5 text-muted-foreground"/>
-                  {unreadCount > 0 && (<span className="absolute top-1.5 right-1.5 h-2 w-2 rounded-full bg-primary"/>)}
+                  {unreadCount > 0 && (<span className="absolute right-1.5 top-1.5 h-2 w-2 rounded-full bg-primary"/>)}
                   <span className="sr-only">Notifications</span>
                 </Button>
               </DropdownMenuTrigger>
@@ -280,7 +241,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
                 {loadingAlerts ? (<div className="flex flex-col items-center justify-center py-8 text-center">
-                    <Bell className="h-8 w-8 text-muted-foreground/40 mb-2"/>
+                    <Bell className="mb-2 h-8 w-8 text-muted-foreground/40"/>
                     <p className="text-sm font-medium text-muted-foreground">Loading notifications...</p>
                   </div>) : user?.role === 'student' && notifications.length > 0 ? (<div className="max-h-96 overflow-y-auto">
                     {notifications.slice(0, 6).map((notification) => {
@@ -291,7 +252,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
                             <Icon className="h-4 w-4"/>
                           </div>
                           <div className="min-w-0 flex-1">
-                            <p className="text-sm font-medium text-foreground whitespace-normal leading-5">
+                            <p className="whitespace-normal text-sm font-medium leading-5 text-foreground">
                               {notification.message}
                             </p>
                             <div className="mt-1 flex items-center gap-2 text-xs text-muted-foreground">
@@ -309,9 +270,9 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
                         Mark all as read
                       </DropdownMenuItem>)}
                   </div>) : (<div className="flex flex-col items-center justify-center py-8 text-center">
-                    <Bell className="h-8 w-8 text-muted-foreground/40 mb-2"/>
+                    <Bell className="mb-2 h-8 w-8 text-muted-foreground/40"/>
                     <p className="text-sm font-medium text-muted-foreground">No new notifications</p>
-                    <p className="text-xs text-muted-foreground/60 mt-0.5">
+                    <p className="mt-0.5 text-xs text-muted-foreground/60">
                       {user?.role === 'student'
                 ? "You're all caught up!"
                 : 'Student notifications are enabled here first.'}
@@ -319,58 +280,14 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
                   </div>)}
               </DropdownMenuContent>
             </DropdownMenu>
-
-          
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <button className="flex items-center gap-2.5 rounded-full focus:outline-none focus:ring-2 focus:ring-primary/40 focus:ring-offset-2">
-                <Avatar className="h-9 w-9 ring-2 ring-primary/20">
-                  {profilePictureUrl ? (<AvatarImage src={profilePictureUrl} alt={`${userDisplayName} profile picture`}/>) : null}
-                  <AvatarFallback className="bg-primary/10 text-sm font-semibold text-primary">
-                    {getInitials()}
-                  </AvatarFallback>
-                </Avatar>
-                <div className="hidden lg:block text-left">
-                  <p className="text-sm font-semibold leading-none text-foreground">
-                    {user?.firstName} {user?.lastName}
-                  </p>
-                  <p className="text-xs leading-none text-muted-foreground mt-0.5 capitalize">
-                    {user?.role}
-                  </p>
-                </div>
-              </button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-56">
-              <DropdownMenuLabel>
-                <div className="flex flex-col space-y-1">
-                  <p className="text-sm font-semibold leading-none">
-                    {user?.firstName} {user?.lastName}
-                  </p>
-                  <p className="text-xs leading-none text-muted-foreground">
-                    {user?.email}
-                  </p>
-                </div>
-              </DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem className="cursor-pointer gap-2" onClick={() => router.push(getProfilePath())}>
-                Profile
-              </DropdownMenuItem>
-              <DropdownMenuItem className="cursor-pointer gap-2" onClick={() => router.push(getSettingsPath())}>
-                Settings
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={handleLogout} className="cursor-pointer text-destructive focus:text-destructive">
-                Log out
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
           </div>
         </header>
 
-        
-        <main className="flex-1 overflow-y-auto">
-          <div className="container mx-auto p-4 lg:p-6">{children}</div>
-        </main>
-      </div>
-    </div>);
+        <div className="flex flex-1 flex-col gap-4 overflow-auto p-4">
+          <div className="mx-auto w-full max-w-[1600px] flex-1">
+            {children}
+          </div>
+        </div>
+      </SidebarInset>
+    </SidebarProvider>);
 }

@@ -1,10 +1,13 @@
 'use client';
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { Bar, BarChart, CartesianGrid, LabelList, XAxis } from 'recharts';
 import ProtectedRoute from '@/components/auth/ProtectedRoute';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import { Button } from '@/components/ui/button';
-import { Users, CreditCard, Building2, DoorOpen, CheckCircle, Clock, UserCheck, ArrowRight, TrendingUp, Home, LogIn, LogOut, } from 'lucide-react';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { ChartContainer, ChartTooltip, ChartTooltipContent, type ChartConfig } from '@/components/ui/chart';
+import { Users, Building2, DoorOpen, CheckCircle, Clock, UserCheck, ArrowRight, TrendingUp, Home, LogIn, LogOut, } from 'lucide-react';
 import useAdminStore from '@/store/useAdminStore';
 import useAuthStore from '@/store/useAuthStore';
 import { adminAPI } from '@/services/api';
@@ -16,19 +19,17 @@ interface StatCardProps {
         className?: string;
     }>;
     iconBg: string;
-    iconColor: string;
-    accent?: string;
 }
-function StatCard({ label, value, sub, icon: Icon, iconBg, iconColor, accent }: StatCardProps) {
+function StatCard({ label, value, sub, icon: Icon, iconBg }: StatCardProps) {
     return (<div className="rounded-2xl bg-card border border-border p-5 hover:shadow-md transition-all duration-200">
       <div className="flex items-start justify-between">
         <div className="flex-1 min-w-0">
           <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{label}</p>
-          <p className={`mt-2 text-3xl font-bold ${accent ?? 'text-foreground'}`}>{value}</p>
+          <p className="mt-2 text-3xl font-bold text-foreground">{value}</p>
           {sub && <p className="text-xs text-muted-foreground mt-1">{sub}</p>}
         </div>
         <div className={`flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-2xl ${iconBg}`}>
-          <Icon className={`h-6 w-6 ${iconColor}`}/>
+          <Icon className="h-6 w-6 text-foreground"/>
         </div>
       </div>
     </div>);
@@ -69,8 +70,10 @@ export default function AdminDashboard() {
                 const response = await adminAPI.getDashboard();
                 setDashboardStats(response.data.data);
             }
-      catch (error: any) {
-        const status = error?.response?.status;
+      catch (error: unknown) {
+        const status = typeof error === 'object' && error !== null && 'response' in error
+            ? (error as { response?: { status?: number } }).response?.status
+            : undefined;
         if (status !== 401 && status !== 403) {
           console.error('Failed to fetch dashboard:', error);
         }
@@ -88,6 +91,17 @@ export default function AdminDashboard() {
     const occupancyPct = stats?.totalRooms && stats.totalRooms > 0
         ? Math.round((stats.occupiedRooms / stats.totalRooms) * 100)
         : 0;
+    const occupancyChartData = [
+        { label: 'Total', rooms: stats?.totalRooms ?? 0 },
+        { label: 'Occupied', rooms: stats?.occupiedRooms ?? 0 },
+        { label: 'Available', rooms: stats?.availableRooms ?? 0 },
+    ];
+    const occupancyChartConfig = {
+        rooms: {
+            label: 'Rooms',
+            color: 'var(--primary)',
+        },
+    } satisfies ChartConfig;
     if (statsLoading) {
         return (<ProtectedRoute allowedRoles={['admin']}>
         <DashboardLayout>
@@ -117,19 +131,19 @@ export default function AdminDashboard() {
 
           
           <div className="grid grid-cols-2 gap-4 lg:grid-cols-5">
-            <StatCard label="Total Students" value={stats?.totalStudents ?? 0} sub="Registered" icon={Users} iconBg="bg-violet-100 dark:bg-violet-900/30" iconColor="text-violet-600" accent="text-violet-600"/>
-            <StatCard label="Students Paid" value={stats?.studentsPaid ?? 0} sub={`${paidPct}% rate`} icon={LogIn} iconBg="bg-emerald-100 dark:bg-emerald-900/30" iconColor="text-emerald-600" accent="text-emerald-600"/>
-            <StatCard label="Total Rooms" value={stats?.totalRooms ?? 0} sub="All rooms" icon={DoorOpen} iconBg="bg-sky-100 dark:bg-sky-900/30" iconColor="text-sky-600" accent="text-sky-600"/>
-            <StatCard label="Available Rooms" value={stats?.availableRooms ?? 0} sub="Ready to book" icon={CheckCircle} iconBg="bg-teal-100 dark:bg-teal-900/30" iconColor="text-teal-600" accent="text-teal-600"/>
-            <StatCard label="Occupied Rooms" value={stats?.occupiedRooms ?? 0} sub={`${occupancyPct}% full`} icon={LogOut} iconBg="bg-orange-100 dark:bg-orange-900/30" iconColor="text-orange-500" accent="text-orange-500"/>
+            <StatCard label="Total Students" value={stats?.totalStudents ?? 0} sub="Registered" icon={Users} iconBg="bg-violet-100 dark:bg-violet-900/30"/>
+            <StatCard label="Students Paid" value={stats?.studentsPaid ?? 0} sub={`${paidPct}% rate`} icon={LogIn} iconBg="bg-emerald-100 dark:bg-emerald-900/30"/>
+            <StatCard label="Total Rooms" value={stats?.totalRooms ?? 0} sub="All rooms" icon={DoorOpen} iconBg="bg-sky-100 dark:bg-sky-900/30"/>
+            <StatCard label="Available Rooms" value={stats?.availableRooms ?? 0} sub="Ready to book" icon={CheckCircle} iconBg="bg-teal-100 dark:bg-teal-900/30"/>
+            <StatCard label="Occupied Rooms" value={stats?.occupiedRooms ?? 0} sub={`${occupancyPct}% full`} icon={LogOut} iconBg="bg-orange-100 dark:bg-orange-900/30"/>
           </div>
 
           
           <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
-            <StatCard label="Total Hostels" value={stats?.totalHostels ?? 0} sub="Active hostels" icon={Building2} iconBg="bg-indigo-100 dark:bg-indigo-900/30" iconColor="text-indigo-600"/>
-            <StatCard label="Total Porters" value={stats?.totalPorters ?? 0} sub="Active porters" icon={UserCheck} iconBg="bg-pink-100 dark:bg-pink-900/30" iconColor="text-pink-600"/>
-            <StatCard label="Pending Payments" value={stats?.studentsPending ?? 0} sub="Awaiting payment" icon={Clock} iconBg="bg-amber-100 dark:bg-amber-900/30" iconColor="text-amber-600"/>
-            <StatCard label="Payment Rate" value={`${paidPct}%`} sub="Of all students" icon={TrendingUp} iconBg="bg-primary/10" iconColor="text-primary" accent="text-primary"/>
+            <StatCard label="Total Hostels" value={stats?.totalHostels ?? 0} sub="Active hostels" icon={Building2} iconBg="bg-indigo-100 dark:bg-indigo-900/30"/>
+            <StatCard label="Total Porters" value={stats?.totalPorters ?? 0} sub="Active porters" icon={UserCheck} iconBg="bg-pink-100 dark:bg-pink-900/30"/>
+            <StatCard label="Pending Payments" value={stats?.studentsPending ?? 0} sub="Awaiting payment" icon={Clock} iconBg="bg-amber-100 dark:bg-amber-900/30"/>
+            <StatCard label="Payment Rate" value={`${paidPct}%`} sub="Of all students" icon={TrendingUp} iconBg="bg-primary/10"/>
           </div>
 
           
@@ -191,37 +205,84 @@ export default function AdminDashboard() {
           </div>
 
           
-          <div className="rounded-2xl border border-border bg-card p-5">
-            <div className="flex items-center justify-between mb-4">
+          <Card className="rounded-2xl">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
               <div>
-                <h2 className="font-semibold text-foreground">Room Occupancy Status</h2>
-                <p className="text-xs text-muted-foreground mt-0.5">
+                <CardTitle>Room Occupancy Status</CardTitle>
+                <CardDescription>
                   {stats?.occupiedRooms ?? 0} of {stats?.totalRooms ?? 0} rooms are occupied
-                </p>
+                </CardDescription>
               </div>
               <Button variant="outline" size="sm" onClick={() => router.push('/admin/rooms')} className="gap-2 text-xs">
                 <DoorOpen className="h-3.5 w-3.5"/>
                 Manage Rooms
               </Button>
-            </div>
-            <div className="grid grid-cols-3 gap-4">
-              {[
-            { label: 'Total Rooms', value: stats?.totalRooms ?? 0, pct: 100, color: 'bg-primary' },
-            { label: 'Occupied', value: stats?.occupiedRooms ?? 0, pct: occupancyPct, color: 'bg-orange-500' },
-            { label: 'Available', value: stats?.availableRooms ?? 0, pct: 100 - occupancyPct, color: 'bg-emerald-500' },
-        ].map((item) => (<div key={item.label} className="text-center">
-                  <div className="relative flex items-center justify-center mb-2">
-                    <svg className="h-20 w-20 -rotate-90">
-                      <circle cx="40" cy="40" r="30" fill="none" stroke="currentColor" strokeWidth="8" className="text-muted/50"/>
-                      <circle cx="40" cy="40" r="30" fill="none" strokeWidth="8" strokeDasharray={`${(item.pct / 100) * 2 * Math.PI * 30} ${2 * Math.PI * 30}`} className={item.color.replace('bg-', 'stroke-')} strokeLinecap="round"/>
-                    </svg>
-                    <span className="absolute text-lg font-bold text-foreground">{item.value}</span>
-                  </div>
-                  <p className="text-xs font-medium text-muted-foreground">{item.label}</p>
-                  <p className="text-xs text-muted-foreground/60">{item.pct}%</p>
-                </div>))}
-            </div>
-          </div>
+            </CardHeader>
+            <CardContent className="pt-0">
+              <div className="grid gap-6 lg:grid-cols-[220px_minmax(0,1fr)] lg:items-center">
+                <div className="grid gap-3">
+                  {[
+                    { label: 'Total Rooms', value: stats?.totalRooms ?? 0 },
+                    { label: 'Occupied', value: stats?.occupiedRooms ?? 0 },
+                    { label: 'Available', value: stats?.availableRooms ?? 0 },
+                  ].map((item) => (
+                    <div key={item.label} className="rounded-xl border border-border bg-muted/30 px-4 py-3">
+                      <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                        {item.label}
+                      </p>
+                      <p className="mt-1 text-2xl font-semibold text-foreground">
+                        {item.value}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="mx-auto w-full max-w-2xl">
+                  <ChartContainer config={occupancyChartConfig} className="h-[300px] w-full">
+                    <BarChart
+                      accessibilityLayer
+                      data={occupancyChartData}
+                      margin={{
+                        top: 22,
+                        left: 8,
+                        right: 18,
+                        bottom: 12,
+                      }}
+                    >
+                      <CartesianGrid vertical={false} strokeDasharray="3 3" />
+                      <XAxis
+                        dataKey="label"
+                        tickLine={false}
+                        tickMargin={8}
+                        axisLine={false}
+                      />
+                      <ChartTooltip
+                        cursor={false}
+                        content={<ChartTooltipContent hideLabel />}
+                      />
+                      <Bar dataKey="rooms" fill="var(--color-rooms)" radius={8} barSize={48}>
+                        <LabelList
+                          dataKey="rooms"
+                          position="top"
+                          offset={8}
+                          className="fill-foreground"
+                          fontSize={11}
+                        />
+                      </Bar>
+                    </BarChart>
+                  </ChartContainer>
+                </div>
+              </div>
+            </CardContent>
+            <CardFooter className="flex-col items-start gap-1.5 pt-0 text-sm">
+              <div className="flex gap-2 leading-none font-medium">
+                Occupancy currently at {occupancyPct}% <TrendingUp className="h-4 w-4" />
+              </div>
+              <div className="text-xs leading-none text-muted-foreground">
+                Comparing total rooms against occupied and available capacity
+              </div>
+            </CardFooter>
+          </Card>
         </div>
       </DashboardLayout>
     </ProtectedRoute>);
