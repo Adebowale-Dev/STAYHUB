@@ -198,11 +198,11 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
     return (<SidebarProvider defaultOpen>
       <AppSidebar />
       <SidebarInset className="bg-muted/30">
-        <header className="flex h-16 shrink-0 items-center gap-2 border-b bg-background/80 backdrop-blur-sm">
-          <div className="flex items-center gap-2 px-4">
+        <header className="flex min-h-16 shrink-0 items-center gap-2 border-b bg-background/80 px-3 py-2 backdrop-blur-sm sm:px-4">
+          <div className="flex min-w-0 flex-1 items-center gap-2">
             <SidebarTrigger className="-ml-1" />
-            <Separator orientation="vertical" className="mr-2 data-[orientation=vertical]:h-4" />
-            <Breadcrumb>
+            <Separator orientation="vertical" className="mr-1 hidden data-[orientation=vertical]:h-4 sm:block" />
+            <Breadcrumb className="min-w-0">
               <BreadcrumbList>
                 {breadcrumbItems.length > 1 && (<>
                     <BreadcrumbItem className="hidden md:block">
@@ -221,7 +221,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
             </Breadcrumb>
           </div>
 
-          <div className="ml-auto flex items-center gap-2 px-4">
+          <div className="ml-auto flex shrink-0 items-center gap-1.5 sm:gap-2">
             <AnimatedThemeToggler />
 
             <DropdownMenu>
@@ -232,7 +232,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
                   <span className="sr-only">Notifications</span>
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-80">
+              <DropdownMenuContent align="end" className="w-[min(20rem,calc(100vw-1rem))]">
                 <DropdownMenuLabel className="flex items-center justify-between">
                   <span>Notifications</span>
                   <span className="text-xs font-normal text-muted-foreground">
@@ -283,7 +283,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
           </div>
         </header>
 
-        <div className="flex flex-1 flex-col gap-4 overflow-auto p-4">
+        <div className="flex flex-1 flex-col gap-4 overflow-auto px-3 py-4 sm:p-4">
           <div className="mx-auto w-full max-w-[1600px] flex-1">
             {children}
           </div>

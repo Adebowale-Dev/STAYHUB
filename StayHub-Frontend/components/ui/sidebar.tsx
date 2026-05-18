@@ -7,7 +7,7 @@ import { cva, type VariantProps } from "class-variance-authority";
 
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
-import { Sheet, SheetContent } from "@/components/ui/sheet";
+import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
 
 const SIDEBAR_WIDTH = "16rem";
 const SIDEBAR_WIDTH_MOBILE = "18rem";
@@ -154,6 +154,7 @@ function Sidebar({
           side={side}
           className="w-[var(--sidebar-width-mobile)] border-sidebar-border bg-sidebar p-0 text-sidebar-foreground"
         >
+          <SheetTitle className="sr-only">Sidebar navigation</SheetTitle>
           <div
             data-sidebar="sidebar"
             data-mobile="true"

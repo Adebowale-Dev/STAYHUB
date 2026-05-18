@@ -21,15 +21,15 @@ interface StatCardProps {
     iconBg: string;
 }
 function StatCard({ label, value, sub, icon: Icon, iconBg }: StatCardProps) {
-    return (<div className="rounded-2xl bg-card border border-border p-5 hover:shadow-md transition-all duration-200">
+    return (<div className="rounded-2xl border border-border bg-card p-4 transition-all duration-200 hover:shadow-md sm:p-5">
       <div className="flex items-start justify-between">
         <div className="flex-1 min-w-0">
           <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{label}</p>
-          <p className="mt-2 text-3xl font-bold text-foreground">{value}</p>
+          <p className="mt-2 text-2xl font-bold text-foreground sm:text-3xl">{value}</p>
           {sub && <p className="text-xs text-muted-foreground mt-1">{sub}</p>}
         </div>
-        <div className={`flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-2xl ${iconBg}`}>
-          <Icon className="h-6 w-6 text-foreground"/>
+        <div className={`flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-2xl sm:h-12 sm:w-12 ${iconBg}`}>
+          <Icon className="h-5 w-5 text-foreground sm:h-6 sm:w-6"/>
         </div>
       </div>
     </div>);
@@ -118,19 +118,19 @@ export default function AdminDashboard() {
       <DashboardLayout>
         <div className="space-y-6">
           
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-2xl font-bold text-foreground">
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+            <div className="min-w-0">
+              <h1 className="text-xl font-bold text-foreground sm:text-2xl">
                 Welcome back, {user?.firstName || 'Admin'} 👋
               </h1>
-              <p className="text-sm text-muted-foreground mt-1">
+              <p className="mt-1 text-sm text-muted-foreground">
                 Here&apos;s a full overview of your accommodation system.
               </p>
             </div>
           </div>
 
           
-          <div className="grid grid-cols-2 gap-4 lg:grid-cols-5">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5">
             <StatCard label="Total Students" value={stats?.totalStudents ?? 0} sub="Registered" icon={Users} iconBg="bg-violet-100 dark:bg-violet-900/30"/>
             <StatCard label="Students Paid" value={stats?.studentsPaid ?? 0} sub={`${paidPct}% rate`} icon={LogIn} iconBg="bg-emerald-100 dark:bg-emerald-900/30"/>
             <StatCard label="Total Rooms" value={stats?.totalRooms ?? 0} sub="All rooms" icon={DoorOpen} iconBg="bg-sky-100 dark:bg-sky-900/30"/>
@@ -139,7 +139,7 @@ export default function AdminDashboard() {
           </div>
 
           
-          <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
             <StatCard label="Total Hostels" value={stats?.totalHostels ?? 0} sub="Active hostels" icon={Building2} iconBg="bg-indigo-100 dark:bg-indigo-900/30"/>
             <StatCard label="Total Porters" value={stats?.totalPorters ?? 0} sub="Active porters" icon={UserCheck} iconBg="bg-pink-100 dark:bg-pink-900/30"/>
             <StatCard label="Pending Payments" value={stats?.studentsPending ?? 0} sub="Awaiting payment" icon={Clock} iconBg="bg-amber-100 dark:bg-amber-900/30"/>
@@ -160,8 +160,8 @@ export default function AdminDashboard() {
             </div>
 
             
-            <div className="rounded-2xl border border-border bg-card p-5">
-              <div className="flex items-center justify-between mb-5">
+            <div className="rounded-2xl border border-border bg-card p-4 sm:p-5">
+              <div className="mb-5 flex items-center justify-between gap-3">
                 <div>
                   <h2 className="font-semibold text-foreground">Payment Overview</h2>
                   <p className="text-xs text-muted-foreground mt-0.5">Student payment status</p>
@@ -206,21 +206,21 @@ export default function AdminDashboard() {
 
           
           <Card className="rounded-2xl">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
-              <div>
+            <CardHeader className="flex flex-col gap-3 pb-3 sm:flex-row sm:items-center sm:justify-between sm:space-y-0">
+              <div className="min-w-0">
                 <CardTitle>Room Occupancy Status</CardTitle>
                 <CardDescription>
                   {stats?.occupiedRooms ?? 0} of {stats?.totalRooms ?? 0} rooms are occupied
                 </CardDescription>
               </div>
-              <Button variant="outline" size="sm" onClick={() => router.push('/admin/rooms')} className="gap-2 text-xs">
+              <Button variant="outline" size="sm" onClick={() => router.push('/admin/rooms')} className="w-full gap-2 text-xs sm:w-auto">
                 <DoorOpen className="h-3.5 w-3.5"/>
                 Manage Rooms
               </Button>
             </CardHeader>
             <CardContent className="pt-0">
               <div className="grid gap-6 lg:grid-cols-[220px_minmax(0,1fr)] lg:items-center">
-                <div className="grid gap-3">
+                <div className="grid gap-3 sm:grid-cols-3 lg:grid-cols-1">
                   {[
                     { label: 'Total Rooms', value: stats?.totalRooms ?? 0 },
                     { label: 'Occupied', value: stats?.occupiedRooms ?? 0 },
@@ -230,7 +230,7 @@ export default function AdminDashboard() {
                       <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
                         {item.label}
                       </p>
-                      <p className="mt-1 text-2xl font-semibold text-foreground">
+                      <p className="mt-1 text-xl font-semibold text-foreground sm:text-2xl">
                         {item.value}
                       </p>
                     </div>
@@ -238,15 +238,15 @@ export default function AdminDashboard() {
                 </div>
 
                 <div className="mx-auto w-full max-w-2xl">
-                  <ChartContainer config={occupancyChartConfig} className="h-[300px] w-full">
+                  <ChartContainer config={occupancyChartConfig} className="h-[240px] w-full sm:h-[280px] lg:h-[300px]">
                     <BarChart
                       accessibilityLayer
                       data={occupancyChartData}
                       margin={{
-                        top: 22,
-                        left: 8,
-                        right: 18,
-                        bottom: 12,
+                        top: 18,
+                        left: 0,
+                        right: 8,
+                        bottom: 4,
                       }}
                     >
                       <CartesianGrid vertical={false} strokeDasharray="3 3" />
@@ -260,13 +260,13 @@ export default function AdminDashboard() {
                         cursor={false}
                         content={<ChartTooltipContent hideLabel />}
                       />
-                      <Bar dataKey="rooms" fill="var(--color-rooms)" radius={8} barSize={48}>
+                      <Bar dataKey="rooms" fill="var(--color-rooms)" radius={8} barSize={32}>
                         <LabelList
                           dataKey="rooms"
                           position="top"
-                          offset={8}
+                          offset={6}
                           className="fill-foreground"
-                          fontSize={11}
+                          fontSize={10}
                         />
                       </Bar>
                     </BarChart>
