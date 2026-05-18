@@ -10,6 +10,7 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Building2, Search, MapPin, Users, BedDouble, CheckCircle2, ArrowRight, Home, Filter } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue, } from '@/components/ui/select';
+import { toast } from 'sonner';
 interface Hostel {
     _id: string;
     name: string;
@@ -81,7 +82,7 @@ export default function BrowseHostelsPage() {
             else {
                 errorMessage = 'Unable to connect to the server. Please ensure the backend is running.';
             }
-            alert(errorMessage);
+            toast.error(errorMessage);
         }
         finally {
             setLoading(false);

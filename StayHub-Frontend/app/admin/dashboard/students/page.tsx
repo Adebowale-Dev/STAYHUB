@@ -210,11 +210,13 @@ Email: ${studentToReset.email}
 Matric No: ${studentToReset.matricNo}
 New Password: ${newPassword}
 
-The student can now login with their email/matric number and this new password.
+            The student can now login with their email/matric number and this new password.
       `.trim();
             console.log(credentials);
-            alert(credentials);
-            toast.success("Password reset successfully!");
+            toast.success("Password reset successfully!", {
+                description: credentials,
+                duration: 12000,
+            });
             setResetPasswordModalOpen(false);
             setStudentToReset(null);
             setNewPassword("");
@@ -260,8 +262,10 @@ TO FIX THE BACKEND:
 Current backend behavior is abnormal - password hashing should take <1 second.
         `.trim();
                 console.warn(credentials);
-                alert(credentials);
-                toast.warning("Backend timeout! Password may still be updating. Wait 3-5 minutes then try logging in.", { duration: 10000 });
+                toast.warning("Backend timeout! Password may still be updating. Wait 3-5 minutes then try logging in.", {
+                    description: credentials,
+                    duration: 15000,
+                });
                 setResetPasswordModalOpen(false);
                 setNewPassword("");
             }

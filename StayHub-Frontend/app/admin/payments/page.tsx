@@ -10,6 +10,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { CreditCard, Search, CheckCircle, Clock, X, TrendingUp } from 'lucide-react';
+import { toast } from 'sonner';
 interface Payment {
     _id: string;
     student: {
@@ -200,7 +201,7 @@ export default function PaymentsPage() {
     const handleUpdateAmount = async () => {
         const amount = parseFloat(newAmount);
         if (isNaN(amount) || amount <= 0) {
-            alert('Please enter a valid amount');
+            toast.error('Please enter a valid amount');
             return;
         }
         setUpdatingAmount(true);
@@ -214,7 +215,7 @@ export default function PaymentsPage() {
             catch {
                 setCurrentAmount(amount);
             }
-            alert('Payment amount updated successfully!');
+            toast.success('Payment amount updated successfully!');
             setAmountDialogOpen(false);
             setNewAmount('');
             await loadData();
@@ -231,10 +232,12 @@ export default function PaymentsPage() {
                 message?: string;
             };
             if (error?.response?.data?.status === 404) {
-                alert('⚠️ Payment amount configuration is not yet implemented in the backend.');
+                toast.warning('Payment amount configuration is not yet implemented in the backend.');
             }
             else {
-                alert(`Error: ${error?.response?.data?.message || error?.message || 'Failed to update payment amount.'}`);
+                toast.error('Failed to update payment amount.', {
+                    description: error?.response?.data?.message || error?.message || 'Please try again.',
+                });
             }
         }
         finally {

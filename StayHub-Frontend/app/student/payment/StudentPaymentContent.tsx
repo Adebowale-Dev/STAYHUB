@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { CreditCard, CheckCircle2, XCircle, Clock, AlertCircle, DollarSign, Calendar, Building2, Info, KeyRound } from 'lucide-react';
+import { toast } from 'sonner';
 
 interface PaymentInfo {
     amount: number;
@@ -137,7 +138,9 @@ export default function StudentPaymentContent() {
                 localStorage.setItem('paymentReference', reference);
             }
 
-            alert('Payment initialized successfully!\n\nCheck your email for the payment code. You will need to enter this code to complete verification.');
+            toast.success('Payment initialized successfully!', {
+                description: 'Check your email for the payment code. You will need it to complete verification.',
+            });
             window.location.href = authorizationUrl;
         }
         catch (error: any) {
@@ -150,7 +153,9 @@ export default function StudentPaymentContent() {
                 const backendMessage = error.response?.data?.message || '';
 
                 if (backendMessage.includes('already completed payment') || backendMessage.includes('already paid')) {
-                    alert('Payment Already Completed!\n\nYou have already paid for this semester. Refresh the page to see your payment status.');
+                    toast.info('Payment already completed!', {
+                        description: 'Refresh the page to see your payment status.',
+                    });
                     loadPaymentInfo();
                     return;
                 }
@@ -168,7 +173,9 @@ export default function StudentPaymentContent() {
                 errorMessage += error.response?.data?.message || error.message || 'Please try again.';
             }
 
-            alert('Payment Error: ' + errorMessage);
+            toast.error('Payment error', {
+                description: errorMessage,
+            });
         }
         finally {
             setProcessing(false);

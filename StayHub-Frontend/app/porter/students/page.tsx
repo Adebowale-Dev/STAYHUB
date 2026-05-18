@@ -10,6 +10,7 @@ import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Users, Search, CheckCircle2, Clock, XCircle, Building2, DoorOpen, UserCheck, Mail, Phone } from 'lucide-react';
+import { toast } from 'sonner';
 interface Student {
     _id: string;
     name: string;
@@ -129,17 +130,19 @@ export default function PorterStudentsPage() {
                 };
             };
             if (axiosError.response?.data?.firstLogin) {
-                alert('You must change your password before accessing this page. Redirecting to settings...');
+                toast.warning('You must change your password before accessing this page.', {
+                    description: 'Redirecting to settings...',
+                });
                 window.location.href = '/porter/settings';
                 return;
             }
             if (axiosError.response?.status === 403) {
                 const errorMessage = axiosError.response?.data?.message || 'Access denied: Your porter account does not have a hostel assigned yet. Please contact the administrator to assign a hostel to your account.';
-                alert(errorMessage);
+                toast.error(errorMessage);
             }
             else {
                 const errorMessage = axiosError.response?.data?.message || 'Failed to load students. Please try again.';
-                alert(errorMessage);
+                toast.error(errorMessage);
             }
         }
         finally {
@@ -152,7 +155,7 @@ export default function PorterStudentsPage() {
             console.log('Checking in student:', studentId);
             const response = await porterAPI.checkInStudent(studentId);
             console.log('Check-in response:', response.data);
-            alert('Student checked in successfully!');
+            toast.success('Student checked in successfully!');
             loadStudents();
         }
         catch (error) {
@@ -168,7 +171,7 @@ export default function PorterStudentsPage() {
             const errorMessage = axiosError.response?.data?.message || 'Failed to check in student. Please try again.';
             console.error('Error status:', axiosError.response?.status);
             console.error('Error message:', errorMessage);
-            alert(errorMessage);
+            toast.error(errorMessage);
         }
         finally {
             setCheckingIn(null);

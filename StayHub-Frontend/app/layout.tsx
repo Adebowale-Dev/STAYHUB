@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import { ThemeProvider } from "@/components/themeprovider";
+import { Toaster } from "@/components/ui/sonner";
 export const metadata: Metadata = {
     title: "StayHub | Student Accommodation Platform",
     description: "A modern landing page and operations hub for student hostels, reservations, payments, and move-ins.",
@@ -21,6 +22,7 @@ export default function RootLayout({ children, }: Readonly<{
       <body className="antialiased" suppressHydrationWarning>
           <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
         {children}
+        <Toaster position="top-center" />
         </ThemeProvider>
       </body>
     </html>);

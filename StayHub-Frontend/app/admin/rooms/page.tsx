@@ -376,7 +376,7 @@ function RoomsPageContent() {
             await loadData();
             setDeleteDialogOpen(false);
             setRoomToDelete(null);
-            alert(`Room ${roomToDelete.roomNumber} deleted successfully`);
+            toast.success(`Room ${roomToDelete.roomNumber} deleted successfully`);
         }
         catch (err) {
             console.error("Error deleting room:", err);
@@ -390,13 +390,15 @@ function RoomsPageContent() {
                     };
                 };
                 if (axiosError.response?.status === 404) {
-                    alert("❌ Room deletion is not yet supported by the backend.\n\nThe backend needs to implement: DELETE /api/admin/rooms/:id\n\nPlease contact the backend team.");
+                    toast.warning("Room deletion is not yet supported by the backend.", {
+                        description: "The backend needs to implement `DELETE /api/admin/rooms/:id`.",
+                    });
                     setDeleteDialogOpen(false);
                     return;
                 }
             }
             const errorMessage = "Failed to delete room. Please try again.";
-            alert(errorMessage);
+            toast.error(errorMessage);
         }
         finally {
             setDeleting(false);

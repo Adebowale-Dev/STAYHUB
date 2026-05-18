@@ -10,6 +10,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { CheckCircle2, XCircle, Loader2, Home, CreditCard, KeyRound, Info, Mail } from 'lucide-react';
+import { toast } from 'sonner';
 
 type PageStatus = 'input' | 'verifying' | 'success' | 'failed';
 
@@ -32,11 +33,11 @@ export default function PaymentVerifyContent() {
 
     const handleVerifyPayment = async () => {
         if (!paymentCode.trim()) {
-            alert('Please enter the 6-character payment code');
+            toast.error('Please enter the 6-character payment code');
             return;
         }
         if (paymentCode.trim().length !== 6) {
-            alert('Payment code must be exactly 6 characters');
+            toast.error('Payment code must be exactly 6 characters');
             return;
         }
 

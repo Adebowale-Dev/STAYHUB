@@ -10,6 +10,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
 import { UserCheck, Search, Building2, Mail, Phone, UserPlus } from 'lucide-react';
+import { toast } from 'sonner';
 interface Porter {
     _id: string;
     name: string;
@@ -75,7 +76,9 @@ export default function PortersPage() {
     };
     const handleCreatePorter = async () => {
         if (!newPorter.name || !newPorter.email || !newPorter.password) {
-            alert('Please fill in all required fields (Name, Email, Password)');
+            toast.error('Please fill in all required fields.', {
+                description: 'Name, email, and password are required.',
+            });
             return;
         }
         setCreating(true);
@@ -91,7 +94,7 @@ export default function PortersPage() {
                 phoneNumber: newPorter.phoneNumber,
                 hostelId: newPorter.hostelId || undefined,
             });
-            alert('Porter created successfully!');
+            toast.success('Porter created successfully!');
             setCreateDialogOpen(false);
             setNewPorter({ name: '', email: '', password: '', phoneNumber: '', hostelId: '' });
             loadData();
@@ -107,7 +110,7 @@ export default function PortersPage() {
                 };
             };
             const errorMessage = axiosError.response?.data?.message || axiosError.response?.data?.error || 'Failed to create porter';
-            alert(errorMessage);
+            toast.error(errorMessage);
         }
         finally {
             setCreating(false);
@@ -120,13 +123,13 @@ export default function PortersPage() {
     };
     const handleReassignHostel = async () => {
         if (!selectedPorter || !selectedHostelId) {
-            alert('Please select a hostel');
+            toast.error('Please select a hostel');
             return;
         }
         setReassigning(true);
         try {
             await adminAPI.reassignHostel(selectedPorter._id, selectedHostelId);
-            alert('Hostel assigned successfully!');
+            toast.success('Hostel assigned successfully!');
             setReassignDialogOpen(false);
             setSelectedPorter(null);
             setSelectedHostelId('');
@@ -144,7 +147,9 @@ export default function PortersPage() {
                 };
             };
             const errorMessage = axiosError.response?.data?.message || axiosError.response?.data?.error || 'Failed to assign hostel';
-            alert(`Error: ${errorMessage}`);
+            toast.error('Failed to assign hostel.', {
+                description: errorMessage,
+            });
         }
         finally {
             setReassigning(false);

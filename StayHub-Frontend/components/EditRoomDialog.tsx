@@ -6,6 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue, } from "@/components/ui/select";
 import { adminAPI } from "@/services/api";
+import { toast } from "sonner";
 interface Hostel {
     _id: string;
     name: string;
@@ -122,7 +123,7 @@ export function EditRoomDialog({ open, onOpenChange, room, onSuccess }: EditRoom
             });
             const response = await adminAPI.updateRoom(room._id, payload);
             console.log("Room updated successfully:", response.data);
-            alert("Room updated successfully!");
+            toast.success("Room updated successfully!");
             onOpenChange(false);
             if (onSuccess) {
                 onSuccess();
@@ -154,40 +155,54 @@ export function EditRoomDialog({ open, onOpenChange, room, onSuccess }: EditRoom
                     code: axiosError.code,
                 });
                 if (axiosError.response?.status === 404) {
-                    alert("❌ Room editing is not yet supported by the backend.\n\nThe backend needs to implement: PUT /api/admin/rooms/:id\n\nPlease contact the backend team.");
+                    toast.warning("Room editing is not yet supported by the backend.", {
+                        description: "The backend needs to implement `PUT /api/admin/rooms/:id`.",
+                    });
                 }
                 else if (axiosError.response?.status === 400) {
                     const errorData = axiosError.response?.data;
                     const validationErrors = errorData?.errors || [];
                     if (validationErrors.length > 0) {
                         const errorDetails = validationErrors.map(e => `${e.field}: ${e.message}`).join("\n");
-                        alert(`Validation Error:\n${errorDetails}`);
+                        toast.error("Validation error", {
+                            description: errorDetails,
+                        });
                     }
                     else {
-                        alert(`Validation Error: ${errorData?.message || "Invalid data provided"}`);
+                        toast.error("Validation error", {
+                            description: errorData?.message || "Invalid data provided",
+                        });
                     }
                 }
                 else if (axiosError.response?.status === 409) {
                     setErrors({
                         roomNumber: "A room with this number already exists in the selected hostel",
                     });
-                    alert("A room with this number already exists in the selected hostel");
+                    toast.error("A room with this number already exists in the selected hostel");
                 }
                 else if (axiosError.response?.data?.message) {
-                    alert(`Error: ${axiosError.response.data.message}`);
+                    toast.error("Failed to update room", {
+                        description: axiosError.response.data.message,
+                    });
                 }
                 else if (axiosError.code === "ECONNABORTED" || axiosError.message?.includes("timeout")) {
-                    alert("Request timeout. Please check if the backend server is running.");
+                    toast.error("Request timeout.", {
+                        description: "Please check if the backend server is running.",
+                    });
                 }
                 else if (!axiosError.response) {
-                    alert("Network error. Please check if the backend server is running at http://localhost:5000");
+                    toast.error("Network error.", {
+                        description: "Please check if the backend server is running at http://localhost:5000",
+                    });
                 }
                 else {
-                    alert(`Failed to update room. Status: ${axiosError.response?.status}`);
+                    toast.error("Failed to update room.", {
+                        description: `Status: ${axiosError.response?.status}`,
+                    });
                 }
             }
             else {
-                alert("An unexpected error occurred. Please try again.");
+                toast.error("An unexpected error occurred. Please try again.");
             }
         }
         finally {

@@ -14,6 +14,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Separator } from '@/components/ui/separator';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue, } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, } from '@/components/ui/dialog';
+import { toast } from 'sonner';
 interface Room {
     _id: string;
     hostelId?: string;
@@ -334,14 +335,15 @@ export default function HostelRoomsPage() {
             console.log('✅ Reservation successful!');
             console.log('   Response:', response.data);
             if (reserveWithFriends && invitedFriends.length > 0) {
-                alert(`✅ Group Reservation Successful!\n\n` +
-                    `Room ${selectedRoom.roomNumber} reserved for:\n` +
-                    `- You\n` +
-                    invitedFriends.map(f => `- ${f.name} (${f.matricNo})`).join('\n') +
-                    `\n\nPlease proceed to check-in at the porter's desk.`);
+                toast.success('Group reservation successful!', {
+                    description: `Room ${selectedRoom.roomNumber} reserved for you and ${invitedFriends.length} invited friend(s). Please proceed to check-in at the porter's desk.`,
+                    duration: 10000,
+                });
             }
             else {
-                alert(`✅ Room ${selectedRoom.roomNumber} reserved successfully!\n\nPlease proceed to check-in at the porter's desk.`);
+                toast.success(`Room ${selectedRoom.roomNumber} reserved successfully!`, {
+                    description: "Please proceed to check-in at the porter's desk.",
+                });
             }
             resetReservationDialog();
             router.push('/student/reservation');
@@ -386,7 +388,10 @@ export default function HostelRoomsPage() {
                 const conflictingReservation = errorData.data.reservation;
                 const conflictRoom = conflictingReservation?.room?.roomNumber || 'your assigned room';
                 const conflictHostel = conflictingReservation?.hostel?.name || 'your hostel';
-                alert(`❌ Reservation Blocked\n\n${errorMessage}\n\nCurrent room: ${conflictRoom} in ${conflictHostel}\n\nYou will be redirected to your reservation page.`);
+                toast.error('Reservation blocked', {
+                    description: `${errorMessage} Current room: ${conflictRoom} in ${conflictHostel}. You will be redirected to your reservation page.`,
+                    duration: 10000,
+                });
                 setActiveReservation({
                     status: errorData?.data?.reservationStatus || conflictingReservation?.reservationStatus || conflictingReservation?.status || 'confirmed',
                     roomNumber: conflictingReservation?.room?.roomNumber,
@@ -397,7 +402,9 @@ export default function HostelRoomsPage() {
                 return;
             }
             else if (errorMessage.includes('No available bunks')) {
-                alert(`❌ Room No Longer Available\n\nAll bunks in this room are already reserved or occupied.\n\nThe room list will refresh automatically to show current availability.`);
+                toast.error('Room no longer available', {
+                    description: 'All bunks in this room are already reserved or occupied. The room list will refresh automatically to show current availability.',
+                });
                 try {
                     await loadRooms();
                 }
@@ -406,14 +413,20 @@ export default function HostelRoomsPage() {
                 resetReservationDialog();
             }
             else if (status === 401) {
-                alert(`❌ Session Expired\n\nYour session has expired. Please log in again.`);
+                toast.error('Session expired', {
+                    description: 'Your session has expired. Please log in again.',
+                });
                 router.push('/login');
             }
             else if (status === 404) {
-                alert(`❌ Room Not Found\n\nThe room you're trying to reserve no longer exists or has been removed.`);
+                toast.error('Room not found', {
+                    description: "The room you're trying to reserve no longer exists or has been removed.",
+                });
             }
             else {
-                alert(`❌ Reservation Failed\n\n${errorMessage}`);
+                toast.error('Reservation failed', {
+                    description: errorMessage,
+                });
             }
         }
         finally {

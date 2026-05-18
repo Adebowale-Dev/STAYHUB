@@ -9,6 +9,7 @@ import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { FileText, Download, Users, BedDouble, DoorOpen, Calendar, Building2, CheckCircle2, XCircle, Clock } from 'lucide-react';
+import { toast } from 'sonner';
 interface Student {
     _id: string;
     firstName: string;
@@ -75,13 +76,15 @@ export default function PorterReportsPage() {
                 };
             };
             if (axiosError.response?.data?.firstLogin) {
-                alert('You must change your password before accessing this page. Redirecting to settings...');
+                toast.warning('You must change your password before accessing this page.', {
+                    description: 'Redirecting to settings...',
+                });
                 window.location.href = '/porter/settings';
                 return;
             }
             if (axiosError.response?.status === 403) {
                 const errorMessage = axiosError.response?.data?.message || 'Access denied';
-                alert(errorMessage);
+                toast.error(errorMessage);
             }
         }
         finally {
@@ -123,7 +126,9 @@ export default function PorterReportsPage() {
         }, {} as Record<number, number>)
     };
     const handleExport = (reportType: string) => {
-        alert(`Exporting ${reportType} report... (This will be implemented with the backend)`);
+        toast.info(`Exporting ${reportType} report...`, {
+            description: 'This will be implemented with the backend.',
+        });
     };
     if (loading) {
         return (<ProtectedRoute allowedRoles={['porter']}>

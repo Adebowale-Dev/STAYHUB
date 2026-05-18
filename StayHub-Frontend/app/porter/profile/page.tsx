@@ -11,6 +11,7 @@ import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { User, Mail, Phone, Building2, Shield, Calendar, Clock, ArrowLeft, CheckCircle2 } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { toast } from 'sonner';
 interface PorterProfile {
     _id: string;
     name: string;
@@ -84,11 +85,11 @@ export default function PorterProfile() {
                 setProfile({ ...profile, phoneNumber });
             }
             setEditing(false);
-            alert('Phone number updated successfully!');
+            toast.success('Phone number updated successfully!');
         }
         catch (error) {
             console.error('Failed to update profile:', error);
-            alert('Failed to update profile. Please try again.');
+            toast.error('Failed to update profile. Please try again.');
         }
         finally {
             setSaving(false);

@@ -209,11 +209,13 @@ Login Credentials:
 🎓 Matric No: ${formData.matricNo.trim().toUpperCase()}
 🔑 Password: ${formData.password}
 
-The student can login using either their email or matric number along with the password.
+            The student can login using either their email or matric number along with the password.
       `.trim();
             console.log(loginInfo);
-            alert(loginInfo);
-            toast.success(`Student created successfully!`);
+            toast.success("Student created successfully!", {
+                description: loginInfo,
+                duration: 12000,
+            });
             onSuccess();
             onOpenChange(false);
             setFormData({

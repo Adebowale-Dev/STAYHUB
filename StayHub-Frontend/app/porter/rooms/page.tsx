@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { DoorOpen, Search, Users, BedDouble, Building2, AlertCircle } from 'lucide-react';
+import { toast } from 'sonner';
 interface Room {
     _id: string;
     roomNumber: string;
@@ -57,16 +58,18 @@ export default function PorterRoomsPage() {
                 };
             };
             if (axiosError.response?.data?.firstLogin) {
-                alert('You must change your password before accessing this page. Redirecting to settings...');
+                toast.warning('You must change your password before accessing this page.', {
+                    description: 'Redirecting to settings...',
+                });
                 window.location.href = '/porter/settings';
                 return;
             }
             if (axiosError.response?.status === 403) {
                 const errorMessage = axiosError.response?.data?.message || 'Access denied: Your porter account does not have a hostel assigned yet. Please contact the administrator to assign a hostel to your account.';
-                alert(errorMessage);
+                toast.error(errorMessage);
             }
             else {
-                alert('Failed to load rooms. Please try again.');
+                toast.error('Failed to load rooms. Please try again.');
             }
         }
         finally {

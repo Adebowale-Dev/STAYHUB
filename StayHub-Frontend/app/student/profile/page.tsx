@@ -14,6 +14,7 @@ import { resolveMediaUrl } from '@/lib/media';
 import useAuthStore from '@/store/useAuthStore';
 import { User, Mail, Phone, MapPin, Calendar, Building2, GraduationCap, CreditCard, Home, AlertCircle, Camera, CheckCircle2, ArrowLeft, Settings, Trash2 } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { toast } from 'sonner';
 interface StudentProfile {
     _id: string;
     name: string;
@@ -196,11 +197,11 @@ export default function StudentProfile() {
             const updatedProfile = response.data.user || response.data.data || response.data;
             applyProfileUpdate(updatedProfile);
             setEditing(false);
-            alert('Profile updated successfully!');
+            toast.success('Profile updated successfully!');
         }
         catch (error: unknown) {
             console.error('Failed to update profile:', error);
-            alert(getApiErrorMessage(error, 'Failed to update profile. Please try again.'));
+            toast.error(getApiErrorMessage(error, 'Failed to update profile. Please try again.'));
         }
         finally {
             setSaving(false);
@@ -213,12 +214,12 @@ export default function StudentProfile() {
         }
         const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
         if (!allowedTypes.includes(file.type)) {
-            alert('Please upload a JPEG, PNG, or WebP image.');
+            toast.error('Please upload a JPEG, PNG, or WebP image.');
             event.target.value = '';
             return;
         }
         if (file.size > 5 * 1024 * 1024) {
-            alert('Image must be 5 MB or smaller.');
+            toast.error('Image must be 5 MB or smaller.');
             event.target.value = '';
             return;
         }
@@ -232,11 +233,11 @@ export default function StudentProfile() {
                 response.data.student ||
                 response.data.data;
             applyProfileUpdate(updatedProfile);
-            alert('Profile picture updated successfully!');
+            toast.success('Profile picture updated successfully!');
         }
         catch (error) {
             console.error('Failed to upload profile picture:', error);
-            alert(getApiErrorMessage(error, 'Failed to upload profile picture. Please try again.'));
+            toast.error(getApiErrorMessage(error, 'Failed to upload profile picture. Please try again.'));
         }
         finally {
             setPictureAction(null);
@@ -252,11 +253,11 @@ export default function StudentProfile() {
             const response = await authAPI.updateProfile({ profilePicture: null });
             const updatedProfile = response.data.user || response.data.data || response.data;
             applyProfileUpdate(updatedProfile);
-            alert('Profile picture removed successfully!');
+            toast.success('Profile picture removed successfully!');
         }
         catch (error) {
             console.error('Failed to remove profile picture:', error);
-            alert(getApiErrorMessage(error, 'Failed to remove profile picture. Please try again.'));
+            toast.error(getApiErrorMessage(error, 'Failed to remove profile picture. Please try again.'));
         }
         finally {
             setPictureAction(null);

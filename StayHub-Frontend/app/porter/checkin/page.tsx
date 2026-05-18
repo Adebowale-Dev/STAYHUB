@@ -10,6 +10,7 @@ import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Checkbox } from '@/components/ui/checkbox';
 import { UserCheck, Search, CheckCircle2, Clock, AlertTriangle, Building2, DoorOpen, Mail, Phone, User, Calendar, Users } from 'lucide-react';
+import { toast } from 'sonner';
 interface PendingStudent {
     _id: string;
     name?: string;
@@ -184,17 +185,19 @@ export default function PorterCheckInPage() {
             console.error('Error status:', axiosError.response?.status);
             console.error('Error data:', axiosError.response?.data);
             if (axiosError.response?.data?.firstLogin) {
-                alert('You must change your password before accessing this page. Redirecting to settings...');
+                toast.warning('You must change your password before accessing this page.', {
+                    description: 'Redirecting to settings...',
+                });
                 window.location.href = '/porter/settings';
                 return;
             }
             if (axiosError.response?.status === 403) {
                 const errorMessage = axiosError.response?.data?.message || 'Access denied: Your porter account does not have a hostel assigned yet. Please contact the administrator to assign a hostel to your account.';
-                alert(errorMessage);
+                toast.error(errorMessage);
             }
             else {
                 const errorMessage = axiosError.response?.data?.message || 'Failed to load students. Please try again.';
-                alert(errorMessage);
+                toast.error(errorMessage);
             }
         }
         finally {
@@ -207,7 +210,7 @@ export default function PorterCheckInPage() {
             console.log('Checking in student:', studentId);
             const response = await porterAPI.checkInStudent(studentId);
             console.log('Check-in response:', response.data);
-            alert('Student checked in successfully!');
+            toast.success('Student checked in successfully!');
             await loadPendingStudents();
         }
         catch (error) {
@@ -221,7 +224,7 @@ export default function PorterCheckInPage() {
                 };
             };
             const errorMessage = axiosError.response?.data?.message || 'Failed to check in student. Please try again.';
-            alert(errorMessage);
+            toast.error(errorMessage);
         }
         finally {
             setCheckingIn(null);
@@ -234,12 +237,12 @@ export default function PorterCheckInPage() {
         setReleasingExpired(true);
         try {
             await porterAPI.releaseExpired();
-            alert('Expired reservations released successfully!');
+            toast.success('Expired reservations released successfully!');
             loadPendingStudents();
         }
         catch (error) {
             console.error('Failed to release expired reservations:', error);
-            alert('Failed to release expired reservations. Please try again.');
+            toast.error('Failed to release expired reservations. Please try again.');
         }
         finally {
             setReleasingExpired(false);
@@ -266,7 +269,7 @@ export default function PorterCheckInPage() {
     };
     const handleBulkCheckIn = async () => {
         if (selectedStudents.size === 0) {
-            alert('Please select at least one student to check in.');
+            toast.error('Please select at least one student to check in.');
             return;
         }
         if (!confirm(`Are you sure you want to check in ${selectedStudents.size} student(s)?`)) {
@@ -291,17 +294,20 @@ export default function PorterCheckInPage() {
             });
             await Promise.all(checkInPromises);
             if (failCount === 0) {
-                alert(`✅ Successfully checked in ${successCount} student(s)!`);
+                toast.success(`Successfully checked in ${successCount} student(s)!`);
             }
             else {
-                alert(`✅ Checked in ${successCount} student(s)\n❌ Failed: ${failCount} student(s)\n\nFailed students: ${errors.join(', ')}`);
+                toast.warning(`Checked in ${successCount} student(s) with ${failCount} failure(s).`, {
+                    description: `Failed students: ${errors.join(', ')}`,
+                    duration: 10000,
+                });
             }
             setSelectedStudents(new Set());
             await loadPendingStudents();
         }
         catch (error) {
             console.error('Bulk check-in error:', error);
-            alert('An error occurred during bulk check-in. Please try again.');
+            toast.error('An error occurred during bulk check-in. Please try again.');
         }
         finally {
             setBulkCheckingIn(false);

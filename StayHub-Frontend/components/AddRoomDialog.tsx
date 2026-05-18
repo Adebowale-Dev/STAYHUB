@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue, } from "@/components/ui/select";
 import { adminAPI } from "@/services/api";
+import { toast } from "sonner";
 interface Hostel {
     _id: string;
     name: string;
@@ -118,7 +119,7 @@ export function AddRoomDialog({ open, onOpenChange, onSuccess }: AddRoomDialogPr
             console.log("Creating room with payload:", payload);
             const response = await adminAPI.createRoom(payload);
             console.log("Room created successfully:", response.data);
-            alert("Room created successfully!");
+            toast.success("Room created successfully!");
             onOpenChange(false);
             if (onSuccess) {
                 onSuccess();
@@ -161,7 +162,9 @@ export function AddRoomDialog({ open, onOpenChange, onSuccess }: AddRoomDialogPr
                     console.error("Validation errors array:", errorData?.errors);
                     const errorMessage = errorData?.message || errorData?.error || "Invalid data provided";
                     if (errorMessage.includes("E11000") || errorMessage.includes("duplicate key")) {
-                        alert("❌ A room with this number already exists in this hostel.\n\nPlease use a different room number.");
+                        toast.error("A room with this number already exists in this hostel.", {
+                            description: "Please use a different room number.",
+                        });
                         setErrors({
                             roomNumber: "Room number already exists in this hostel",
                         });
@@ -170,10 +173,14 @@ export function AddRoomDialog({ open, onOpenChange, onSuccess }: AddRoomDialogPr
                     const validationErrors = errorData?.errors || [];
                     if (validationErrors.length > 0) {
                         const errorDetails = validationErrors.map(e => `${e.field}: ${e.message}`).join("\n");
-                        alert(`Validation Error:\n${errorDetails}`);
+                        toast.error("Validation error", {
+                            description: errorDetails,
+                        });
                     }
                     else {
-                        alert(`Validation Error: ${errorMessage}`);
+                        toast.error("Validation error", {
+                            description: errorMessage,
+                        });
                     }
                 }
                 else if (axiosError.response?.status === 409) {
@@ -182,20 +189,28 @@ export function AddRoomDialog({ open, onOpenChange, onSuccess }: AddRoomDialogPr
                     });
                 }
                 else if (axiosError.response?.data?.message) {
-                    alert(`Error: ${axiosError.response.data.message}`);
+                    toast.error("Failed to create room", {
+                        description: axiosError.response.data.message,
+                    });
                 }
                 else if (axiosError.code === "ECONNABORTED" || axiosError.message?.includes("timeout")) {
-                    alert("Request timeout. Please check if the backend server is running.");
+                    toast.error("Request timeout.", {
+                        description: "Please check if the backend server is running.",
+                    });
                 }
                 else if (!axiosError.response) {
-                    alert("Network error. Please check if the backend server is running at http://localhost:5000");
+                    toast.error("Network error.", {
+                        description: "Please check if the backend server is running at http://localhost:5000",
+                    });
                 }
                 else {
-                    alert(`Failed to create room. Status: ${axiosError.response?.status}`);
+                    toast.error("Failed to create room.", {
+                        description: `Status: ${axiosError.response?.status}`,
+                    });
                 }
             }
             else {
-                alert("An unexpected error occurred. Please try again.");
+                toast.error("An unexpected error occurred. Please try again.");
             }
         }
         finally {

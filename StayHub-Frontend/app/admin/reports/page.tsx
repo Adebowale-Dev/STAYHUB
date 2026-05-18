@@ -8,6 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Download, Users, Building2, CreditCard, TrendingUp, DoorOpen, UserCheck, Calendar, BarChart3 } from 'lucide-react';
+import { toast } from 'sonner';
 interface DashboardStats {
     totalStudents: number;
     studentsPaid: number;
@@ -308,11 +309,13 @@ export default function ReportsPage() {
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
-            alert(`✅ Report exported successfully as ${filename}.csv`);
+            toast.success('Report exported successfully!', {
+                description: `${filename}.csv`,
+            });
         }
         catch (error) {
             console.error('Export failed:', error);
-            alert('❌ Failed to export report. Please try again.');
+            toast.error('Failed to export report. Please try again.');
         }
         finally {
             setExporting(false);
