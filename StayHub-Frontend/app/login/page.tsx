@@ -30,14 +30,16 @@ export default function LoginPage() {
             />
 
             <div className="relative z-10 flex min-h-screen items-center justify-center px-6 py-10">
-                <div className="w-full max-w-md rounded-3xl border border-white/30 bg-white/60 p-8 shadow-2xl backdrop-blur-xl">
-                    <div className="mb-8 flex flex-col items-center text-center">
-                        <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-primary shadow-sm">
-                            <Building2 className="h-7 w-7 text-primary-foreground" />
+                <div className="w-full max-w-md rounded-3xl border border-white/40 bg-white/82 px-6 py-7 shadow-2xl backdrop-blur-md sm:px-8 sm:py-8">
+                    <div className="mb-6 flex flex-col items-center text-center">
+                        <div className="mb-3 flex h-14 w-14 items-center justify-center rounded-2xl bg-white/55 shadow-sm backdrop-blur">
+                            <Building2 className="h-7 w-7 text-slate-800" />
                         </div>
-                        <h1 className="text-3xl font-bold tracking-tight text-foreground">Welcome back</h1>
-                        <p className="mt-2 text-sm text-muted-foreground">
-                            Sign in to continue to StayHub
+                        <h1 className="text-3xl font-bold tracking-tight text-slate-800 sm:text-4xl">
+                            STAYHUB
+                        </h1>
+                        <p className="mt-2 text-xl font-medium text-slate-700">
+                            Welcome Back!
                         </p>
                     </div>
 
