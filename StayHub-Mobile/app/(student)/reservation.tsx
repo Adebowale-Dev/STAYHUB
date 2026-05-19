@@ -506,9 +506,11 @@ export default function ReservationScreen() {
                                 item.status !== 'approved' &&
                                 item.status !== 'rejected' &&
                                 item.status !== 'expired' ? (
-                                    <View style={styles.previewWarningRow}>
-                                        <MaterialCommunityIcons name="credit-card-clock-outline" size={16} color="#EF6C00" />
-                                        <Text style={styles.previewWarningText}>Payment is still pending for this friend, so approval can only happen after payment.</Text>
+                                    <View style={[styles.previewWarningRow, { backgroundColor: palette.warningSoft }]}>
+                                        <MaterialCommunityIcons name="credit-card-clock-outline" size={16} color={palette.warning} />
+                                        <Text style={[styles.previewWarningText, { color: palette.warning }]}>
+                                            Payment is still pending for this friend, so approval can only happen after payment.
+                                        </Text>
                                     </View>
                                 ) : null}
                             </View>
@@ -641,7 +643,7 @@ export default function ReservationScreen() {
                                 <Text style={[styles.heroMetaText, { color: statusMeta.color }]}>{statusMeta.label}</Text>
                             </View>
                             <View style={styles.heroGhostChip}>
-                                <MaterialCommunityIcons name="home-city-outline" size={14} color="#CFE3FF" />
+                                <MaterialCommunityIcons name="home-city-outline" size={14} color="rgba(255,255,255,0.82)" />
                                 <Text style={styles.heroGhostChipText}>{reservation.hostel?.name ?? 'Hostel'}</Text>
                             </View>
                         </View>
@@ -1184,7 +1186,7 @@ const styles = StyleSheet.create({
         minWidth: 30,
         height: 30,
         borderRadius: 15,
-        backgroundColor: '#1565C0',
+        backgroundColor: 'transparent',
         alignItems: 'center',
         justifyContent: 'center',
         paddingHorizontal: 8,
@@ -1209,7 +1211,7 @@ const styles = StyleSheet.create({
         width: 68,
         height: 68,
         borderRadius: 34,
-        backgroundColor: '#E3F2FD',
+        backgroundColor: 'transparent',
         alignItems: 'center',
         justifyContent: 'center',
         marginBottom: 16,
@@ -1225,7 +1227,7 @@ const styles = StyleSheet.create({
         textAlign: 'center',
     },
     inviteBanner: {
-        backgroundColor: '#EAF3FF',
+        backgroundColor: 'transparent',
         borderRadius: 22,
         padding: 18,
         marginBottom: 22,
@@ -1234,23 +1236,23 @@ const styles = StyleSheet.create({
         width: 44,
         height: 44,
         borderRadius: 14,
-        backgroundColor: '#FFFFFF',
+        backgroundColor: 'transparent',
         alignItems: 'center',
         justifyContent: 'center',
     },
     inviteBannerTitle: {
         fontSize: 17,
         fontWeight: '800',
-        color: '#0D47A1',
+        color: '#08305C',
     },
     inviteBannerText: {
         fontSize: 14,
         lineHeight: 20,
-        color: '#305A84',
+        color: '#667085',
     },
     inviteBannerDeadline: {
         fontSize: 12,
-        color: '#1565C0',
+        color: '#0C4A8C',
         fontWeight: '700',
         marginTop: 2,
     },
@@ -1258,7 +1260,7 @@ const styles = StyleSheet.create({
         flex: 1,
         minHeight: 48,
         borderRadius: 14,
-        backgroundColor: '#1565C0',
+        backgroundColor: '#0C4A8C',
         alignItems: 'center',
         justifyContent: 'center',
         flexDirection: 'row',
@@ -1273,16 +1275,16 @@ const styles = StyleSheet.create({
         flex: 1,
         minHeight: 48,
         borderRadius: 14,
-        backgroundColor: '#FFFFFF',
+        backgroundColor: 'transparent',
         borderWidth: 1.5,
-        borderColor: '#F2C0C0',
+        borderColor: 'transparent',
         alignItems: 'center',
         justifyContent: 'center',
         flexDirection: 'row',
         gap: 8,
     },
     secondaryActionText: {
-        color: '#C62828',
+        color: '#B91C1C',
         fontSize: 14,
         fontWeight: '800',
     },
@@ -1296,16 +1298,16 @@ const styles = StyleSheet.create({
         marginBottom: 18,
     },
     feedbackBannerSuccess: {
-        backgroundColor: '#E8F5E9',
+        backgroundColor: 'transparent',
     },
     feedbackBannerInfo: {
-        backgroundColor: '#E3F2FD',
+        backgroundColor: 'transparent',
     },
     feedbackBannerIcon: {
         width: 28,
         height: 28,
         borderRadius: 10,
-        backgroundColor: '#FFFFFF',
+        backgroundColor: 'transparent',
         alignItems: 'center',
         justifyContent: 'center',
     },
@@ -1313,13 +1315,13 @@ const styles = StyleSheet.create({
         flex: 1,
         fontSize: 13,
         lineHeight: 19,
-        color: '#256029',
+        color: '#15803D',
     },
     feedbackBannerTextInfo: {
         flex: 1,
         fontSize: 13,
         lineHeight: 19,
-        color: '#245D8B',
+        color: '#08305C',
     },
     disabledAction: {
         opacity: 0.7,
@@ -1424,7 +1426,7 @@ const styles = StyleSheet.create({
         width: 40,
         height: 40,
         borderRadius: 14,
-        backgroundColor: '#F5F7FA',
+        backgroundColor: 'transparent',
         alignItems: 'center',
         justifyContent: 'center',
         marginBottom: 12,
@@ -1442,7 +1444,7 @@ const styles = StyleSheet.create({
     addFriendsButton: {
         marginTop: 16,
         borderRadius: 16,
-        backgroundColor: '#EAF3FF',
+        backgroundColor: 'transparent',
         paddingVertical: 14,
         paddingHorizontal: 16,
         alignItems: 'center',
@@ -1451,7 +1453,7 @@ const styles = StyleSheet.create({
         gap: 8,
     },
     addFriendsButtonText: {
-        color: '#1565C0',
+        color: '#0C4A8C',
         fontSize: 14,
         fontWeight: '800',
     },
@@ -1475,14 +1477,14 @@ const styles = StyleSheet.create({
         alignItems: 'flex-start',
         gap: 8,
         borderRadius: 14,
-        backgroundColor: '#FFF7ED',
+        backgroundColor: 'transparent',
         paddingHorizontal: 12,
         paddingVertical: 10,
         marginTop: 8,
     },
     previewWarningText: {
         flex: 1,
-        color: '#9A3412',
+        color: '#B45309',
         fontSize: 12,
         lineHeight: 18,
     },
@@ -1516,7 +1518,7 @@ const styles = StyleSheet.create({
     },
     dangerPanel: {
         borderRadius: 22,
-        backgroundColor: '#FFF4F4',
+        backgroundColor: 'transparent',
         paddingHorizontal: 18,
         paddingVertical: 18,
         gap: 16,
@@ -1525,19 +1527,19 @@ const styles = StyleSheet.create({
         gap: 6,
     },
     dangerTitle: {
-        color: '#B71C1C',
+        color: '#B91C1C',
         fontSize: 17,
         fontWeight: '800',
     },
     dangerText: {
-        color: '#8A3A3A',
+        color: '#667085',
         fontSize: 13,
         lineHeight: 19,
     },
     dangerButton: {
         minHeight: 48,
         borderRadius: 14,
-        backgroundColor: '#D32F2F',
+        backgroundColor: '#B91C1C',
         alignItems: 'center',
         justifyContent: 'center',
         flexDirection: 'row',
@@ -1569,14 +1571,14 @@ const styles = StyleSheet.create({
         width: 46,
         height: 5,
         borderRadius: 999,
-        backgroundColor: '#D7DCE5',
+        backgroundColor: 'transparent',
         marginBottom: 18,
     },
     modalHeroIcon: {
         width: 48,
         height: 48,
         borderRadius: 16,
-        backgroundColor: '#EAF3FF',
+        backgroundColor: 'transparent',
         alignItems: 'center',
         justifyContent: 'center',
     },
@@ -1602,17 +1604,17 @@ const styles = StyleSheet.create({
         paddingHorizontal: 14,
         paddingVertical: 10,
         borderRadius: 999,
-        backgroundColor: '#EAF3FF',
+        backgroundColor: 'transparent',
     },
     addAnotherText: {
-        color: '#1565C0',
+        color: '#0C4A8C',
         fontWeight: '700',
         fontSize: 13,
     },
     summaryBanner: {
         marginTop: 18,
         borderRadius: 18,
-        backgroundColor: '#EEF4FF',
+        backgroundColor: 'transparent',
         paddingHorizontal: 14,
         paddingVertical: 14,
         flexDirection: 'row',
@@ -1623,7 +1625,7 @@ const styles = StyleSheet.create({
         width: 28,
         height: 28,
         borderRadius: 10,
-        backgroundColor: '#FFFFFF',
+        backgroundColor: 'transparent',
         alignItems: 'center',
         justifyContent: 'center',
     },
@@ -1631,19 +1633,19 @@ const styles = StyleSheet.create({
         flex: 1,
         fontSize: 13,
         lineHeight: 19,
-        color: '#355F90',
+        color: '#667085',
     },
     modalCancelButton: {
         flex: 1,
         minHeight: 50,
         borderRadius: 16,
         borderWidth: 1.5,
-        borderColor: '#D6DCE5',
+        borderColor: 'transparent',
         alignItems: 'center',
         justifyContent: 'center',
     },
     modalCancelButtonText: {
-        color: '#546274',
+        color: '#667085',
         fontSize: 14,
         fontWeight: '800',
     },
@@ -1651,7 +1653,7 @@ const styles = StyleSheet.create({
         flex: 1,
         minHeight: 50,
         borderRadius: 16,
-        backgroundColor: '#1565C0',
+        backgroundColor: '#0C4A8C',
         alignItems: 'center',
         justifyContent: 'center',
         flexDirection: 'row',

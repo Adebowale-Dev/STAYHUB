@@ -5,43 +5,14 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { studentAPI } from '../../services/api';
+import { LoadingSpinner } from '../../components/LoadingSpinner';
 import { Reveal } from '../../components/ui/Reveal';
+import { StudentHero } from '../../components/ui/StudentHero';
+import { getStudentPalette } from '../../constants/design';
 import type { StudentNotification } from '../../types';
 import { toMobileNotificationRoute } from '../../utils/notificationRoutes';
 
 type IconName = React.ComponentProps<typeof MaterialCommunityIcons>['name'];
-
-const TYPE_META: Record<StudentNotification['type'], {
-    color: string;
-    backgroundColor: string;
-    iconBackground: string;
-    icon: IconName;
-}> = {
-    warning: {
-        color: '#E65100',
-        backgroundColor: '#FFF7ED',
-        iconBackground: '#FFE4C7',
-        icon: 'alert-outline',
-    },
-    info: {
-        color: '#1565C0',
-        backgroundColor: '#EEF5FF',
-        iconBackground: '#DCEAFF',
-        icon: 'information-outline',
-    },
-    error: {
-        color: '#C62828',
-        backgroundColor: '#FFF1F1',
-        iconBackground: '#FFDADA',
-        icon: 'close-circle-outline',
-    },
-    success: {
-        color: '#2E7D32',
-        backgroundColor: '#EEF8F0',
-        iconBackground: '#DDF2E0',
-        icon: 'check-circle-outline',
-    },
-};
 
 function formatTimestamp(value?: string) {
     if (!value) {
@@ -59,6 +30,7 @@ function formatTimestamp(value?: string) {
 
 export default function NotificationsScreen() {
     const theme = useTheme();
+    const palette = getStudentPalette(theme.dark);
     const router = useRouter();
     const insets = useSafeAreaInsets();
     const [notifications, setNotifications] = useState<StudentNotification[]>([]);
@@ -68,26 +40,61 @@ export default function NotificationsScreen() {
     const [markingAll, setMarkingAll] = useState(false);
     const [openingId, setOpeningId] = useState<string | null>(null);
 
+    const typeMeta = useMemo<Record<StudentNotification['type'], {
+        color: string;
+        backgroundColor: string;
+        iconBackground: string;
+        icon: IconName;
+    }>>(
+        () => ({
+            warning: {
+                color: palette.warning,
+                backgroundColor: palette.warningSoft,
+                iconBackground: palette.surface,
+                icon: 'alert-outline',
+            },
+            info: {
+                color: palette.primary,
+                backgroundColor: palette.primarySoft,
+                iconBackground: palette.surface,
+                icon: 'information-outline',
+            },
+            error: {
+                color: palette.danger,
+                backgroundColor: palette.dangerSoft,
+                iconBackground: palette.surface,
+                icon: 'close-circle-outline',
+            },
+            success: {
+                color: palette.success,
+                backgroundColor: palette.successSoft,
+                iconBackground: palette.surface,
+                icon: 'check-circle-outline',
+            },
+        }),
+        [palette]
+    );
+
     const loadNotifications = useCallback(async () => {
         try {
             const response = await studentAPI.getNotifications();
             const payload = response.data as any;
             const data = payload?.data ?? [];
             setNotifications(Array.isArray(data) ? data : []);
-        }
-        catch {
+        } catch {
             setNotifications([]);
-        }
-        finally {
+        } finally {
             setLoading(false);
             setRefreshing(false);
         }
     }, []);
 
-    useFocusEffect(useCallback(() => {
-        setLoading(true);
-        loadNotifications();
-    }, [loadNotifications]));
+    useFocusEffect(
+        useCallback(() => {
+            setLoading(true);
+            loadNotifications();
+        }, [loadNotifications])
+    );
 
     const onRefresh = () => {
         setRefreshing(true);
@@ -96,14 +103,15 @@ export default function NotificationsScreen() {
 
     const unreadCount = useMemo(
         () => notifications.filter((notification) => !notification.read).length,
-        [notifications],
+        [notifications]
     );
 
     const visibleNotifications = useMemo(
-        () => filter === 'unread'
-            ? notifications.filter((notification) => !notification.read)
-            : notifications,
-        [filter, notifications],
+        () =>
+            filter === 'unread'
+                ? notifications.filter((notification) => !notification.read)
+                : notifications,
+        [filter, notifications]
     );
 
     const handleOpen = async (notification: StudentNotification) => {
@@ -112,13 +120,13 @@ export default function NotificationsScreen() {
             if (!notification.read) {
                 await studentAPI.markNotificationsRead({ ids: [notification._id] });
                 setNotifications((current) =>
-                    current.map((item) => item._id === notification._id ? { ...item, read: true } : item),
+                    current.map((item) =>
+                        item._id === notification._id ? { ...item, read: true } : item
+                    )
                 );
             }
-        }
-        catch {
-        }
-        finally {
+        } catch {
+        } finally {
             setOpeningId(null);
             router.push(toMobileNotificationRoute(notification.destination, '/(student)/reservation'));
         }
@@ -129,88 +137,135 @@ export default function NotificationsScreen() {
         try {
             await studentAPI.markNotificationsRead({ markAll: true });
             setNotifications((current) => current.map((item) => ({ ...item, read: true })));
-        }
-        catch {
-        }
-        finally {
+        } catch {
+        } finally {
             setMarkingAll(false);
         }
     };
 
     if (loading) {
         return (
-            <View style={[styles.loadingScreen, { backgroundColor: theme.colors.background }]}>
-                <StatusBar barStyle="light-content" backgroundColor="#1565C0" />
-                <View style={[styles.hero, { paddingTop: insets.top + 20 }]}>
-                    <View style={styles.heroBubbleLarge} />
-                    <View style={styles.heroBubbleSmall} />
-                    <View style={styles.heroBubbleMid} />
-                </View>
-                <View style={styles.loadingBody}>
-                    <ActivityIndicator size="large" color="#1565C0" />
-                    <Text style={[styles.loadingText, { color: theme.colors.onSurfaceVariant }]}>Loading notifications...</Text>
-                </View>
-            </View>
+            <LoadingSpinner
+                title="Loading notifications"
+                message="We are collecting your room invites, payment prompts, and reservation updates."
+            />
         );
     }
 
     return (
-        <View style={[styles.screen, { backgroundColor: theme.colors.background }]}>
-            <StatusBar barStyle="light-content" backgroundColor="#1565C0" />
+        <View className="flex-1" style={{ backgroundColor: palette.pageBackground }}>
+            <StatusBar barStyle="light-content" backgroundColor={palette.hero} />
 
             <ScrollView
-                style={styles.flex}
-                contentContainerStyle={styles.content}
-                refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#1565C0" colors={['#1565C0']} />}
+                className="flex-1"
+                contentContainerStyle={{ paddingBottom: 144 }}
+                refreshControl={
+                    <RefreshControl
+                        refreshing={refreshing}
+                        onRefresh={onRefresh}
+                        tintColor={palette.primary}
+                        colors={[palette.primary]}
+                    />
+                }
                 showsVerticalScrollIndicator={false}
             >
-                <View style={[styles.hero, { paddingTop: insets.top + 20 }]}>
-                    <View style={styles.heroBubbleLarge} />
-                    <View style={styles.heroBubbleSmall} />
-                    <View style={styles.heroBubbleMid} />
-
-                    <Text style={styles.heroEyebrow}>Notification center</Text>
-                    <Text style={styles.heroTitle}>Every room update in one place</Text>
-                    <Text style={styles.heroCopy}>
-                        Track invitations, approvals, payment prompts, and reservation reminders without missing the next step.
-                    </Text>
-
-                    <View style={styles.heroStats}>
-                        <View style={styles.heroStatCard}>
-                            <Text style={styles.heroStatNumber}>{unreadCount}</Text>
-                            <Text style={styles.heroStatLabel}>Unread</Text>
+                <StudentHero
+                    insetTop={insets.top}
+                    eyebrow="Notifications"
+                    title="Stay on top of updates"
+                    subtitle="See invitations, approvals, reminders, and reservation activity in one place."
+                >
+                    <View className="mt-6 flex-row gap-2.5">
+                        <View
+                            style={[
+                                styles.heroStatCard,
+                                {
+                                    backgroundColor: palette.heroGlass,
+                                    borderColor: palette.heroBorder,
+                                },
+                            ]}
+                        >
+                            <Text className="text-2xl font-extrabold text-white">{unreadCount}</Text>
+                            <Text className="text-[12px] font-bold leading-[18px] text-white/80">Unread</Text>
                         </View>
-                        <View style={styles.heroStatCard}>
-                            <Text style={styles.heroStatNumber}>{notifications.length}</Text>
-                            <Text style={styles.heroStatLabel}>Total alerts</Text>
+                        <View
+                            style={[
+                                styles.heroStatCard,
+                                {
+                                    backgroundColor: palette.heroGlass,
+                                    borderColor: palette.heroBorder,
+                                },
+                            ]}
+                        >
+                            <Text className="text-2xl font-extrabold text-white">{notifications.length}</Text>
+                            <Text className="text-[12px] font-bold leading-[18px] text-white/80">Total alerts</Text>
                         </View>
-                        <View style={styles.heroStatCard}>
-                            <Text style={styles.heroStatNumber}>{notifications.length - unreadCount}</Text>
-                            <Text style={styles.heroStatLabel}>Reviewed</Text>
+                        <View
+                            style={[
+                                styles.heroStatCard,
+                                {
+                                    backgroundColor: palette.heroGlass,
+                                    borderColor: palette.heroBorder,
+                                },
+                            ]}
+                        >
+                            <Text className="text-2xl font-extrabold text-white">
+                                {notifications.length - unreadCount}
+                            </Text>
+                            <Text className="text-[12px] font-bold leading-[18px] text-white/80">Reviewed</Text>
                         </View>
                     </View>
-                </View>
+                </StudentHero>
 
-                <View style={styles.section}>
+                <View className="mt-3 px-[18px]">
                     <Reveal delay={60}>
-                        <View style={[styles.controlsPanel, { backgroundColor: theme.colors.surface }]}>
+                        <View
+                            style={[
+                                styles.controlsPanel,
+                                {
+                                    backgroundColor: palette.surface,
+                                    borderColor: palette.border,
+                                    shadowColor: palette.shadow,
+                                },
+                            ]}
+                        >
                             <View style={styles.controlsHeader}>
                                 <View>
-                                    <Text style={[styles.controlsEyebrow, { color: theme.colors.onSurfaceVariant }]}>Filter</Text>
-                                    <Text style={[styles.controlsTitle, { color: theme.colors.onSurface }]}>Your activity feed</Text>
+                                    <Text
+                                        className="mb-1 text-[11px] font-extrabold uppercase tracking-[1px]"
+                                        style={{ color: palette.textMuted }}
+                                    >
+                                        Filter
+                                    </Text>
+                                    <Text
+                                        className="text-[20px] font-extrabold"
+                                        style={{ color: palette.textPrimary }}
+                                    >
+                                        Activity feed
+                                    </Text>
                                 </View>
                                 <TouchableOpacity
-                                    style={[styles.markAllButton, unreadCount === 0 && styles.disabledButton]}
+                                    style={[
+                                        styles.markAllButton,
+                                        { backgroundColor: palette.primarySoft },
+                                        unreadCount === 0 && styles.disabledButton,
+                                    ]}
                                     activeOpacity={0.85}
                                     onPress={handleMarkAllRead}
                                     disabled={markingAll || unreadCount === 0}
                                 >
                                     {markingAll ? (
-                                        <ActivityIndicator size="small" color="#1565C0" />
+                                        <ActivityIndicator size="small" color={palette.primary} />
                                     ) : (
                                         <>
-                                            <MaterialCommunityIcons name="check-all" size={18} color="#1565C0" />
-                                            <Text style={styles.markAllText}>Mark all read</Text>
+                                            <MaterialCommunityIcons
+                                                name="check-all"
+                                                size={18}
+                                                color={palette.primary}
+                                            />
+                                            <Text style={[styles.markAllText, { color: palette.primary }]}>
+                                                Mark all read
+                                            </Text>
                                         </>
                                     )}
                                 </TouchableOpacity>
@@ -223,92 +278,166 @@ export default function NotificationsScreen() {
                                     { value: 'all', label: `All (${notifications.length})` },
                                     { value: 'unread', label: `Unread (${unreadCount})` },
                                 ]}
+                                style={styles.segmented}
                             />
                         </View>
                     </Reveal>
-                </View>
 
-                <View style={styles.section}>
-                    {visibleNotifications.length === 0 ? (
-                        <Reveal delay={120}>
-                            <View style={[styles.emptyPanel, { backgroundColor: theme.colors.surface }]}>
-                                <View style={styles.emptyIconWrap}>
-                                    <MaterialCommunityIcons name="bell-sleep-outline" size={34} color="#1565C0" />
+                    <View className="pt-[22px]">
+                        {visibleNotifications.length === 0 ? (
+                            <Reveal delay={120}>
+                                <View
+                                    style={[
+                                        styles.emptyPanel,
+                                        {
+                                            backgroundColor: palette.surface,
+                                            borderColor: palette.border,
+                                            shadowColor: palette.shadow,
+                                        },
+                                    ]}
+                                >
+                                    <View style={[styles.emptyIconWrap, { backgroundColor: palette.primarySoft }]}>
+                                        <MaterialCommunityIcons
+                                            name="bell-sleep-outline"
+                                            size={34}
+                                            color={palette.primary}
+                                        />
+                                    </View>
+                                    <Text style={[styles.emptyTitle, { color: palette.textPrimary }]}>
+                                        {filter === 'unread' ? 'No unread notifications' : 'Nothing here yet'}
+                                    </Text>
+                                    <Text style={[styles.emptyCopy, { color: palette.textSecondary }]}>
+                                        {filter === 'unread'
+                                            ? 'You are all caught up. New room activity will appear here as soon as it happens.'
+                                            : 'When friends reserve beds, payments update, or room status changes, you will see it here.'}
+                                    </Text>
                                 </View>
-                                <Text style={[styles.emptyTitle, { color: theme.colors.onSurface }]}>
-                                    {filter === 'unread' ? 'No unread notifications' : 'Nothing here yet'}
-                                </Text>
-                                <Text style={[styles.emptyCopy, { color: theme.colors.onSurfaceVariant }]}>
-                                    {filter === 'unread'
-                                        ? 'You are all caught up. New room activity will appear here as soon as it happens.'
-                                        : 'When friends reserve beds, payments update, or room status changes, you will see it here.'}
-                                </Text>
-                            </View>
-                        </Reveal>
-                    ) : (
-                        visibleNotifications.map((notification, index) => {
-                            const meta = TYPE_META[notification.type] ?? TYPE_META.info;
-                            const isOpening = openingId === notification._id;
+                            </Reveal>
+                        ) : (
+                            visibleNotifications.map((notification, index) => {
+                                const meta = typeMeta[notification.type] ?? typeMeta.info;
+                                const isOpening = openingId === notification._id;
 
-                            return (
-                                <Reveal key={notification._id} delay={120 + index * 55}>
-                                    <TouchableOpacity
-                                        style={[styles.notificationCard, { backgroundColor: theme.colors.surface }]}
-                                        activeOpacity={0.85}
-                                        onPress={() => handleOpen(notification)}
-                                    >
-                                        <View style={[styles.notificationAccent, { backgroundColor: meta.color }]} />
+                                return (
+                                    <Reveal key={notification._id} delay={120 + index * 55}>
+                                        <TouchableOpacity
+                                            style={[
+                                                styles.notificationCard,
+                                                {
+                                                    backgroundColor: palette.surface,
+                                                    borderColor: palette.border,
+                                                    shadowColor: palette.shadow,
+                                                },
+                                            ]}
+                                            activeOpacity={0.85}
+                                            onPress={() => handleOpen(notification)}
+                                        >
+                                            <View style={[styles.notificationAccent, { backgroundColor: meta.color }]} />
 
-                                        <View style={styles.notificationContent}>
-                                            <View style={styles.notificationTopRow}>
-                                                <View style={[styles.notificationIconBox, { backgroundColor: meta.iconBackground }]}>
-                                                    <MaterialCommunityIcons
-                                                        name={(notification.icon as IconName) || meta.icon}
-                                                        size={20}
-                                                        color={meta.color}
-                                                    />
-                                                </View>
-
-                                                <View style={styles.notificationCopy}>
-                                                    <View style={styles.notificationHeader}>
-                                                        <Text style={[styles.notificationTitle, { color: theme.colors.onSurface }]} numberOfLines={2}>
-                                                            {notification.title || 'StayHub update'}
-                                                        </Text>
-                                                        {!notification.read ? <View style={styles.unreadDot} /> : null}
+                                            <View style={styles.notificationContent}>
+                                                <View style={styles.notificationTopRow}>
+                                                    <View
+                                                        style={[
+                                                            styles.notificationIconBox,
+                                                            { backgroundColor: meta.iconBackground },
+                                                        ]}
+                                                    >
+                                                        <MaterialCommunityIcons
+                                                            name={(notification.icon as IconName) || meta.icon}
+                                                            size={20}
+                                                            color={meta.color}
+                                                        />
                                                     </View>
-                                                    <Text style={[styles.notificationMessage, { color: theme.colors.onSurfaceVariant }]} numberOfLines={3}>
-                                                        {notification.message}
+
+                                                    <View style={styles.notificationCopy}>
+                                                        <View style={styles.notificationHeader}>
+                                                            <Text
+                                                                style={[
+                                                                    styles.notificationTitle,
+                                                                    { color: palette.textPrimary },
+                                                                ]}
+                                                                numberOfLines={2}
+                                                            >
+                                                                {notification.title || 'StayHub update'}
+                                                            </Text>
+                                                            {!notification.read ? (
+                                                                <View
+                                                                    style={[
+                                                                        styles.unreadDot,
+                                                                        { backgroundColor: palette.primary },
+                                                                    ]}
+                                                                />
+                                                            ) : null}
+                                                        </View>
+                                                        <Text
+                                                            style={[
+                                                                styles.notificationMessage,
+                                                                { color: palette.textSecondary },
+                                                            ]}
+                                                            numberOfLines={3}
+                                                        >
+                                                            {notification.message}
+                                                        </Text>
+                                                    </View>
+                                                </View>
+
+                                                <View style={styles.notificationFooter}>
+                                                    <View
+                                                        style={[
+                                                            styles.notificationTypePill,
+                                                            { backgroundColor: meta.backgroundColor },
+                                                        ]}
+                                                    >
+                                                        <Text
+                                                            style={[
+                                                                styles.notificationTypeText,
+                                                                { color: meta.color },
+                                                            ]}
+                                                        >
+                                                            {notification.read ? 'Reviewed' : 'Unread'}
+                                                        </Text>
+                                                    </View>
+                                                    <Text
+                                                        style={[
+                                                            styles.notificationTimestamp,
+                                                            { color: palette.textSecondary },
+                                                        ]}
+                                                    >
+                                                        {formatTimestamp(notification.createdAt)}
                                                     </Text>
                                                 </View>
-                                            </View>
 
-                                            <View style={styles.notificationFooter}>
-                                                <View style={[styles.notificationTypePill, { backgroundColor: meta.backgroundColor }]}>
-                                                    <Text style={[styles.notificationTypeText, { color: meta.color }]}>
-                                                        {notification.read ? 'Reviewed' : 'Unread'}
+                                                <View
+                                                    style={[
+                                                        styles.notificationActionRow,
+                                                        { borderTopColor: palette.divider },
+                                                    ]}
+                                                >
+                                                    <Text
+                                                        style={[
+                                                            styles.notificationActionText,
+                                                            { color: palette.primary },
+                                                        ]}
+                                                    >
+                                                        {isOpening ? 'Opening...' : 'Open update'}
                                                     </Text>
+                                                    {isOpening ? (
+                                                        <ActivityIndicator size="small" color={palette.primary} />
+                                                    ) : (
+                                                        <MaterialCommunityIcons
+                                                            name="arrow-right"
+                                                            size={18}
+                                                            color={palette.primary}
+                                                        />
+                                                    )}
                                                 </View>
-                                                <Text style={[styles.notificationTimestamp, { color: theme.colors.onSurfaceVariant }]}>
-                                                    {formatTimestamp(notification.createdAt)}
-                                                </Text>
                                             </View>
-
-                                            <View style={styles.notificationActionRow}>
-                                                <Text style={styles.notificationActionText}>
-                                                    {isOpening ? 'Opening...' : 'Open update'}
-                                                </Text>
-                                                {isOpening ? (
-                                                    <ActivityIndicator size="small" color="#1565C0" />
-                                                ) : (
-                                                    <MaterialCommunityIcons name="arrow-right" size={18} color="#1565C0" />
-                                                )}
-                                            </View>
-                                        </View>
-                                    </TouchableOpacity>
-                                </Reveal>
-                            );
-                        })
-                    )}
+                                        </TouchableOpacity>
+                                    </Reveal>
+                                );
+                            })
+                        )}
+                    </View>
                 </View>
             </ScrollView>
         </View>
@@ -316,121 +445,24 @@ export default function NotificationsScreen() {
 }
 
 const styles = StyleSheet.create({
-    flex: {
-        flex: 1,
-    },
-    screen: {
-        flex: 1,
-    },
-    loadingScreen: {
-        flex: 1,
-    },
-    loadingBody: {
-        flex: 1,
-        alignItems: 'center',
-        justifyContent: 'center',
-        gap: 10,
-    },
-    loadingText: {
-        fontSize: 14,
-        fontWeight: '600',
-    },
-    content: {
-        paddingBottom: 28,
-    },
-    hero: {
-        backgroundColor: '#1565C0',
-        paddingHorizontal: 22,
-        paddingBottom: 34,
-        borderBottomLeftRadius: 32,
-        borderBottomRightRadius: 32,
-        overflow: 'hidden',
-    },
-    heroBubbleLarge: {
-        position: 'absolute',
-        width: 220,
-        height: 220,
-        borderRadius: 110,
-        backgroundColor: 'rgba(255,255,255,0.06)',
-        top: -84,
-        right: -72,
-    },
-    heroBubbleSmall: {
-        position: 'absolute',
-        width: 112,
-        height: 112,
-        borderRadius: 56,
-        backgroundColor: 'rgba(255,255,255,0.07)',
-        bottom: -24,
-        left: -18,
-    },
-    heroBubbleMid: {
-        position: 'absolute',
-        width: 72,
-        height: 72,
-        borderRadius: 36,
-        backgroundColor: 'rgba(255,255,255,0.08)',
-        top: 42,
-        left: 150,
-    },
-    heroEyebrow: {
-        color: 'rgba(255,255,255,0.72)',
-        fontSize: 12,
-        fontWeight: '700',
-        textTransform: 'uppercase',
-        letterSpacing: 1.2,
-        marginBottom: 10,
-    },
-    heroTitle: {
-        color: '#FFFFFF',
-        fontSize: 29,
-        fontWeight: '800',
-        letterSpacing: -0.5,
-        marginBottom: 10,
-        maxWidth: 320,
-    },
-    heroCopy: {
-        color: 'rgba(255,255,255,0.8)',
-        fontSize: 14,
-        lineHeight: 21,
-        maxWidth: 336,
-    },
-    heroStats: {
-        flexDirection: 'row',
-        gap: 10,
-        marginTop: 22,
-    },
     heroStatCard: {
         flex: 1,
-        borderRadius: 18,
+        minHeight: 88,
+        borderRadius: 22,
+        paddingHorizontal: 14,
         paddingVertical: 14,
-        backgroundColor: 'rgba(255,255,255,0.14)',
-        alignItems: 'center',
-        justifyContent: 'center',
-    },
-    heroStatNumber: {
-        color: '#FFFFFF',
-        fontSize: 20,
-        fontWeight: '800',
-        marginBottom: 4,
-    },
-    heroStatLabel: {
-        color: 'rgba(255,255,255,0.76)',
-        fontSize: 11,
-        fontWeight: '700',
-    },
-    section: {
-        paddingHorizontal: 18,
-        paddingTop: 22,
+        alignItems: 'flex-start',
+        justifyContent: 'space-between',
+        borderWidth: 1,
     },
     controlsPanel: {
-        borderRadius: 22,
+        borderRadius: 28,
+        borderWidth: 1,
         padding: 18,
-        shadowColor: '#000000',
-        shadowOffset: { width: 0, height: 10 },
-        shadowOpacity: 0.07,
-        shadowRadius: 18,
-        elevation: 4,
+        shadowOffset: { width: 0, height: 14 },
+        shadowOpacity: 0.14,
+        shadowRadius: 24,
+        elevation: 10,
     },
     controlsHeader: {
         flexDirection: 'row',
@@ -439,21 +471,9 @@ const styles = StyleSheet.create({
         gap: 12,
         marginBottom: 16,
     },
-    controlsEyebrow: {
-        fontSize: 11,
-        fontWeight: '700',
-        textTransform: 'uppercase',
-        letterSpacing: 1,
-        marginBottom: 4,
-    },
-    controlsTitle: {
-        fontSize: 18,
-        fontWeight: '800',
-    },
     markAllButton: {
         minHeight: 42,
         borderRadius: 14,
-        backgroundColor: '#EEF5FF',
         paddingHorizontal: 14,
         alignItems: 'center',
         justifyContent: 'center',
@@ -461,29 +481,30 @@ const styles = StyleSheet.create({
         gap: 8,
     },
     markAllText: {
-        color: '#1565C0',
         fontSize: 13,
         fontWeight: '800',
+    },
+    segmented: {
+        minHeight: 42,
     },
     disabledButton: {
         opacity: 0.55,
     },
     emptyPanel: {
-        borderRadius: 22,
+        borderRadius: 28,
+        borderWidth: 1,
         paddingHorizontal: 24,
         paddingVertical: 28,
         alignItems: 'center',
-        shadowColor: '#000000',
-        shadowOffset: { width: 0, height: 10 },
-        shadowOpacity: 0.07,
-        shadowRadius: 18,
-        elevation: 4,
+        shadowOffset: { width: 0, height: 14 },
+        shadowOpacity: 0.14,
+        shadowRadius: 24,
+        elevation: 10,
     },
     emptyIconWrap: {
         width: 68,
         height: 68,
         borderRadius: 34,
-        backgroundColor: '#EAF3FF',
         alignItems: 'center',
         justifyContent: 'center',
         marginBottom: 16,
@@ -501,14 +522,14 @@ const styles = StyleSheet.create({
     },
     notificationCard: {
         flexDirection: 'row',
-        borderRadius: 22,
+        borderRadius: 24,
         overflow: 'hidden',
         marginBottom: 14,
-        shadowColor: '#000000',
+        borderWidth: 1,
         shadowOffset: { width: 0, height: 10 },
-        shadowOpacity: 0.07,
-        shadowRadius: 18,
-        elevation: 4,
+        shadowOpacity: 0.12,
+        shadowRadius: 20,
+        elevation: 8,
     },
     notificationAccent: {
         width: 5,
@@ -550,7 +571,6 @@ const styles = StyleSheet.create({
         width: 10,
         height: 10,
         borderRadius: 5,
-        backgroundColor: '#1565C0',
         marginTop: 5,
     },
     notificationMessage: {
@@ -583,13 +603,11 @@ const styles = StyleSheet.create({
         marginTop: 14,
         paddingTop: 14,
         borderTopWidth: 1,
-        borderTopColor: '#EEF2F6',
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'space-between',
     },
     notificationActionText: {
-        color: '#1565C0',
         fontSize: 13,
         fontWeight: '800',
     },

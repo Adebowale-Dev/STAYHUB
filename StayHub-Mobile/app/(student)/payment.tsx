@@ -209,9 +209,9 @@ export default function PaymentScreen() {
             >
                 <StudentHero
                     insetTop={insets.top}
-                    eyebrow="Hostel fee payment"
+                    eyebrow="Payments"
                     title={formattedAmount}
-                    // subtitle="Pay securely, verify offline codes, and keep your reservation moving without delays."
+                    subtitle="Pay online or confirm an offline payment code from one place."
                     align="center"
                 >
                     <View style={styles.heroStatusWrap}>
@@ -418,7 +418,7 @@ export default function PaymentScreen() {
                         <View className="mt-[22px]">
                             <Reveal delay={190}>
                                 <Text className="mb-3 text-[11px] font-extrabold uppercase tracking-[1px]" style={{ color: palette.textMuted }}>
-                                    Online payment
+                                    Pay online
                                 </Text>
                                 <View
                                     style={[
@@ -443,14 +443,14 @@ export default function PaymentScreen() {
                                                 Pay with Paystack
                                             </Text>
                                             <Text style={[styles.cardSub, { color: palette.textSecondary }]}>
-                                                Card, bank transfer, or USSD
+                                                Card, transfer, or USSD
                                             </Text>
                                         </View>
                                     </View>
 
                                     <Text style={[styles.cardHint, { color: palette.textSecondary }]}>
                                         {useBrowserCheckout
-                                            ? 'Expo Go will open Paystack in your browser so you can complete payment securely and return here to refresh.'
+                                            ? 'Expo Go will open Paystack in your browser. Return here after payment and refresh your status.'
                                             : "You'll be redirected to Paystack's secure checkout to complete payment."}
                                     </Text>
 
@@ -489,7 +489,7 @@ export default function PaymentScreen() {
                         <View className="mt-[22px]">
                             <Reveal delay={250}>
                                 <Text className="mb-3 text-[11px] font-extrabold uppercase tracking-[1px]" style={{ color: palette.textMuted }}>
-                                    Payment code
+                                    Verify payment
                                 </Text>
                                 <View
                                     style={[
@@ -520,7 +520,7 @@ export default function PaymentScreen() {
                                     </View>
 
                                     <Text style={[styles.cardHint, { color: palette.textSecondary }]}>
-                                        Enter the payment code issued by the bursary or finance office to verify your payment here.
+                                        Enter the code issued by the bursary or finance office to confirm your payment.
                                     </Text>
 
                                     <TextInput

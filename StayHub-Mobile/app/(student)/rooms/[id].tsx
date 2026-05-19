@@ -5,6 +5,9 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useLocalSearchParams, useNavigation, useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { studentAPI } from '../../../services/api';
+import { LoadingSpinner } from '../../../components/LoadingSpinner';
+import { StudentHero } from '../../../components/ui/StudentHero';
+import { getStudentPalette } from '../../../constants/design';
 import type { ReservationInvitePreview, Room } from '../../../types';
 
 type RoomTone = {
@@ -14,32 +17,32 @@ type RoomTone = {
     accentColor: string;
 };
 
-const ROOM_STATUS_META: Record<string, RoomTone> = {
+const getRoomStatusMeta = (palette: ReturnType<typeof getStudentPalette>): Record<string, RoomTone> => ({
     available: {
         label: 'Available',
-        color: '#2E7D32',
-        backgroundColor: '#E8F5E9',
-        accentColor: '#43A047',
+        color: palette.success,
+        backgroundColor: palette.successSoft,
+        accentColor: palette.success,
     },
     partially_occupied: {
         label: 'Available',
-        color: '#2E7D32',
-        backgroundColor: '#E8F5E9',
-        accentColor: '#43A047',
+        color: palette.success,
+        backgroundColor: palette.successSoft,
+        accentColor: palette.success,
     },
     full: {
         label: 'Full',
-        color: '#C62828',
-        backgroundColor: '#FFEBEE',
-        accentColor: '#E53935',
+        color: palette.danger,
+        backgroundColor: palette.dangerSoft,
+        accentColor: palette.danger,
     },
     maintenance: {
         label: 'Maintenance',
-        color: '#EF6C00',
-        backgroundColor: '#FFF3E0',
-        accentColor: '#FB8C00',
+        color: palette.warning,
+        backgroundColor: palette.warningSoft,
+        accentColor: palette.warning,
     },
-};
+});
 
 export default function RoomsScreen() {
     const { id: hostelId } = useLocalSearchParams<{ id: string }>();
@@ -56,18 +59,26 @@ export default function RoomsScreen() {
     const router = useRouter();
     const navigation = useNavigation();
     const theme = useTheme();
+    const palette = getStudentPalette(theme.dark);
     const insets = useSafeAreaInsets();
+    const roomStatusMeta = useMemo(() => getRoomStatusMeta(palette), [palette]);
+    const bedTone = useMemo(() => ({
+        empty: palette.divider,
+        occupied: palette.danger,
+        you: palette.primaryStrong,
+        friends: palette.primary,
+    }), [palette]);
 
     useEffect(() => {
         navigation.setOptions({
             title: 'Available Rooms',
             headerLeft: () => (
                 <TouchableOpacity onPress={() => router.navigate('/(student)/hostels')} style={styles.backBtn}>
-                    <MaterialCommunityIcons name="arrow-left" size={24} color="#1A1A2E" />
+                    <MaterialCommunityIcons name="arrow-left" size={24} color={palette.textPrimary} />
                 </TouchableOpacity>
             ),
         });
-    }, [navigation, router]);
+    }, [navigation, palette.textPrimary, router]);
 
     const loadRooms = async () => {
         if (!hostelId) {
@@ -229,52 +240,64 @@ export default function RoomsScreen() {
 
     if (loading) {
         return (
-            <View style={[styles.loadingScreen, { backgroundColor: theme.colors.background }]}>
-                <StatusBar barStyle="light-content" backgroundColor="#1565C0" />
-                <View style={[styles.hero, { paddingTop: insets.top + 18 }]}>
-                    <View style={styles.heroBubbleLarge} />
-                    <View style={styles.heroBubbleSmall} />
-                    <View style={styles.heroBubbleMid} />
-                </View>
-                <View style={styles.loadingBody}>
-                    <ActivityIndicator size="large" color="#1565C0" />
-                </View>
-            </View>
+            <LoadingSpinner
+                title="Loading rooms"
+                message="We are preparing live room availability, bed counts, and reservation options."
+            />
         );
     }
 
     const listHeader = (
         <>
-            <View style={[styles.hero, { paddingTop: insets.top + 18 }]}>
-                <View style={styles.heroBubbleLarge} />
-                <View style={styles.heroBubbleSmall} />
-                <View style={styles.heroBubbleMid} />
-
-                <Text style={styles.heroEyebrow}>Room selection</Text>
-                <Text style={styles.heroTitle}>Choose the right room</Text>
-                <Text style={styles.heroCopy}>
-                    Review capacity, open beds, and current occupancy before locking in a space for yourself or your friends.
-                </Text>
-
-                <View style={styles.heroStats}>
-                    <View style={styles.heroStatCard}>
-                        <Text style={styles.heroStatNumber}>{availableRoomCount}</Text>
-                        <Text style={styles.heroStatLabel}>Open rooms</Text>
+            <StudentHero
+                insetTop={insets.top}
+                eyebrow="Room selection"
+                title="Choose the right room"
+                subtitle="Review capacity, open beds, and current occupancy before locking in a space for yourself or your friends."
+            >
+                <View className="mt-6 flex-row gap-2.5">
+                    <View
+                        style={[
+                            styles.heroStatCard,
+                            {
+                                backgroundColor: palette.heroGlass,
+                                borderColor: palette.heroBorder,
+                            },
+                        ]}
+                    >
+                        <Text className="text-2xl font-extrabold text-white">{availableRoomCount}</Text>
+                        <Text className="text-[12px] font-bold leading-[18px] text-white/80">Open rooms</Text>
                     </View>
-                    <View style={styles.heroStatCard}>
-                        <Text style={styles.heroStatNumber}>{totalAvailableBeds}</Text>
-                        <Text style={styles.heroStatLabel}>Beds left</Text>
+                    <View
+                        style={[
+                            styles.heroStatCard,
+                            {
+                                backgroundColor: palette.heroGlass,
+                                borderColor: palette.heroBorder,
+                            },
+                        ]}
+                    >
+                        <Text className="text-2xl font-extrabold text-white">{totalAvailableBeds}</Text>
+                        <Text className="text-[12px] font-bold leading-[18px] text-white/80">Beds left</Text>
                     </View>
-                    <View style={styles.heroStatCard}>
-                        <Text style={styles.heroStatNumber}>{fullRoomCount}</Text>
-                        <Text style={styles.heroStatLabel}>Full rooms</Text>
+                    <View
+                        style={[
+                            styles.heroStatCard,
+                            {
+                                backgroundColor: palette.heroGlass,
+                                borderColor: palette.heroBorder,
+                            },
+                        ]}
+                    >
+                        <Text className="text-2xl font-extrabold text-white">{fullRoomCount}</Text>
+                        <Text className="text-[12px] font-bold leading-[18px] text-white/80">Full rooms</Text>
                     </View>
                 </View>
-            </View>
+            </StudentHero>
 
             <View style={styles.sectionHeader}>
-                <Text style={[styles.sectionLabel, { color: theme.colors.onSurfaceVariant }]}>Available options</Text>
-                <Text style={[styles.sectionCount, { color: theme.colors.onSurfaceVariant }]}>
+                <Text style={[styles.sectionLabel, { color: palette.textMuted }]}>Available options</Text>
+                <Text style={[styles.sectionCount, { color: palette.textSecondary }]}>
                     {rooms.length} {rooms.length === 1 ? 'room' : 'rooms'}
                 </Text>
             </View>
@@ -283,19 +306,35 @@ export default function RoomsScreen() {
 
     if (error) {
         return (
-            <View style={[styles.screen, { backgroundColor: theme.colors.background }]}>
-                <StatusBar barStyle="light-content" backgroundColor="#1565C0" />
+            <View style={[styles.screen, { backgroundColor: palette.pageBackground }]}>
+                <StatusBar barStyle="light-content" backgroundColor={palette.hero} />
                 {listHeader}
                 <View style={styles.section}>
-                    <View style={[styles.errorPanel, { backgroundColor: theme.colors.surface }]}>
-                        <View style={styles.errorIconWrap}>
-                            <MaterialCommunityIcons name="wifi-off" size={32} color="#1565C0" />
+                    <View
+                        style={[
+                            styles.errorPanel,
+                            {
+                                backgroundColor: palette.surface,
+                                borderColor: palette.border,
+                                shadowColor: palette.shadow,
+                            },
+                        ]}
+                    >
+                        <View style={[styles.errorIconWrap, { backgroundColor: palette.primarySoft }]}>
+                            <MaterialCommunityIcons name="wifi-off" size={32} color={palette.primary} />
                         </View>
-                        <Text style={[styles.errorTitle, { color: theme.colors.onSurface }]}>Could not load rooms</Text>
-                        <Text style={[styles.errorCopy, { color: theme.colors.onSurfaceVariant }]}>
+                        <Text style={[styles.errorTitle, { color: palette.textPrimary }]}>Could not load rooms</Text>
+                        <Text style={[styles.errorCopy, { color: palette.textSecondary }]}>
                             Check your connection and try again.
                         </Text>
-                        <TouchableOpacity style={styles.retryButton} activeOpacity={0.85} onPress={() => { setLoading(true); loadRooms(); }}>
+                        <TouchableOpacity
+                            style={[styles.retryButton, { backgroundColor: palette.primary }]}
+                            activeOpacity={0.85}
+                            onPress={() => {
+                                setLoading(true);
+                                loadRooms();
+                            }}
+                        >
                             <MaterialCommunityIcons name="refresh" size={18} color="#FFFFFF" />
                             <Text style={styles.retryButtonText}>Retry</Text>
                         </TouchableOpacity>
@@ -306,41 +345,66 @@ export default function RoomsScreen() {
     }
 
     return (
-        <View style={[styles.screen, { backgroundColor: theme.colors.background }]}>
-            <StatusBar barStyle="light-content" backgroundColor="#1565C0" />
+        <View style={[styles.screen, { backgroundColor: palette.pageBackground }]}>
+            <StatusBar barStyle="light-content" backgroundColor={palette.hero} />
 
             <FlatList
                 data={rooms}
                 keyExtractor={(item) => item._id}
                 contentContainerStyle={styles.listContent}
                 showsVerticalScrollIndicator={false}
-                refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#1565C0" colors={['#1565C0']} />}
+                refreshControl={
+                    <RefreshControl
+                        refreshing={refreshing}
+                        onRefresh={onRefresh}
+                        tintColor={palette.primary}
+                        colors={[palette.primary]}
+                    />
+                }
                 ListHeaderComponent={listHeader}
                 ListEmptyComponent={
-                    <View style={[styles.emptyPanel, { backgroundColor: theme.colors.surface }]}>
-                        <View style={styles.emptyIconWrap}>
-                            <MaterialCommunityIcons name="bed-empty" size={34} color="#1565C0" />
+                    <View
+                        style={[
+                            styles.emptyPanel,
+                            {
+                                backgroundColor: palette.surface,
+                                borderColor: palette.border,
+                                shadowColor: palette.shadow,
+                            },
+                        ]}
+                    >
+                        <View style={[styles.emptyIconWrap, { backgroundColor: palette.primarySoft }]}>
+                            <MaterialCommunityIcons name="bed-empty" size={34} color={palette.primary} />
                         </View>
-                        <Text style={[styles.emptyTitle, { color: theme.colors.onSurface }]}>No rooms available</Text>
-                        <Text style={[styles.emptyCopy, { color: theme.colors.onSurfaceVariant }]}>
+                        <Text style={[styles.emptyTitle, { color: palette.textPrimary }]}>No rooms available</Text>
+                        <Text style={[styles.emptyCopy, { color: palette.textSecondary }]}>
                             There are no room options for this hostel right now.
                         </Text>
                     </View>
                 }
                 renderItem={({ item }) => {
                     const available = item.availableSpaces > 0 && item.status !== 'maintenance' && item.status !== 'full';
-                    const tone = ROOM_STATUS_META[item.status] ?? (available ? ROOM_STATUS_META.available : ROOM_STATUS_META.full);
+                    const tone = roomStatusMeta[item.status] ?? (available ? roomStatusMeta.available : roomStatusMeta.full);
                     const occupancyRatio = item.capacity > 0 ? item.currentOccupancy / item.capacity : 0;
 
                     return (
-                        <View style={[styles.roomCard, { backgroundColor: theme.colors.surface }]}>
+                        <View
+                            style={[
+                                styles.roomCard,
+                                {
+                                    backgroundColor: palette.surface,
+                                    borderColor: palette.border,
+                                    shadowColor: palette.shadow,
+                                },
+                            ]}
+                        >
                             <View style={[styles.roomAccent, { backgroundColor: tone.accentColor }]} />
 
                             <View style={styles.roomBody}>
                                 <View style={styles.roomHeader}>
                                     <View style={styles.roomHeaderCopy}>
-                                        <Text style={[styles.roomTitle, { color: theme.colors.onSurface }]}>Room {item.roomNumber}</Text>
-                                        <Text style={[styles.roomSubtitle, { color: theme.colors.onSurfaceVariant }]}>
+                                        <Text style={[styles.roomTitle, { color: palette.textPrimary }]}>Room {item.roomNumber}</Text>
+                                        <Text style={[styles.roomSubtitle, { color: palette.textSecondary }]}>
                                             {item.currentOccupancy} of {item.capacity} beds occupied
                                         </Text>
                                     </View>
@@ -351,24 +415,24 @@ export default function RoomsScreen() {
                                 </View>
 
                                 <View style={styles.metricGrid}>
-                                    <View style={[styles.metricCard, { backgroundColor: theme.colors.background }]}>
-                                        <Text style={[styles.metricLabel, { color: theme.colors.onSurfaceVariant }]}>Open beds</Text>
-                                        <Text style={[styles.metricValue, { color: theme.colors.onSurface }]}>{item.availableSpaces}</Text>
+                                    <View style={[styles.metricCard, { backgroundColor: palette.surfaceMuted, borderColor: palette.border }]}>
+                                        <Text style={[styles.metricLabel, { color: palette.textMuted }]}>Open beds</Text>
+                                        <Text style={[styles.metricValue, { color: palette.textPrimary }]}>{item.availableSpaces}</Text>
                                     </View>
 
-                                    <View style={[styles.metricCard, { backgroundColor: theme.colors.background }]}>
-                                        <Text style={[styles.metricLabel, { color: theme.colors.onSurfaceVariant }]}>Capacity</Text>
-                                        <Text style={[styles.metricValue, { color: theme.colors.onSurface }]}>{item.capacity}</Text>
+                                    <View style={[styles.metricCard, { backgroundColor: palette.surfaceMuted, borderColor: palette.border }]}>
+                                        <Text style={[styles.metricLabel, { color: palette.textMuted }]}>Capacity</Text>
+                                        <Text style={[styles.metricValue, { color: palette.textPrimary }]}>{item.capacity}</Text>
                                     </View>
 
-                                    <View style={[styles.metricCardWide, { backgroundColor: theme.colors.background }]}>
+                                    <View style={[styles.metricCardWide, { backgroundColor: palette.surfaceMuted, borderColor: palette.border }]}>
                                         <View style={styles.progressHeader}>
-                                            <Text style={[styles.metricLabel, { color: theme.colors.onSurfaceVariant }]}>Occupancy</Text>
+                                            <Text style={[styles.metricLabel, { color: palette.textMuted }]}>Occupancy</Text>
                                             <Text style={[styles.progressValue, { color: tone.color }]}>
                                                 {Math.round(occupancyRatio * 100)}%
                                             </Text>
                                         </View>
-                                        <View style={[styles.progressTrack, { backgroundColor: theme.colors.surfaceVariant }]}>
+                                        <View style={[styles.progressTrack, { backgroundColor: palette.divider }]}>
                                             <View
                                                 style={[
                                                     styles.progressFill,
@@ -384,12 +448,12 @@ export default function RoomsScreen() {
 
                                 <View style={styles.bedLegendRow}>
                                     {Array.from({ length: item.capacity }).map((_, index) => {
-                                        let backgroundColor = '#DDE3EA';
+                                        let backgroundColor = bedTone.empty;
                                         if (index < item.currentOccupancy) {
-                                            backgroundColor = '#F08C8C';
+                                            backgroundColor = bedTone.occupied;
                                         }
                                         else if (index < item.currentOccupancy + item.availableSpaces) {
-                                            backgroundColor = '#8BC5A1';
+                                            backgroundColor = tone.accentColor;
                                         }
 
                                         return <View key={index} style={[styles.bedDot, { backgroundColor }]} />;
@@ -397,7 +461,12 @@ export default function RoomsScreen() {
                                 </View>
 
                                 <TouchableOpacity
-                                    style={[styles.reserveButton, !available && styles.reserveButtonDisabled]}
+                                    style={[
+                                        styles.reserveButton,
+                                        { backgroundColor: palette.primarySoft },
+                                        !available && styles.reserveButtonDisabled,
+                                        !available && { backgroundColor: palette.surfaceMuted },
+                                    ]}
                                     activeOpacity={0.85}
                                     onPress={() => openReservation(item)}
                                     disabled={!available}
@@ -408,7 +477,7 @@ export default function RoomsScreen() {
                                     <MaterialCommunityIcons
                                         name={available ? 'arrow-right' : 'lock-outline'}
                                         size={18}
-                                        color={available ? '#1565C0' : '#90A4AE'}
+                                        color={available ? palette.primary : palette.textMuted}
                                     />
                                 </TouchableOpacity>
                             </View>
@@ -420,44 +489,44 @@ export default function RoomsScreen() {
             <Modal visible={modalVisible} transparent animationType="slide" onRequestClose={() => setModalVisible(false)}>
                 <View style={styles.modalOverlay}>
                     <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={styles.modalWrap}>
-                        <View style={[styles.modalSheet, { backgroundColor: theme.colors.surface }]}>
-                            <View style={styles.modalHandle} />
+                        <View style={[styles.modalSheet, { backgroundColor: palette.surface }]}>
+                            <View style={[styles.modalHandle, { backgroundColor: palette.border }]} />
 
                             <ScrollView showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
                                 <View style={styles.modalHero}>
-                                    <View style={styles.modalHeroIcon}>
-                                        <MaterialCommunityIcons name="bed-outline" size={22} color="#1565C0" />
+                                    <View style={[styles.modalHeroIcon, { backgroundColor: palette.primarySoft }]}>
+                                        <MaterialCommunityIcons name="bed-outline" size={22} color={palette.primary} />
                                     </View>
                                     <View style={styles.modalHeroCopy}>
-                                        <Text style={[styles.modalTitle, { color: theme.colors.onSurface }]}>
+                                        <Text style={[styles.modalTitle, { color: palette.textPrimary }]}>
                                             Reserve Room {selectedRoom?.roomNumber}
                                         </Text>
-                                        <Text style={[styles.modalSubtitle, { color: theme.colors.onSurfaceVariant }]}>
+                                        <Text style={[styles.modalSubtitle, { color: palette.textSecondary }]}>
                                             {selectedRoom?.capacity}-person room | {selectedRoom?.availableSpaces} bed{selectedRoom?.availableSpaces !== 1 ? 's' : ''} available
                                         </Text>
                                     </View>
                                 </View>
 
-                                <Divider style={{ backgroundColor: theme.colors.surfaceVariant, marginBottom: 18 }} />
+                                <Divider style={{ backgroundColor: palette.divider, marginBottom: 18 }} />
 
-                                <Text style={[styles.modalLabel, { color: theme.colors.onSurfaceVariant }]}>Bed layout</Text>
+                                <Text style={[styles.modalLabel, { color: palette.textMuted }]}>Bed layout</Text>
 
                                 <View style={styles.bedSlots}>
                                     {Array.from({ length: selectedRoom?.capacity ?? 0 }).map((_, index) => {
                                         const occupied = selectedRoom?.currentOccupancy ?? 0;
-                                        let backgroundColor = '#E0E6EE';
+                                        let backgroundColor = bedTone.empty;
                                         let iconName: React.ComponentProps<typeof MaterialCommunityIcons>['name'] | null = null;
 
                                         if (index < occupied) {
-                                            backgroundColor = '#F08C8C';
+                                            backgroundColor = bedTone.occupied;
                                             iconName = 'account';
                                         }
                                         else if (index === occupied) {
-                                            backgroundColor = '#1565C0';
+                                            backgroundColor = bedTone.you;
                                             iconName = 'account-star';
                                         }
                                         else if (index < occupied + totalReserving) {
-                                            backgroundColor = '#42A5F5';
+                                            backgroundColor = bedTone.friends;
                                             iconName = 'account-plus';
                                         }
 
@@ -471,32 +540,32 @@ export default function RoomsScreen() {
 
                                 <View style={styles.legend}>
                                     {[
-                                        { label: 'Occupied', color: '#F08C8C' },
-                                        { label: 'You', color: '#1565C0' },
-                                        { label: 'Friends', color: '#42A5F5' },
-                                        { label: 'Empty', color: '#E0E6EE' },
+                                        { label: 'Occupied', color: bedTone.occupied },
+                                        { label: 'You', color: bedTone.you },
+                                        { label: 'Friends', color: bedTone.friends },
+                                        { label: 'Empty', color: bedTone.empty },
                                     ].map((item) => (
                                         <View key={item.label} style={styles.legendItem}>
                                             <View style={[styles.legendDot, { backgroundColor: item.color }]} />
-                                            <Text style={[styles.legendText, { color: theme.colors.onSurfaceVariant }]}>{item.label}</Text>
+                                            <Text style={[styles.legendText, { color: palette.textSecondary }]}>{item.label}</Text>
                                         </View>
                                     ))}
                                 </View>
 
-                                <Divider style={{ backgroundColor: theme.colors.surfaceVariant, marginVertical: 18 }} />
+                                <Divider style={{ backgroundColor: palette.divider, marginVertical: 18 }} />
 
                                 <View style={styles.modalSectionHeader}>
-                                    <Text style={[styles.modalLabel, { color: theme.colors.onSurfaceVariant }]}>Friends sharing this room</Text>
-                                    <Text style={[styles.modalMetaText, { color: theme.colors.onSurfaceVariant }]}>
+                                    <Text style={[styles.modalLabel, { color: palette.textMuted }]}>Friends sharing this room</Text>
+                                    <Text style={[styles.modalMetaText, { color: palette.textSecondary }]}>
                                         Optional | up to {maxFriends}
                                     </Text>
                                 </View>
 
                                 {maxFriends === 0 ? (
-                                    <Text style={styles.noSpaceHint}>Only 1 space left - no room for friends.</Text>
+                                    <Text style={[styles.noSpaceHint, { color: palette.danger }]}>Only 1 space left - no room for friends.</Text>
                                 ) : (
                                     <>
-                                        <Text style={[styles.groupHint, { color: theme.colors.onSurfaceVariant }]}>
+                                        <Text style={[styles.groupHint, { color: palette.textSecondary }]}>
                                             Add matric numbers for friends who should share the same room with you.
                                         </Text>
 
@@ -510,24 +579,31 @@ export default function RoomsScreen() {
                                                     autoCapitalize="characters"
                                                     autoCorrect={false}
                                                     style={styles.groupInput}
-                                                    outlineColor={theme.colors.surfaceVariant}
-                                                    activeOutlineColor="#1565C0"
+                                                    outlineColor={palette.border}
+                                                    activeOutlineColor={palette.primary}
                                                     left={<TextInput.Icon icon="account-outline" />}
                                                 />
-                                                <IconButton icon="close-circle" iconColor="#E53935" size={22} onPress={() => removeFriend(index)} />
+                                                <IconButton icon="close-circle" iconColor={palette.danger} size={22} onPress={() => removeFriend(index)} />
                                             </View>
                                         ))}
 
                                         {groupMatrics.length < maxFriends ? (
-                                            <TouchableOpacity style={styles.addFriendButton} activeOpacity={0.85} onPress={addFriend}>
-                                                <MaterialCommunityIcons name="plus-circle-outline" size={18} color="#1565C0" />
-                                                <Text style={styles.addFriendButtonText}>Add a friend</Text>
+                                            <TouchableOpacity style={[styles.addFriendButton, { backgroundColor: palette.primarySoft }]} activeOpacity={0.85} onPress={addFriend}>
+                                                <MaterialCommunityIcons name="plus-circle-outline" size={18} color={palette.primary} />
+                                                <Text style={[styles.addFriendButtonText, { color: palette.primary }]}>Add a friend</Text>
                                             </TouchableOpacity>
                                         ) : null}
 
                                         {filledMatrics.length > 0 ? (
                                             <TouchableOpacity
-                                                style={[styles.validateInviteButton, validatingFriends && styles.disabledButton]}
+                                                style={[
+                                                    styles.validateInviteButton,
+                                                    {
+                                                        borderColor: palette.border,
+                                                        backgroundColor: palette.surfaceRaised,
+                                                    },
+                                                    validatingFriends && styles.disabledButton,
+                                                ]}
                                                 activeOpacity={0.85}
                                                 onPress={() => { validateInvitePreviews().catch((errorResponse: any) => {
                                                     Alert.alert('Invite check failed', errorResponse.response?.data?.message ?? 'Could not verify this matric number.');
@@ -535,11 +611,11 @@ export default function RoomsScreen() {
                                                 disabled={validatingFriends}
                                             >
                                                 {validatingFriends ? (
-                                                    <ActivityIndicator size="small" color="#1565C0" />
+                                                    <ActivityIndicator size="small" color={palette.primary} />
                                                 ) : (
                                                     <>
-                                                        <MaterialCommunityIcons name="email-check-outline" size={18} color="#1565C0" />
-                                                        <Text style={styles.validateInviteButtonText}>Check invite delivery</Text>
+                                                        <MaterialCommunityIcons name="email-check-outline" size={18} color={palette.primary} />
+                                                        <Text style={[styles.validateInviteButtonText, { color: palette.primary }]}>Check invite delivery</Text>
                                                     </>
                                                 )}
                                             </TouchableOpacity>
@@ -548,24 +624,24 @@ export default function RoomsScreen() {
                                         {invitePreviews.length > 0 ? (
                                             <View style={styles.previewList}>
                                                 {invitePreviews.map((preview) => (
-                                                    <View key={preview.friend._id} style={[styles.previewCard, { backgroundColor: theme.colors.background }]}>
+                                                    <View key={preview.friend._id} style={[styles.previewCard, { backgroundColor: palette.surfaceRaised, borderColor: palette.border }]}>
                                                         <View style={styles.previewCardHeader}>
                                                             <View>
-                                                                <Text style={[styles.previewName, { color: theme.colors.onSurface }]}>
+                                                                <Text style={[styles.previewName, { color: palette.textPrimary }]}>
                                                                     {preview.friend.firstName} {preview.friend.lastName}
                                                                 </Text>
-                                                                <Text style={[styles.previewMeta, { color: theme.colors.onSurfaceVariant }]}>
+                                                                <Text style={[styles.previewMeta, { color: palette.textSecondary }]}>
                                                                     {preview.friend.matricNo}
                                                                     {getDepartmentLabel(preview) ? ` • ${getDepartmentLabel(preview)}` : ''}
                                                                     {preview.friend.level ? ` • ${preview.friend.level} level` : ''}
                                                                 </Text>
                                                             </View>
-                                                            <View style={styles.previewStatusPill}>
-                                                                <Text style={styles.previewStatusPillText}>Ready</Text>
+                                                            <View style={[styles.previewStatusPill, { backgroundColor: palette.successSoft }]}>
+                                                                <Text style={[styles.previewStatusPillText, { color: palette.success }]}>Ready</Text>
                                                             </View>
                                                         </View>
 
-                                                        <Text style={[styles.previewCopy, { color: theme.colors.onSurfaceVariant }]}>
+                                                        <Text style={[styles.previewCopy, { color: palette.textSecondary }]}>
                                                             Invite will go out by {getInviteChannelsLabel(preview)}
                                                             {preview.invitation.notificationChannels.email.addressMasked
                                                                 ? ` to ${preview.invitation.notificationChannels.email.addressMasked}`
@@ -574,9 +650,9 @@ export default function RoomsScreen() {
                                                         </Text>
 
                                                         {preview.invitation.requiresPaymentBeforeApproval ? (
-                                                            <View style={styles.previewWarningRow}>
-                                                                <MaterialCommunityIcons name="credit-card-clock-outline" size={16} color="#EF6C00" />
-                                                                <Text style={styles.previewWarningText}>Payment is still pending for this friend, so they will need to pay before approval.</Text>
+                                                            <View style={[styles.previewWarningRow, { backgroundColor: palette.warningSoft }]}>
+                                                                <MaterialCommunityIcons name="credit-card-clock-outline" size={16} color={palette.warning} />
+                                                                <Text style={[styles.previewWarningText, { color: palette.warning }]}>Payment is still pending for this friend, so they will need to pay before approval.</Text>
                                                             </View>
                                                         ) : null}
                                                     </View>
@@ -586,11 +662,11 @@ export default function RoomsScreen() {
                                     </>
                                 )}
 
-                                <View style={styles.summaryBanner}>
-                                    <View style={styles.summaryIcon}>
-                                        <MaterialCommunityIcons name="information-outline" size={16} color="#1565C0" />
+                                <View style={[styles.summaryBanner, { backgroundColor: palette.surfaceMuted }]}>
+                                    <View style={[styles.summaryIcon, { backgroundColor: palette.surface }]}>
+                                        <MaterialCommunityIcons name="information-outline" size={16} color={palette.primary} />
                                     </View>
-                                    <Text style={styles.summaryText}>
+                                    <Text style={[styles.summaryText, { color: palette.textSecondary }]}>
                                         {filledMatrics.length === 0
                                             ? 'You are reserving 1 bed for yourself.'
                                             : `You are reserving ${totalReserving} beds - you plus ${filledMatrics.length} friend${
@@ -602,16 +678,16 @@ export default function RoomsScreen() {
 
                             <View style={styles.modalActions}>
                                 <TouchableOpacity
-                                    style={[styles.modalCancelButton, (reserving || validatingFriends) && styles.disabledButton]}
+                                    style={[styles.modalCancelButton, { borderColor: palette.border, backgroundColor: palette.surface }, (reserving || validatingFriends) && styles.disabledButton]}
                                     activeOpacity={0.85}
                                     onPress={() => setModalVisible(false)}
                                     disabled={reserving || validatingFriends}
                                 >
-                                    <Text style={styles.modalCancelButtonText}>Cancel</Text>
+                                    <Text style={[styles.modalCancelButtonText, { color: palette.textSecondary }]}>Cancel</Text>
                                 </TouchableOpacity>
 
                                 <TouchableOpacity
-                                    style={[styles.modalPrimaryButton, (reserving || validatingFriends) && styles.disabledButton]}
+                                    style={[styles.modalPrimaryButton, { backgroundColor: palette.primary }, (reserving || validatingFriends) && styles.disabledButton]}
                                     activeOpacity={0.85}
                                     onPress={handleReserve}
                                     disabled={reserving || validatingFriends}
@@ -712,7 +788,7 @@ const styles = StyleSheet.create({
         flex: 1,
         borderRadius: 18,
         paddingVertical: 14,
-        backgroundColor: 'rgba(255,255,255,0.14)',
+        borderWidth: 1,
         alignItems: 'center',
         justifyContent: 'center',
     },
@@ -758,7 +834,7 @@ const styles = StyleSheet.create({
         borderRadius: 22,
         overflow: 'hidden',
         flexDirection: 'row',
-        shadowColor: '#000000',
+        borderWidth: 1,
         shadowOffset: { width: 0, height: 10 },
         shadowOpacity: 0.07,
         shadowRadius: 18,
@@ -812,12 +888,14 @@ const styles = StyleSheet.create({
         borderRadius: 16,
         paddingHorizontal: 14,
         paddingVertical: 14,
+        borderWidth: 1,
     },
     metricCardWide: {
         width: '100%',
         borderRadius: 16,
         paddingHorizontal: 14,
         paddingVertical: 14,
+        borderWidth: 1,
     },
     metricLabel: {
         fontSize: 11,
@@ -864,31 +942,31 @@ const styles = StyleSheet.create({
     reserveButton: {
         minHeight: 46,
         borderRadius: 16,
-        backgroundColor: '#EEF5FF',
+        backgroundColor: 'transparent',
         paddingHorizontal: 16,
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'space-between',
     },
     reserveButtonDisabled: {
-        backgroundColor: '#F3F5F7',
+        backgroundColor: 'transparent',
     },
     reserveButtonText: {
-        color: '#1565C0',
+        color: '#0C4A8C',
         fontSize: 14,
         fontWeight: '800',
     },
     reserveButtonTextDisabled: {
-        color: '#90A4AE',
+        color: '#94A3B8',
     },
     emptyPanel: {
         marginHorizontal: 18,
         marginTop: 12,
         borderRadius: 22,
+        borderWidth: 1,
         paddingHorizontal: 24,
         paddingVertical: 28,
         alignItems: 'center',
-        shadowColor: '#000000',
         shadowOffset: { width: 0, height: 10 },
         shadowOpacity: 0.07,
         shadowRadius: 18,
@@ -898,7 +976,7 @@ const styles = StyleSheet.create({
         width: 68,
         height: 68,
         borderRadius: 34,
-        backgroundColor: '#EAF3FF',
+        backgroundColor: 'transparent',
         alignItems: 'center',
         justifyContent: 'center',
         marginBottom: 16,
@@ -915,10 +993,10 @@ const styles = StyleSheet.create({
     },
     errorPanel: {
         borderRadius: 22,
+        borderWidth: 1,
         paddingHorizontal: 24,
         paddingVertical: 28,
         alignItems: 'center',
-        shadowColor: '#000000',
         shadowOffset: { width: 0, height: 10 },
         shadowOpacity: 0.07,
         shadowRadius: 18,
@@ -928,7 +1006,7 @@ const styles = StyleSheet.create({
         width: 68,
         height: 68,
         borderRadius: 34,
-        backgroundColor: '#EAF3FF',
+        backgroundColor: 'transparent',
         alignItems: 'center',
         justifyContent: 'center',
         marginBottom: 16,
@@ -947,7 +1025,7 @@ const styles = StyleSheet.create({
     retryButton: {
         minHeight: 46,
         borderRadius: 16,
-        backgroundColor: '#1565C0',
+        backgroundColor: '#0C4A8C',
         paddingHorizontal: 18,
         flexDirection: 'row',
         alignItems: 'center',
@@ -984,7 +1062,7 @@ const styles = StyleSheet.create({
         width: 46,
         height: 5,
         borderRadius: 999,
-        backgroundColor: '#D7DCE5',
+        backgroundColor: 'transparent',
         marginBottom: 18,
     },
     modalHero: {
@@ -996,7 +1074,7 @@ const styles = StyleSheet.create({
         width: 48,
         height: 48,
         borderRadius: 16,
-        backgroundColor: '#EAF3FF',
+        backgroundColor: 'transparent',
         alignItems: 'center',
         justifyContent: 'center',
     },
@@ -1064,7 +1142,7 @@ const styles = StyleSheet.create({
         fontWeight: '600',
     },
     noSpaceHint: {
-        color: '#E57373',
+        color: '#B91C1C',
         fontSize: 13,
         lineHeight: 19,
     },
@@ -1090,10 +1168,10 @@ const styles = StyleSheet.create({
         paddingHorizontal: 14,
         paddingVertical: 10,
         borderRadius: 999,
-        backgroundColor: '#EAF3FF',
+        backgroundColor: 'transparent',
     },
     addFriendButtonText: {
-        color: '#1565C0',
+        color: '#0C4A8C',
         fontSize: 13,
         fontWeight: '700',
     },
@@ -1107,11 +1185,11 @@ const styles = StyleSheet.create({
         paddingVertical: 10,
         borderRadius: 999,
         borderWidth: 1,
-        borderColor: '#BFDBFE',
-        backgroundColor: '#F8FBFF',
+        borderColor: 'transparent',
+        backgroundColor: 'transparent',
     },
     validateInviteButtonText: {
-        color: '#1565C0',
+        color: '#0C4A8C',
         fontSize: 13,
         fontWeight: '700',
     },
@@ -1124,7 +1202,7 @@ const styles = StyleSheet.create({
         paddingHorizontal: 14,
         paddingVertical: 14,
         borderWidth: 1,
-        borderColor: '#E2E8F0',
+        borderColor: 'transparent',
         gap: 10,
     },
     previewCardHeader: {
@@ -1146,10 +1224,10 @@ const styles = StyleSheet.create({
         paddingHorizontal: 10,
         paddingVertical: 6,
         borderRadius: 999,
-        backgroundColor: '#E8F5E9',
+        backgroundColor: 'transparent',
     },
     previewStatusPillText: {
-        color: '#2E7D32',
+        color: '#15803D',
         fontSize: 11,
         fontWeight: '800',
         textTransform: 'uppercase',
@@ -1164,20 +1242,20 @@ const styles = StyleSheet.create({
         alignItems: 'flex-start',
         gap: 8,
         borderRadius: 14,
-        backgroundColor: '#FFF7ED',
+        backgroundColor: 'transparent',
         paddingHorizontal: 12,
         paddingVertical: 10,
     },
     previewWarningText: {
         flex: 1,
-        color: '#9A3412',
+        color: '#B45309',
         fontSize: 12,
         lineHeight: 18,
     },
     summaryBanner: {
         marginTop: 18,
         borderRadius: 18,
-        backgroundColor: '#EEF4FF',
+        backgroundColor: 'transparent',
         paddingHorizontal: 14,
         paddingVertical: 14,
         flexDirection: 'row',
@@ -1188,7 +1266,7 @@ const styles = StyleSheet.create({
         width: 28,
         height: 28,
         borderRadius: 10,
-        backgroundColor: '#FFFFFF',
+        backgroundColor: 'transparent',
         alignItems: 'center',
         justifyContent: 'center',
     },
@@ -1196,7 +1274,7 @@ const styles = StyleSheet.create({
         flex: 1,
         fontSize: 13,
         lineHeight: 19,
-        color: '#355F90',
+        color: '#667085',
     },
     modalActions: {
         flexDirection: 'row',
@@ -1208,12 +1286,12 @@ const styles = StyleSheet.create({
         minHeight: 50,
         borderRadius: 16,
         borderWidth: 1.5,
-        borderColor: '#D6DCE5',
+        borderColor: 'transparent',
         alignItems: 'center',
         justifyContent: 'center',
     },
     modalCancelButtonText: {
-        color: '#546274',
+        color: '#667085',
         fontSize: 14,
         fontWeight: '800',
     },
@@ -1221,7 +1299,7 @@ const styles = StyleSheet.create({
         flex: 1,
         minHeight: 50,
         borderRadius: 16,
-        backgroundColor: '#1565C0',
+        backgroundColor: '#0C4A8C',
         alignItems: 'center',
         justifyContent: 'center',
         flexDirection: 'row',

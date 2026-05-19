@@ -114,14 +114,69 @@ export default function DashboardScreen() {
     const paymentPaid = dashboard?.paymentStatus === 'paid';
     const reservationStatus = dashboard?.reservationStatus ?? dashboard?.reservation?.status ?? null;
     const hasReservation = dashboard?.hasReservation ?? false;
-    const paymentToneColor = paymentPaid ? '#B8E0C0' : '#FFD08A';
-    const reservationToneColor = hasReservation ? '#D6E7FF' : 'rgba(255,255,255,0.72)';
+    const paymentToneColor = paymentPaid ? '#CBEFD2' : '#FFD89C';
+    const reservationToneColor = hasReservation ? '#DDEBFF' : 'rgba(255,255,255,0.76)';
     const reservationLabel =
         reservationStatus === 'temporary'
             ? 'Invite pending'
             : hasReservation
                 ? 'Room reserved'
                 : 'No reservation';
+    const reservationStatusTone =
+        reservationStatus === 'confirmed'
+            ? { backgroundColor: palette.successSoft, color: palette.success }
+            : reservationStatus === 'cancelled'
+                ? { backgroundColor: palette.dangerSoft, color: palette.danger }
+                : { backgroundColor: palette.warningSoft, color: palette.warning };
+    const nextStep = !paymentPaid
+        ? {
+            title: 'Complete your hostel payment',
+            description: paymentAmount != null
+                ? `Amount due: ${formatAmountLabel(paymentAmount)}. Complete payment so your room process can continue without delay.`
+                : 'Open payment to review your fee and complete checkout.',
+            icon: 'credit-card-outline' as const,
+            route: '/(student)/payment',
+            cta: 'Open payment',
+            backgroundColor: palette.warningSoft,
+            iconBackground: palette.surface,
+            iconColor: palette.warning,
+            titleColor: palette.warning,
+        }
+        : reservationStatus === 'temporary'
+            ? {
+                title: 'Review your room invite',
+                description: 'A room is waiting for your approval. Open your reservation and confirm it before the approval window closes.',
+                icon: 'email-check-outline' as const,
+                route: '/(student)/reservation',
+                cta: 'Review invite',
+                backgroundColor: palette.primarySoft,
+                iconBackground: palette.surface,
+                iconColor: palette.primary,
+                titleColor: palette.primaryStrong,
+            }
+            : !hasReservation
+                ? {
+                    title: 'Reserve a room',
+                    description: 'Browse available hostels and secure a room that fits your session before the preferred spaces fill up.',
+                    icon: 'home-search-outline' as const,
+                    route: '/(student)/hostels',
+                    cta: 'Browse hostels',
+                    backgroundColor: palette.primarySoft,
+                    iconBackground: palette.surface,
+                    iconColor: palette.primary,
+                    titleColor: palette.primaryStrong,
+                }
+                : {
+                    title: 'Manage your reservation',
+                    description: 'Your room is already in place. Open your reservation to review occupants, invite status, and final check-in details.',
+                    icon: 'bed-outline' as const,
+                    route: '/(student)/reservation',
+                    cta: 'View reservation',
+                    backgroundColor: palette.successSoft,
+                    iconBackground: palette.surface,
+                    iconColor: palette.success,
+                    titleColor: palette.success,
+                };
 
     if (loading) {
         return (
@@ -206,45 +261,15 @@ export default function DashboardScreen() {
                         ) : null}
                     </View>
 
-                    <View className="flex-row gap-3">
-                        <View style={styles.heroStatusCard}>
-                            <MaterialCommunityIcons
-                                name={paymentPaid ? 'check-circle-outline' : 'clock-outline'}
-                                size={18}
-                                color={paymentToneColor}
-                            />
-                            <View style={styles.heroStatusCopy}>
-                                <Text
-                                    style={[
-                                        styles.heroStatusLabel,
-                                        { color: paymentToneColor },
-                                    ]}
-                                >
-                                    Payment
-                                </Text>
-                                <Text style={styles.heroStatusValue}>
-                                    {paymentPaid ? 'Cleared' : 'Pending review'}
-                                </Text>
-                            </View>
+                    <View style={styles.heroSummaryBar}>
+                        <View style={styles.heroSummaryItem}>
+                            <Text style={[styles.heroSummaryLabel, { color: paymentToneColor }]}>Payment</Text>
+                            <Text style={styles.heroSummaryValue}>{paymentPaid ? 'Cleared' : 'Pending review'}</Text>
                         </View>
-
-                        <View style={styles.heroStatusCard}>
-                            <MaterialCommunityIcons
-                                name={hasReservation ? 'bed-outline' : 'bed-empty'}
-                                size={18}
-                                color={reservationToneColor}
-                            />
-                            <View style={styles.heroStatusCopy}>
-                                <Text
-                                    style={[
-                                        styles.heroStatusLabel,
-                                        { color: reservationToneColor },
-                                    ]}
-                                >
-                                    Reservation
-                                </Text>
-                                <Text style={styles.heroStatusValue}>{reservationLabel}</Text>
-                            </View>
+                        <View style={styles.heroSummaryDivider} />
+                        <View style={styles.heroSummaryItem}>
+                            <Text style={[styles.heroSummaryLabel, { color: reservationToneColor }]}>Reservation</Text>
+                            <Text style={styles.heroSummaryValue}>{reservationLabel}</Text>
                         </View>
                     </View>
                 </StudentHero>
@@ -283,11 +308,11 @@ export default function DashboardScreen() {
                             </TouchableOpacity>
                         </View>
                     ) : (
-                        <>
+                        <View className="gap-[22px]">
                             <Reveal delay={40}>
                                 <View
                                     style={[
-                                        styles.spotlightCard,
+                                        styles.summaryCard,
                                         {
                                             backgroundColor: palette.surface,
                                             borderColor: palette.border,
@@ -295,145 +320,85 @@ export default function DashboardScreen() {
                                         },
                                     ]}
                                 >
-                                    <View style={styles.spotlightHeader}>
+                                    <View style={styles.sectionHeaderRow}>
                                         <View>
                                             <Text className="mb-1.5 text-[11px] font-extrabold uppercase tracking-[1px]" style={{ color: palette.textMuted }}>
-                                                At a glance
+                                                Overview
                                             </Text>
                                             <Text className="text-[22px] font-extrabold tracking-[-0.5px]" style={{ color: palette.textPrimary }}>
-                                                StayHub snapshot
+                                                Your housing summary
                                             </Text>
                                         </View>
-                                        <View
-                                            style={[
-                                                styles.spotlightBadge,
-                                                { backgroundColor: palette.primarySoft },
-                                            ]}
-                                        >
-                                            <Text
-                                                style={[
-                                                    styles.spotlightBadgeText,
-                                                    { color: palette.primary },
-                                                ]}
-                                            >
-                                                Live
-                                            </Text>
+                                        <View style={[styles.sectionBadge, { backgroundColor: palette.primarySoft }]}>
+                                            <Text style={[styles.sectionBadgeText, { color: palette.primary }]}>Live</Text>
                                         </View>
                                     </View>
 
-                                    <View style={styles.overviewGrid}>
-                                        <View
-                                            style={[
-                                                styles.overviewCard,
-                                                {
-                                                    backgroundColor: palette.surfaceMuted,
-                                                    borderColor: palette.border,
-                                                },
-                                            ]}
-                                        >
-                                            <Text
-                                                style={[
-                                                    styles.overviewEyebrow,
-                                                    { color: palette.textMuted },
-                                                ]}
-                                            >
-                                                Outstanding fee
+                                    <View style={styles.summaryGrid}>
+                                        <View style={[styles.summaryTile, { backgroundColor: palette.surfaceMuted, borderColor: palette.border }]}>
+                                            <Text style={[styles.summaryTileLabel, { color: palette.textMuted }]}>Payment status</Text>
+                                            <Text style={[styles.summaryTileValue, { color: palette.textPrimary }]}>
+                                                {paymentPaid ? 'Paid in full' : 'Pending payment'}
                                             </Text>
-                                            <Text
-                                                style={[
-                                                    styles.overviewValue,
-                                                    { color: palette.textPrimary },
-                                                ]}
-                                            >
-                                                {paymentPaid ? 'Paid in full' : formatAmountLabel(paymentAmount)}
+                                            <Text style={[styles.summaryTileMeta, { color: palette.textSecondary }]}>
+                                                {paymentPaid ? 'No outstanding hostel fee' : formatAmountLabel(paymentAmount)}
                                             </Text>
                                         </View>
 
-                                        <View
-                                            style={[
-                                                styles.overviewCard,
-                                                {
-                                                    backgroundColor: palette.surfaceMuted,
-                                                    borderColor: palette.border,
-                                                },
-                                            ]}
-                                        >
-                                            <Text
-                                                style={[
-                                                    styles.overviewEyebrow,
-                                                    { color: palette.textMuted },
-                                                ]}
-                                            >
-                                                Room status
-                                            </Text>
-                                            <Text
-                                                style={[
-                                                    styles.overviewValue,
-                                                    { color: palette.textPrimary },
-                                                ]}
-                                            >
+                                        <View style={[styles.summaryTile, { backgroundColor: palette.surfaceMuted, borderColor: palette.border }]}>
+                                            <Text style={[styles.summaryTileLabel, { color: palette.textMuted }]}>Reservation status</Text>
+                                            <Text style={[styles.summaryTileValue, { color: palette.textPrimary }]}>
                                                 {formatReservationStatus(reservationStatus)}
                                             </Text>
+                                            <Text style={[styles.summaryTileMeta, { color: palette.textSecondary }]}>
+                                                {hasReservation ? 'Your room is already tracked in StayHub' : 'No room has been reserved yet'}
+                                            </Text>
                                         </View>
+
+                                        {dashboard?.currentSession ? (
+                                            <View style={[styles.summaryTileWide, { backgroundColor: palette.primarySoft, borderColor: palette.border }]}>
+                                                <Text style={[styles.summaryTileLabel, { color: palette.primaryStrong }]}>Current session</Text>
+                                                <Text style={[styles.summaryTileWideValue, { color: palette.textPrimary }]}>
+                                                    {dashboard.currentSession}
+                                                </Text>
+                                            </View>
+                                        ) : null}
                                     </View>
                                 </View>
                             </Reveal>
 
-                            {!paymentPaid ? (
-                                <View className="mt-[22px]">
-                                    <Reveal delay={100}>
-                                        <TouchableOpacity
-                                            style={[styles.paymentBanner, { backgroundColor: palette.warningSoft }]}
-                                            activeOpacity={0.9}
-                                            onPress={() => router.push('/(student)/payment')}
-                                        >
-                                            <View style={styles.paymentBannerLeft}>
-                                                <View style={[styles.paymentBannerIcon, { backgroundColor: palette.surface }]}>
-                                                    <MaterialCommunityIcons
-                                                        name="alert-circle-outline"
-                                                        size={20}
-                                                        color={palette.warning}
-                                                    />
-                                                </View>
-                                                <View style={styles.paymentBannerCopy}>
-                                                    <Text style={[styles.paymentBannerTitle, { color: palette.warning }]}>
-                                                        Payment still outstanding
-                                                    </Text>
-                                                    <Text style={[styles.paymentBannerSubtitle, { color: palette.textSecondary }]}>
-                                                        {paymentAmount != null
-                                                            ? `Amount due: ${formatAmountLabel(paymentAmount)}`
-                                                            : 'Open payment to review the amount and complete checkout.'}
-                                                    </Text>
-                                                </View>
-                                            </View>
-                                            <View style={[styles.paymentBannerCta, { backgroundColor: palette.warning }]}>
-                                                <Text style={styles.paymentBannerCtaText}>Pay now</Text>
-                                            </View>
-                                        </TouchableOpacity>
-                                    </Reveal>
-                                </View>
-                            ) : null}
-
-                            <View className="mt-[22px]">
-                                <Reveal delay={150}>
-                                    <AlertsCard />
-                                </Reveal>
-                            </View>
-
-                            <View className="mt-[22px]">
-                                <Reveal delay={210}>
-                                    <View className="mb-[14px]">
-                                        <View>
-                                            <Text className="mb-1.5 text-[11px] font-extrabold uppercase tracking-[1px]" style={{ color: palette.textMuted }}>
-                                                Reservation
-                                            </Text>
-                                            <Text className="text-[22px] font-extrabold tracking-[-0.5px]" style={{ color: palette.textPrimary }}>
-                                                Current room snapshot
-                                            </Text>
+                            <Reveal delay={90}>
+                                <TouchableOpacity
+                                    style={[styles.nextStepCard, { backgroundColor: nextStep.backgroundColor }]}
+                                    activeOpacity={0.9}
+                                    onPress={() => router.push(nextStep.route as any)}
+                                >
+                                    <View style={styles.nextStepTopRow}>
+                                        <View style={[styles.nextStepIconWrap, { backgroundColor: nextStep.iconBackground }]}>
+                                            <MaterialCommunityIcons name={nextStep.icon} size={20} color={nextStep.iconColor} />
+                                        </View>
+                                        <View style={styles.nextStepCopy}>
+                                            <Text style={[styles.nextStepEyebrow, { color: palette.textMuted }]}>Next step</Text>
+                                            <Text style={[styles.nextStepTitle, { color: nextStep.titleColor }]}>{nextStep.title}</Text>
+                                            <Text style={[styles.nextStepDescription, { color: palette.textSecondary }]}>{nextStep.description}</Text>
                                         </View>
                                     </View>
 
-                                    {hasReservation && dashboard?.reservation ? (
+                                    <View style={[styles.nextStepActionRow, { borderTopColor: palette.divider }]}>
+                                        <Text style={[styles.nextStepActionText, { color: nextStep.iconColor }]}>{nextStep.cta}</Text>
+                                        <View style={[styles.inlineArrowWrap, { backgroundColor: palette.surface }]}>
+                                            <MaterialCommunityIcons name="arrow-right" size={16} color={nextStep.iconColor} />
+                                        </View>
+                                    </View>
+                                </TouchableOpacity>
+                            </Reveal>
+
+                            <Reveal delay={140}>
+                                <AlertsCard />
+                            </Reveal>
+
+                            <Reveal delay={190}>
+                                {hasReservation && dashboard?.reservation ? (
                                         <TouchableOpacity
                                             style={[
                                                 styles.reservationCard,
@@ -446,56 +411,25 @@ export default function DashboardScreen() {
                                             activeOpacity={0.9}
                                             onPress={() => router.push('/(student)/reservation')}
                                         >
-                                            <View style={styles.reservationCardHeader}>
-                                                <View style={styles.reservationCardHeaderCopy}>
-                                                    <Text
-                                                        style={[
-                                                            styles.reservationEyebrow,
-                                                            { color: palette.textMuted },
-                                                        ]}
-                                                    >
-                                                        Assigned hostel
+                                            <View style={styles.sectionHeaderRow}>
+                                                <View>
+                                                    <Text className="mb-1.5 text-[11px] font-extrabold uppercase tracking-[1px]" style={{ color: palette.textMuted }}>
+                                                        Reservation
                                                     </Text>
-                                                    <Text
-                                                        style={[
-                                                            styles.reservationTitle,
-                                                            { color: palette.textPrimary },
-                                                        ]}
-                                                    >
-                                                        {dashboard.reservation.hostel?.name ?? 'Assigned hostel'}
+                                                    <Text className="text-[22px] font-extrabold tracking-[-0.5px]" style={{ color: palette.textPrimary }}>
+                                                        Current room
                                                     </Text>
                                                 </View>
-
-                                                <View
-                                                    style={[
-                                                        styles.reservationStatusPill,
-                                                        {
-                                                            backgroundColor:
-                                                                dashboard.reservation.status === 'confirmed'
-                                                                    ? palette.successSoft
-                                                                    : dashboard.reservation.status === 'cancelled'
-                                                                        ? palette.dangerSoft
-                                                                        : palette.warningSoft,
-                                                        },
-                                                    ]}
-                                                >
-                                                    <Text
-                                                        style={[
-                                                            styles.reservationStatusText,
-                                                            {
-                                                                color:
-                                                                    dashboard.reservation.status === 'confirmed'
-                                                                        ? '#2E7D32'
-                                                                        : dashboard.reservation.status === 'cancelled'
-                                                                            ? '#D92D20'
-                                                                            : '#C2410C',
-                                                            },
-                                                        ]}
-                                                    >
+                                                <View style={[styles.reservationStatusPill, { backgroundColor: reservationStatusTone.backgroundColor }]}>
+                                                    <Text style={[styles.reservationStatusText, { color: reservationStatusTone.color }]}>
                                                         {formatReservationStatus(dashboard.reservation.status)}
                                                     </Text>
                                                 </View>
                                             </View>
+
+                                            <Text style={[styles.reservationHostelName, { color: palette.textPrimary }]}>
+                                                {dashboard.reservation.hostel?.name ?? 'Assigned hostel'}
+                                            </Text>
 
                                             <View style={styles.reservationDetailsRow}>
                                                 <View
@@ -618,9 +552,8 @@ export default function DashboardScreen() {
                                             </TouchableOpacity>
                                         </View>
                                     )}
-                                </Reveal>
-                            </View>
-                        </>
+                            </Reveal>
+                        </View>
                     )}
                 </View>
             </ScrollView>
@@ -689,34 +622,38 @@ const styles = StyleSheet.create({
         fontSize: 20,
         fontWeight: '800',
     },
-    heroStatusCard: {
-        flex: 1,
-        borderRadius: 20,
-        paddingHorizontal: 14,
-        paddingVertical: 14,
+    heroSummaryBar: {
         flexDirection: 'row',
         alignItems: 'center',
-        gap: 10,
+        borderRadius: 20,
+        paddingHorizontal: 16,
+        paddingVertical: 14,
         backgroundColor: 'rgba(255,255,255,0.12)',
         borderWidth: 1,
         borderColor: 'rgba(255,255,255,0.16)',
     },
-    heroStatusCopy: {
+    heroSummaryItem: {
         flex: 1,
         gap: 4,
     },
-    heroStatusLabel: {
+    heroSummaryDivider: {
+        width: 1,
+        alignSelf: 'stretch',
+        marginHorizontal: 14,
+        backgroundColor: 'rgba(255,255,255,0.16)',
+    },
+    heroSummaryLabel: {
         fontSize: 11,
         fontWeight: '800',
         textTransform: 'uppercase',
         letterSpacing: 0.8,
     },
-    heroStatusValue: {
+    heroSummaryValue: {
         color: '#FFFFFF',
         fontSize: 14,
         fontWeight: '800',
     },
-    spotlightCard: {
+    summaryCard: {
         borderRadius: 28,
         borderWidth: 1,
         padding: 18,
@@ -725,94 +662,110 @@ const styles = StyleSheet.create({
         shadowRadius: 24,
         elevation: 10,
     },
-    spotlightHeader: {
+    sectionHeaderRow: {
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'flex-start',
         gap: 12,
         marginBottom: 16,
     },
-    spotlightBadge: {
+    sectionBadge: {
         borderRadius: 999,
         paddingHorizontal: 11,
         paddingVertical: 7,
     },
-    spotlightBadgeText: {
+    sectionBadgeText: {
         fontSize: 11,
         fontWeight: '800',
         textTransform: 'uppercase',
         letterSpacing: 0.7,
     },
-    overviewGrid: {
+    summaryGrid: {
         flexDirection: 'row',
+        flexWrap: 'wrap',
         gap: 12,
     },
-    overviewCard: {
-        flex: 1,
+    summaryTile: {
+        width: '48%',
         borderRadius: 20,
         borderWidth: 1,
         paddingHorizontal: 16,
         paddingVertical: 16,
     },
-    overviewEyebrow: {
+    summaryTileWide: {
+        width: '100%',
+        borderRadius: 20,
+        borderWidth: 1,
+        paddingHorizontal: 16,
+        paddingVertical: 16,
+    },
+    summaryTileLabel: {
         fontSize: 11,
         fontWeight: '800',
         textTransform: 'uppercase',
         letterSpacing: 0.8,
         marginBottom: 10,
     },
-    overviewValue: {
+    summaryTileValue: {
         fontSize: 17,
         fontWeight: '800',
         lineHeight: 24,
     },
-    paymentBanner: {
-        backgroundColor: '#FFF3E4',
+    summaryTileWideValue: {
+        fontSize: 18,
+        fontWeight: '800',
+        lineHeight: 25,
+    },
+    summaryTileMeta: {
+        fontSize: 12,
+        lineHeight: 18,
+        marginTop: 8,
+    },
+    nextStepCard: {
         borderRadius: 24,
         paddingHorizontal: 16,
         paddingVertical: 16,
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        gap: 10,
     },
-    paymentBannerLeft: {
+    nextStepTopRow: {
         flexDirection: 'row',
-        alignItems: 'center',
         gap: 12,
-        flex: 1,
+        alignItems: 'flex-start',
     },
-    paymentBannerIcon: {
+    nextStepIconWrap: {
         width: 46,
         height: 46,
         borderRadius: 16,
-        backgroundColor: '#FFFFFF',
         alignItems: 'center',
         justifyContent: 'center',
     },
-    paymentBannerCopy: {
+    nextStepCopy: {
         flex: 1,
         gap: 4,
     },
-    paymentBannerTitle: {
-        color: '#9A3412',
+    nextStepEyebrow: {
+        fontSize: 11,
+        fontWeight: '800',
+        textTransform: 'uppercase',
+        letterSpacing: 0.8,
+    },
+    nextStepTitle: {
         fontSize: 15,
         fontWeight: '800',
     },
-    paymentBannerSubtitle: {
-        color: '#B45309',
-        fontSize: 12,
-        lineHeight: 18,
+    nextStepDescription: {
+        fontSize: 13,
+        lineHeight: 19,
     },
-    paymentBannerCta: {
-        borderRadius: 16,
-        backgroundColor: '#C2410C',
-        paddingHorizontal: 14,
-        paddingVertical: 11,
+    nextStepActionRow: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginTop: 14,
+        paddingTop: 14,
+        borderTopWidth: 1,
     },
-    paymentBannerCtaText: {
-        color: '#FFFFFF',
-        fontSize: 12,
+    nextStepActionText: {
+        fontSize: 13,
         fontWeight: '800',
     },
     stateCard: {
@@ -870,27 +823,11 @@ const styles = StyleSheet.create({
         shadowRadius: 24,
         elevation: 10,
     },
-    reservationCardHeader: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'flex-start',
-        gap: 12,
-        marginBottom: 16,
-    },
-    reservationCardHeaderCopy: {
-        flex: 1,
-    },
-    reservationEyebrow: {
-        fontSize: 11,
-        fontWeight: '800',
-        textTransform: 'uppercase',
-        letterSpacing: 1,
-        marginBottom: 4,
-    },
-    reservationTitle: {
+    reservationHostelName: {
         fontSize: 22,
         fontWeight: '800',
         lineHeight: 28,
+        marginBottom: 16,
     },
     reservationStatusPill: {
         borderRadius: 999,

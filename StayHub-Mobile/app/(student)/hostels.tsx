@@ -85,9 +85,9 @@ export default function HostelsScreen() {
         <>
             <StudentHero
                 insetTop={insets.top}
-                eyebrow="Accommodation"
-                title="Available hostels"
-                // subtitle="Browse approved hostels, compare room availability, and move into the right option for your session."
+                eyebrow="Hostels"
+                title="Browse hostels"
+                subtitle="Compare available options and choose a hostel that suits your session."
             >
                 <View className="mt-6 flex-row gap-2.5">
                     <View
@@ -129,7 +129,7 @@ export default function HostelsScreen() {
                             color="#FFFFFF"
                         />
                         <Text className="text-[12px] font-bold leading-[18px] text-white/80">
-                            {studentGender === 'male' ? 'Male hostels' : 'Female hostels'}
+                            {studentGender === 'male' ? 'Male only' : 'Female only'}
                         </Text>
                     </View>
                 </View>
@@ -187,7 +187,7 @@ export default function HostelsScreen() {
                                 color={palette.primary}
                             />
                             <Text style={[styles.genderPillText, { color: palette.primary }]}>
-                                {studentGender === 'male' ? 'Male accommodation' : 'Female accommodation'}
+                                {studentGender === 'male' ? 'Male hostels only' : 'Female hostels only'}
                             </Text>
                         </View>
 
@@ -200,10 +200,10 @@ export default function HostelsScreen() {
                 <View className="mb-[14px] mt-[22px] flex-row items-end justify-between gap-3">
                     <View>
                         <Text className="mb-1.5 text-[11px] font-extrabold uppercase tracking-[1px]" style={{ color: palette.textMuted }}>
-                            Matching options
+                            Available now
                         </Text>
                         <Text className="text-[22px] font-extrabold tracking-[-0.5px]" style={{ color: palette.textPrimary }}>
-                            {search ? `Results for "${search}"` : 'Hostels ready to explore'}
+                            {search ? `Results for "${search}"` : 'Available hostels'}
                         </Text>
                     </View>
                     <Text className="text-right text-[12px] font-bold" style={{ color: palette.textSecondary }}>

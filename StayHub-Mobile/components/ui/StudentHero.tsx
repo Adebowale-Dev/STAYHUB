@@ -1,6 +1,5 @@
 import React from 'react';
 import {
-    ImageBackground,
     Platform,
     StyleProp,
     TextStyle,
@@ -8,7 +7,6 @@ import {
     ViewStyle,
 } from 'react-native';
 import { Text } from 'react-native-paper';
-import { STUDENT_HERO_FALLBACK, STUDENT_HERO_IMAGE } from '../../constants/design';
 
 interface StudentHeroProps {
     insetTop: number;
@@ -38,79 +36,69 @@ export function StudentHero({
     const centered = align === 'center';
 
     return (
-        <ImageBackground
-            source={STUDENT_HERO_FALLBACK}
-            className="overflow-hidden rounded-b-[34px] bg-hero"
-            resizeMode="cover"
-        >
-            <ImageBackground
-                source={STUDENT_HERO_IMAGE}
-                className="overflow-hidden rounded-b-[34px]"
-                resizeMode="cover"
-                imageStyle={{ transform: [{ scale: 1.04 }] }}
+        <View className="overflow-hidden rounded-b-[34px] bg-hero">
+            <View className="absolute inset-0 bg-hero/92" />
+            <View className="absolute -right-10 top-0 h-40 w-40 rounded-full bg-white/6" />
+            <View className="absolute -left-8 bottom-0 h-28 w-28 rounded-full bg-white/5" />
+            <View className="absolute inset-x-0 bottom-0 h-24 bg-black/10" />
+
+            <View
+                style={[
+                    { paddingTop: (Platform.OS === 'ios' ? insetTop : 0) + 20 },
+                    contentStyle,
+                ]}
+                className={centered ? 'items-center px-5 pb-6' : 'px-5 pb-6'}
             >
-                <View className="absolute inset-0 bg-hero/70" />
-                <View className="absolute -right-5 -top-28 h-[260px] w-[260px] rounded-full bg-[#2F80ED]/30" />
-                <View className="absolute -bottom-32 -left-8 h-[220px] w-[220px] rounded-full bg-[#0F52BA]/25" />
+                {eyebrow ? (
+                    <View className={centered ? 'mb-4 self-center rounded-full border border-white/12 bg-white/10 px-3 py-1.5' : 'mb-4 self-start rounded-full border border-white/12 bg-white/10 px-3 py-1.5'}>
+                        <Text className="text-[10px] font-extrabold uppercase tracking-[1.1px] text-white/90">
+                            {eyebrow}
+                        </Text>
+                    </View>
+                ) : null}
 
                 <View
-                    style={[
-                        { paddingTop: (Platform.OS === 'ios' ? insetTop : 0) + 22 },
-                        contentStyle,
-                    ]}
-                    className={centered ? 'items-center px-5 pb-7' : 'px-5 pb-7'}
+                    className={centered ? 'mb-[8px] items-center gap-3' : 'mb-[8px] flex-row items-center justify-between gap-4'}
                 >
-                    {eyebrow ? (
-                        <View className={centered ? 'mb-4 self-center rounded-full border border-white/15 bg-white/15 px-3 py-2' : 'mb-4 self-start rounded-full border border-white/15 bg-white/15 px-3 py-2'}>
-                            <Text className="text-[11px] font-extrabold uppercase tracking-[1.1px] text-white">
-                                {eyebrow}
-                            </Text>
-                        </View>
-                    ) : null}
-
-                    <View
-                        className={centered ? 'mb-[10px] items-center gap-3' : 'mb-[10px] flex-row items-center justify-between gap-4'}
+                    <Text
+                        style={[
+                            {
+                                color: '#FFFFFF',
+                                fontSize: 28,
+                                lineHeight: 34,
+                                fontWeight: '800',
+                                letterSpacing: -0.5,
+                                textAlign: centered ? 'center' : 'left',
+                                flexShrink: 1,
+                            },
+                            titleStyle,
+                        ]}
                     >
-                        <Text
-                            style={[
-                                {
-                                    color: '#FFFFFF',
-                                    fontSize: 31,
-                                    lineHeight: 37,
-                                    fontWeight: '800',
-                                    letterSpacing: -0.7,
-                                    textAlign: centered ? 'center' : 'left',
-                                    flexShrink: 1,
-                                },
-                                titleStyle,
-                            ]}
-                        >
-                            {title}
-                        </Text>
+                        {title}
+                    </Text>
 
-                        {titleAccessory}
-                    </View>
-
-                    {subtitle ? (
-                        <Text
-                            style={[
-                                {
-                                    color: 'rgba(255,255,255,0.78)',
-                                    fontSize: 14,
-                                    lineHeight: 22,
-                                    maxWidth: 420,
-                                    textAlign: centered ? 'center' : 'left',
-                                },
-                                subtitleStyle,
-                            ]}
-                        >
-                            {subtitle}
-                        </Text>
-                    ) : null}
-
-                    {children}
+                    {titleAccessory}
                 </View>
-            </ImageBackground>
-        </ImageBackground>
+
+                {subtitle ? (
+                    <Text
+                        style={[
+                            {
+                                color: 'rgba(255,255,255,0.76)',
+                                fontSize: 13,
+                                lineHeight: 20,
+                                maxWidth: 420,
+                                textAlign: centered ? 'center' : 'left',
+                            },
+                            subtitleStyle,
+                        ]}
+                    >
+                        {subtitle}
+                    </Text>
+                ) : null}
+
+                {children}
+            </View>
+        </View>
     );
 }

@@ -137,13 +137,13 @@ export default function AlertsCard() {
             <View style={styles.cardHeader}>
                 <View style={styles.cardHeaderCopy}>
                     <Text style={[styles.headerEyebrow, { color: palette.textMuted }]}>
-                        Attention Center
+                        Notifications
                     </Text>
                     <Text style={[styles.headerTitle, { color: palette.textPrimary }]}>
-                        Fresh updates waiting
+                        Recent updates
                     </Text>
                     <Text style={[styles.headerSubtitle, { color: palette.textSecondary }]}>
-                        Your most recent notifications are kept here until you act on them.
+                        Your latest unread activity is listed here so you can act quickly.
                     </Text>
                 </View>
 
@@ -163,8 +163,8 @@ export default function AlertsCard() {
                 </View>
                 <Text style={[styles.summaryText, { color: palette.textSecondary }]}>
                     {unread.length === 1
-                        ? 'One important update needs your attention.'
-                        : `${unread.length} important updates need your attention.`}
+                        ? 'One unread update needs your attention.'
+                        : `${unread.length} unread updates need your attention.`}
                 </Text>
             </View>
 

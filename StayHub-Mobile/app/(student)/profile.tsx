@@ -453,13 +453,21 @@ export default function ProfileScreen() {
     }
     return (<>
       <StatusBar barStyle="light-content" backgroundColor="#08162B"/>
-      <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={styles.flex}>
-        <ScrollView style={[styles.container, { backgroundColor: palette.pageBackground }]} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false} {...swipeHandlers}>
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        style={[styles.flex, { backgroundColor: palette.pageBackground }]}
+      >
+        <ScrollView
+          style={[styles.container, { backgroundColor: palette.pageBackground }]}
+          contentContainerStyle={[styles.content, { backgroundColor: palette.pageBackground }]}
+          showsVerticalScrollIndicator={false}
+          {...swipeHandlers}
+        >
           <StudentHero
             insetTop={insets.top}
-            eyebrow="Student profile"
+            eyebrow="Profile"
             title={`${user?.firstName ?? ''} ${user?.lastName ?? ''}`.trim() || 'StayHub student'}
-            // subtitle="Manage your account, update your profile details, and keep notification preferences exactly the way you want them."
+            subtitle="Manage your account details, appearance, and notification settings."
             align="center"
           >
             <TouchableOpacity onPress={handleAvatarPress} activeOpacity={0.85} disabled={uploading} style={styles.avatarWrap}>
@@ -775,7 +783,7 @@ export default function ProfileScreen() {
 }
 const styles = StyleSheet.create({
     flex: { flex: 1 },
-    container: { flex: 1, backgroundColor: '#F5F7FA' },
+    container: { flex: 1, backgroundColor: 'transparent' },
     center: { flex: 1, justifyContent: 'center', alignItems: 'center' },
     content: { paddingBottom: 144 },
     hero: {
