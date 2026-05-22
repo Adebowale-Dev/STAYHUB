@@ -49,6 +49,12 @@ const TAB_CONFIG: Record<string, TabConfig> = {
     },
 };
 
+const HIDDEN_ROUTE_OWNER: Partial<Record<string, keyof typeof TAB_CONFIG>> = {
+    settings: 'profile',
+    notifications: 'profile',
+    'rooms/[id]': 'hostels',
+};
+
 const INDICATOR_WIDTH = 26;
 const HORIZONTAL_PADDING = 14;
 const { width: screenWidth } = Dimensions.get('window');
@@ -90,7 +96,25 @@ export function AnimatedTabBar({
     const currentVisibleIndex = useMemo(() => {
         const activeKey = state.routes[state.index]?.key;
         const visibleIndex = visibleRoutes.findIndex((route) => route.key === activeKey);
-        return visibleIndex >= 0 ? visibleIndex : 0;
+
+        if (visibleIndex >= 0) {
+            return visibleIndex;
+        }
+
+        const activeRouteName = state.routes[state.index]?.name;
+        const fallbackRouteName = activeRouteName
+            ? HIDDEN_ROUTE_OWNER[activeRouteName]
+            : undefined;
+
+        if (!fallbackRouteName) {
+            return 0;
+        }
+
+        const fallbackVisibleIndex = visibleRoutes.findIndex(
+            (route) => route.name === fallbackRouteName
+        );
+
+        return fallbackVisibleIndex >= 0 ? fallbackVisibleIndex : 0;
     }, [state.index, state.routes, visibleRoutes]);
 
     const tabWidth = useMemo(() => {
@@ -140,7 +164,13 @@ export function AnimatedTabBar({
                 <View style={styles.row}>
                     {visibleRoutes.map((route) => {
                         const descriptor = descriptors[route.key];
-                        const isFocused = state.index === state.routes.findIndex((item) => item.key === route.key);
+                        const activeRouteName = state.routes[state.index]?.name;
+                        const fallbackRouteName = activeRouteName
+                            ? HIDDEN_ROUTE_OWNER[activeRouteName]
+                            : undefined;
+                        const isFocused =
+                            state.index === state.routes.findIndex((item) => item.key === route.key) ||
+                            (fallbackRouteName != null && route.name === fallbackRouteName);
                         const iconName = isFocused
                             ? route.config.focusedIcon
                             : route.config.unfocusedIcon;

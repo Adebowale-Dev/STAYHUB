@@ -78,6 +78,7 @@ export default function ReservationScreen() {
     const palette = getStudentPalette(theme.dark);
     const insets = useSafeAreaInsets();
     const router = useRouter();
+    const bottomContentPadding = Math.max(insets.bottom + 88, 104);
     const swipeHandlers = useStudentTabSwipe('reservation');
     const primaryTone = buildTone('Ready', 'home-city-outline', palette.primary, palette.primarySoft);
     const successTone = buildTone('Approved', 'check-circle-outline', palette.success, palette.successSoft);
@@ -558,15 +559,16 @@ export default function ReservationScreen() {
     if (!reservation) {
         return (
             <View className="flex-1" style={{ backgroundColor: palette.pageBackground }}>
-                <StatusBar barStyle="light-content" backgroundColor={palette.hero} />
+                <StatusBar barStyle={theme.dark ? 'light-content' : 'dark-content'} backgroundColor={palette.surface} />
                 <ScrollView
                     className="flex-1"
-                    contentContainerStyle={{ paddingBottom: 144 }}
+                    contentContainerStyle={{ paddingBottom: bottomContentPadding }}
                     refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={palette.primary} colors={[palette.primary]} />}
                     showsVerticalScrollIndicator={false}
                 >
                     <StudentHero
                         insetTop={insets.top}
+                        variant="surface"
                         eyebrow="My reservation"
                         title="No room reserved yet"
                         subtitle="Browse hostels, compare available rooms, and reserve the best space before it fills up."
@@ -577,7 +579,7 @@ export default function ReservationScreen() {
                         </TouchableOpacity>
                     </StudentHero>
 
-                    <View className="-mt-[22px]">
+                    <View className="pt-[16px]">
                         <View style={[styles.emptyPanel, { backgroundColor: palette.surface, borderColor: palette.border, shadowColor: palette.shadow }]}>
                             <View style={[styles.emptyIconWrap, { backgroundColor: palette.primarySoft }]}>
                                 <MaterialCommunityIcons name="bed-empty" size={34} color={palette.primary} />
@@ -618,17 +620,18 @@ export default function ReservationScreen() {
     return (
         <>
             <View className="flex-1" style={{ backgroundColor: palette.pageBackground }}>
-                <StatusBar barStyle="light-content" backgroundColor={palette.hero} />
+                <StatusBar barStyle={theme.dark ? 'light-content' : 'dark-content'} backgroundColor={palette.surface} />
 
                 <ScrollView
                     className="flex-1"
-                    contentContainerStyle={{ paddingBottom: 144 }}
+                    contentContainerStyle={{ paddingBottom: bottomContentPadding }}
                     {...swipeHandlers}
                     refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={palette.primary} colors={[palette.primary]} />}
                     showsVerticalScrollIndicator={false}
                 >
                     <StudentHero
                         insetTop={insets.top}
+                        variant="surface"
                         eyebrow="My reservation"
                         title={reservation.room?.roomNumber ? `Room ${reservation.room.roomNumber}` : 'Reserved room'}
                         subtitle={
@@ -642,15 +645,15 @@ export default function ReservationScreen() {
                                 <MaterialCommunityIcons name={statusMeta.icon} size={14} color={statusMeta.color} />
                                 <Text style={[styles.heroMetaText, { color: statusMeta.color }]}>{statusMeta.label}</Text>
                             </View>
-                            <View style={styles.heroGhostChip}>
-                                <MaterialCommunityIcons name="home-city-outline" size={14} color="rgba(255,255,255,0.82)" />
-                                <Text style={styles.heroGhostChipText}>{reservation.hostel?.name ?? 'Hostel'}</Text>
+                            <View style={[styles.heroGhostChip, { backgroundColor: palette.surfaceMuted, borderColor: palette.border }]}>
+                                <MaterialCommunityIcons name="home-city-outline" size={14} color={palette.textSecondary} />
+                                <Text style={[styles.heroGhostChipText, { color: palette.textSecondary }]}>{reservation.hostel?.name ?? 'Hostel'}</Text>
                             </View>
                         </View>
                     </StudentHero>
 
-                    <View className="-mt-[22px]">
-                        <View className="px-[18px] pt-[22px]">
+                    <View className="pt-[16px]">
+                        <View className="px-[18px] pt-[6px]">
                         {isTemporaryInvite ? (
                             <View style={[styles.inviteBanner, { backgroundColor: palette.primarySoft }]}>
                                 <View className="flex-row gap-[14px]">

@@ -49,6 +49,7 @@ export default function ProfileScreen() {
     const warningTint = palette.warningSoft;
     const successTint = palette.successSoft;
     const dangerTint = palette.dangerSoft;
+    const bottomContentPadding = Math.max(insets.bottom + 88, 104);
     const dynText = { color: palette.textPrimary };
     const dynTextSec = { color: palette.textSecondary };
     const dynSep = { backgroundColor: palette.divider };
@@ -452,26 +453,27 @@ export default function ProfileScreen() {
         );
     }
     return (<>
-      <StatusBar barStyle="light-content" backgroundColor="#08162B"/>
+      <StatusBar barStyle={theme.dark ? 'light-content' : 'dark-content'} backgroundColor={palette.surface}/>
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         style={[styles.flex, { backgroundColor: palette.pageBackground }]}
       >
         <ScrollView
           style={[styles.container, { backgroundColor: palette.pageBackground }]}
-          contentContainerStyle={[styles.content, { backgroundColor: palette.pageBackground }]}
+          contentContainerStyle={[styles.content, { backgroundColor: palette.pageBackground, paddingBottom: bottomContentPadding }]}
           showsVerticalScrollIndicator={false}
           {...swipeHandlers}
         >
           <StudentHero
             insetTop={insets.top}
+            variant="surface"
             eyebrow="Profile"
             title={`${user?.firstName ?? ''} ${user?.lastName ?? ''}`.trim() || 'StayHub student'}
             subtitle="Manage your account details, appearance, and notification settings."
             align="center"
           >
             <TouchableOpacity onPress={handleAvatarPress} activeOpacity={0.85} disabled={uploading} style={styles.avatarWrap}>
-              <View style={styles.avatarRing}>
+              <View style={[styles.avatarRing, { borderColor: palette.border, backgroundColor: palette.surfaceMuted }]}>
                 {user?.profilePicture ? (<Image source={{ uri: user.profilePicture }} style={styles.avatarImage}/>) : (<View style={styles.avatar}>
                     <Text style={styles.avatarText}>{initials}</Text>
                   </View>)}
@@ -479,27 +481,28 @@ export default function ProfileScreen() {
 
               {uploading ? (<View style={styles.avatarOverlay}>
                   <ActivityIndicator size="small" color="#fff"/>
-                </View>) : (<View style={styles.cameraBadge}>
+                </View>) : (<View style={[styles.cameraBadge, { backgroundColor: palette.primary }]}>
                   <MaterialCommunityIcons name="camera" size={13} color="#fff"/>
                 </View>)}
             </TouchableOpacity>
 
-            <Text style={styles.heroMatric}>{user?.matricNumber}</Text>
-            {user?.email ? <Text style={styles.heroEmail}>{user.email}</Text> : null}
+            <Text style={[styles.heroMatric, dynTextSec]}>{user?.matricNumber}</Text>
+            {user?.email ? <Text style={[styles.heroEmail, dynTextSec]}>{user.email}</Text> : null}
             <View style={styles.heroPillRow}>
-              {deptName ? (<View style={styles.heroPill}>
-                  <Text style={styles.heroPillText}>{deptName}</Text>
+              {deptName ? (<View style={[styles.heroPill, { backgroundColor: palette.surfaceMuted, borderColor: palette.border }]}>
+                  <Text style={[styles.heroPillText, dynText]}>{deptName}</Text>
                 </View>) : null}
-              {user?.level ? (<View style={styles.heroPill}>
-                  <Text style={styles.heroPillText}>{user.level} Level</Text>
+              {user?.level ? (<View style={[styles.heroPill, { backgroundColor: palette.surfaceMuted, borderColor: palette.border }]}>
+                  <Text style={[styles.heroPillText, dynText]}>{user.level} Level</Text>
                 </View>) : null}
-              <View style={styles.heroPill}>
-                <Text style={styles.heroPillText}>{isDark ? 'Dark mode' : 'Light mode'}</Text>
+              <View style={[styles.heroPill, { backgroundColor: palette.surfaceMuted, borderColor: palette.border }]}>
+                <Text style={[styles.heroPillText, dynText]}>{isDark ? 'Dark mode' : 'Light mode'}</Text>
               </View>
             </View>
           </StudentHero>
 
           <Reveal delay={60}>
+            <View style={styles.summarySection}>
             <View style={styles.summaryGrid}>
               <View style={[styles.summaryCard, { backgroundColor: palette.surface, borderColor: palette.border, shadowColor: palette.shadow }]}>
                 <Text style={[styles.summaryLabel, dynTextSec]}>Department</Text>
@@ -528,6 +531,7 @@ export default function ProfileScreen() {
                 <Text style={[styles.summaryMeta, dynTextSec]}>{notificationMetaText}</Text>
               </View>
             </View>
+            </View>
           </Reveal>
 
           
@@ -535,9 +539,9 @@ export default function ProfileScreen() {
             <View style={[styles.card, { backgroundColor: palette.surface, borderColor: palette.border, shadowColor: palette.shadow }]}>
               <View style={styles.cardHeader}>
                 <Text style={[styles.cardTitle, dynText]}>Student Information</Text>
-                {!editing && (<TouchableOpacity style={styles.editBtn} onPress={() => setEditing(true)}>
-                    <MaterialCommunityIcons name="pencil-outline" size={14} color="#1565C0"/>
-                    <Text style={styles.editBtnText}>Edit</Text>
+                {!editing && (<TouchableOpacity style={[styles.editBtn, { backgroundColor: palette.primarySoft }]} onPress={() => setEditing(true)}>
+                    <MaterialCommunityIcons name="pencil-outline" size={14} color={palette.primary}/>
+                    <Text style={[styles.editBtnText, { color: palette.primary }]}>Edit</Text>
                   </TouchableOpacity>)}
               </View>
 
@@ -593,199 +597,112 @@ export default function ProfileScreen() {
           <Reveal delay={210}>
             <View style={[styles.card, { backgroundColor: palette.surface, borderColor: palette.border, shadowColor: palette.shadow }]}>
               <View style={styles.cardHeader}>
-                <Text style={[styles.cardTitle, dynText]}>Settings</Text>
+                <Text style={[styles.cardTitle, dynText]}>Quick Links</Text>
               </View>
 
-            
-            <Text style={[styles.settingSection, dynTextSec]}>Security</Text>
+              <TouchableOpacity
+                style={styles.settingRow}
+                onPress={() => router.push('/(student)/settings')}
+                activeOpacity={0.75}
+              >
+                <View style={[styles.settingIconWrap, { backgroundColor: primaryTint }]}>
+                  <MaterialCommunityIcons name="cog-outline" size={18} color={palette.primary}/>
+                </View>
+                <View style={styles.settingCopy}>
+                  <Text style={[styles.settingLabel, dynText]}>Open Settings</Text>
+                  <Text style={[styles.settingHint, dynTextSec]}>
+                    Manage your security, appearance, and notification preferences.
+                  </Text>
+                </View>
+                <MaterialCommunityIcons name="chevron-right" size={20} color={palette.textMuted}/>
+              </TouchableOpacity>
 
-            <TouchableOpacity style={styles.settingRow} onPress={() => setPwModalVisible(true)} activeOpacity={0.7}>
-              <View style={[styles.settingIconWrap, { backgroundColor: primaryTint }]}>
-                <MaterialCommunityIcons name="lock-outline" size={18} color={palette.primary}/>
-              </View>
-              <Text style={[styles.settingLabel, dynText]}>Change Password</Text>
-              <MaterialCommunityIcons name="chevron-right" size={20} color={palette.textMuted}/>
-            </TouchableOpacity>
+              <View style={[styles.sep, dynSep]}/>
 
-            <View style={[styles.sep, dynSep]}/>
+              <TouchableOpacity
+                style={styles.settingRow}
+                onPress={() => router.push('/(student)/notifications')}
+                activeOpacity={0.75}
+              >
+                <View style={[styles.settingIconWrap, { backgroundColor: successTint }]}>
+                  <MaterialCommunityIcons name="bell-outline" size={18} color={palette.success}/>
+                </View>
+                <View style={styles.settingCopy}>
+                  <Text style={[styles.settingLabel, dynText]}>Notification Center</Text>
+                  <Text style={[styles.settingHint, dynTextSec]}>
+                    Review invitations, payment reminders, and reservation updates.
+                  </Text>
+                </View>
+                <MaterialCommunityIcons name="chevron-right" size={20} color={palette.textMuted}/>
+              </TouchableOpacity>
 
-            
-            <Text style={[styles.settingSection, dynTextSec, { marginTop: 14 }]}>Appearance</Text>
+              <View style={[styles.sep, dynSep]}/>
 
-            <View style={styles.settingRow}>
-              <View style={[styles.settingIconWrap, { backgroundColor: primaryTint }]}>
-                <MaterialCommunityIcons name={isDark ? 'weather-night' : 'white-balance-sunny'} size={18} color={palette.primary}/>
-              </View>
-              <Text style={[styles.settingLabel, dynText]}>Dark Mode</Text>
-              <Switch value={isDark} onValueChange={handleThemeToggle} trackColor={{ false: '#D5DDE7', true: '#8EC5FF' }} thumbColor={isDark ? palette.primary : '#f4f3f4'}/>
-            </View>
+              <TouchableOpacity
+                style={styles.settingRow}
+                activeOpacity={0.75}
+                onPress={() => Alert.alert('Help & Support', 'For assistance, please contact us:\n\nEmail: support@stayhub.com\n\nOffice hours:\nMon - Fri, 8:00am - 5:00pm')}
+              >
+                <View style={[styles.settingIconWrap, { backgroundColor: primaryTint }]}>
+                  <MaterialCommunityIcons name="headset" size={18} color={palette.primary}/>
+                </View>
+                <View style={styles.settingCopy}>
+                  <Text style={[styles.settingLabel, dynText]}>Help & Support</Text>
+                  <Text style={[styles.settingHint, dynTextSec]}>
+                    Get help with your account, reservations, or payments.
+                  </Text>
+                </View>
+                <MaterialCommunityIcons name="chevron-right" size={20} color={palette.textMuted}/>
+              </TouchableOpacity>
 
-            <View style={[styles.sep, dynSep]}/>
+              <View style={[styles.sep, dynSep]}/>
 
-            <Text style={[styles.settingSection, dynTextSec, { marginTop: 14 }]}>Notifications</Text>
+              <TouchableOpacity
+                style={styles.settingRow}
+                activeOpacity={0.75}
+                onPress={() => Alert.alert('About StayHub', `StayHub Mobile\nVersion ${APP_CONFIG.VERSION}\n\nA smart hostel reservation platform for students. Book your room, manage reservations, and pay seamlessly in one place.`)}
+              >
+                <View style={[styles.settingIconWrap, { backgroundColor: primaryTint }]}>
+                  <MaterialCommunityIcons name="information-outline" size={18} color={palette.primary}/>
+                </View>
+                <View style={styles.settingCopy}>
+                  <Text style={[styles.settingLabel, dynText]}>About StayHub</Text>
+                  <Text style={[styles.settingHint, dynTextSec]}>
+                    View the current app version and product information.
+                  </Text>
+                </View>
+                <MaterialCommunityIcons name="chevron-right" size={20} color={palette.textMuted}/>
+              </TouchableOpacity>
 
-            <View style={styles.settingRow}>
-              <View style={[styles.settingIconWrap, { backgroundColor: successTint }]}>
-                <MaterialCommunityIcons name="bell-ring-outline" size={18} color={palette.success}/>
-              </View>
-              <View style={styles.settingCopy}>
-                <Text style={[styles.settingLabel, dynText]}>Push Alerts</Text>
-                <Text style={[styles.settingHint, dynTextSec]}>{notificationStatusText}</Text>
-              </View>
-              <Switch value={notificationPreferences.pushEnabled} onValueChange={(value) => handleNotificationToggle('pushEnabled', value)} trackColor={{ false: '#D5DDE7', true: '#9CD7A7' }} thumbColor={notificationPreferences.pushEnabled ? palette.success : '#f4f3f4'} disabled={notificationBusy === 'pushEnabled'}/>
-            </View>
+              <View style={[styles.sep, dynSep]}/>
 
-            <View style={[styles.sep, dynSep]}/>
-
-            <TouchableOpacity style={styles.settingRow} activeOpacity={0.7} onPress={handleReconnectDevice} disabled={notificationBusy === 'reconnect'}>
-              <View style={[styles.settingIconWrap, { backgroundColor: primaryTint }]}>
-                <MaterialCommunityIcons name="cellphone-link" size={18} color={palette.primary}/>
-              </View>
-              <View style={styles.settingCopy}>
-                <Text style={[styles.settingLabel, dynText]}>Reconnect This Device</Text>
-                <Text style={[styles.settingHint, dynTextSec]}>{notificationMetaText}</Text>
-              </View>
-              {notificationBusy === 'reconnect' ? (<ActivityIndicator size={18} color={palette.primary}/>) : (<MaterialCommunityIcons name="chevron-right" size={20} color={palette.textMuted}/>)}
-            </TouchableOpacity>
-
-            <View style={[styles.sep, dynSep]}/>
-
-            <View style={styles.settingRow}>
-              <View style={[styles.settingIconWrap, { backgroundColor: warningTint }]}>
-                <MaterialCommunityIcons name="email-sync-outline" size={18} color={palette.warning}/>
-              </View>
-              <View style={styles.settingCopy}>
-                <Text style={[styles.settingLabel, dynText]}>Email Backup</Text>
-                <Text style={[styles.settingHint, dynTextSec]}>
-                  Send email too when push is unavailable or an invitation is urgent.
-                </Text>
-              </View>
-              <Switch value={notificationPreferences.emailEscalationEnabled} onValueChange={(value) => handleNotificationToggle('emailEscalationEnabled', value)} trackColor={{ false: '#D5DDE7', true: '#FFD08A' }} thumbColor={notificationPreferences.emailEscalationEnabled ? palette.warning : '#f4f3f4'} disabled={notificationBusy === 'emailEscalationEnabled'}/>
-            </View>
-
-            <View style={[styles.sep, dynSep]}/>
-
-            <View style={styles.settingRow}>
-              <View style={[styles.settingIconWrap, { backgroundColor: primaryTint }]}>
-                <MaterialCommunityIcons name="account-multiple-outline" size={18} color={palette.primary}/>
-              </View>
-              <View style={styles.settingCopy}>
-                <Text style={[styles.settingLabel, dynText]}>Room Invite Alerts</Text>
-                <Text style={[styles.settingHint, dynTextSec]}>
-                  Get notified immediately when a friend reserves a bed for you.
-                </Text>
-              </View>
-              <Switch value={notificationPreferences.invitationCreated} onValueChange={(value) => handleNotificationToggle('invitationCreated', value)} trackColor={{ false: '#D5DDE7', true: '#8EC5FF' }} thumbColor={notificationPreferences.invitationCreated ? palette.primary : '#f4f3f4'} disabled={notificationBusy === 'invitationCreated'}/>
-            </View>
-
-            <View style={[styles.sep, dynSep]}/>
-
-            <View style={styles.settingRow}>
-              <View style={[styles.settingIconWrap, { backgroundColor: primaryTint }]}>
-                <MaterialCommunityIcons name="account-check-outline" size={18} color={palette.primary}/>
-              </View>
-              <View style={styles.settingCopy}>
-                <Text style={[styles.settingLabel, dynText]}>Invite Responses & Expiry</Text>
-                <Text style={[styles.settingHint, dynTextSec]}>
-                  See when friends approve, reject, or allow an invite to expire.
-                </Text>
-              </View>
-              <Switch value={notificationPreferences.invitationUpdates && notificationPreferences.invitationExpired} onValueChange={(value) => handleNotificationPairToggle('invitationUpdates', 'invitationExpired', value)} trackColor={{ false: '#D5DDE7', true: '#8EC5FF' }} thumbColor={notificationPreferences.invitationUpdates && notificationPreferences.invitationExpired
-            ? palette.primary
-            : '#f4f3f4'} disabled={notificationBusy === 'invitationUpdates'}/>
-            </View>
-
-            <View style={[styles.sep, dynSep]}/>
-
-            <View style={styles.settingRow}>
-              <View style={[styles.settingIconWrap, { backgroundColor: primaryTint }]}>
-                <MaterialCommunityIcons name="credit-card-check-outline" size={18} color={palette.primary}/>
-              </View>
-              <View style={styles.settingCopy}>
-                <Text style={[styles.settingLabel, dynText]}>Payment & Reservation Updates</Text>
-                <Text style={[styles.settingHint, dynTextSec]}>
-                  Keep payment confirmation and confirmed-room updates on this phone.
-                </Text>
-              </View>
-              <Switch value={notificationPreferences.paymentUpdates && notificationPreferences.reservationUpdates} onValueChange={(value) => handleNotificationPairToggle('paymentUpdates', 'reservationUpdates', value)} trackColor={{ false: '#D5DDE7', true: '#8EC5FF' }} thumbColor={notificationPreferences.paymentUpdates && notificationPreferences.reservationUpdates
-            ? palette.primary
-            : '#f4f3f4'} disabled={notificationBusy === 'paymentUpdates'}/>
-            </View>
-
-            <View style={[styles.sep, dynSep]}/>
-            <Text style={[styles.settingSection, dynTextSec, { marginTop: 14 }]}>Support & Info</Text>
-
-            <TouchableOpacity style={styles.settingRow} activeOpacity={0.7} onPress={() => Alert.alert('Help & Support', 'For assistance, please contact us:\n\nEmail: support@stayhub.com\n\nOffice hours:\nMon - Fri, 8:00am - 5:00pm')}>
-              <View style={[styles.settingIconWrap, { backgroundColor: primaryTint }]}>
-                <MaterialCommunityIcons name="headset" size={18} color={palette.primary}/>
-              </View>
-              <Text style={[styles.settingLabel, dynText]}>Help & Support</Text>
-              <MaterialCommunityIcons name="chevron-right" size={20} color={palette.textMuted}/>
-            </TouchableOpacity>
-
-            <View style={[styles.sep, dynSep]}/>
-
-            <TouchableOpacity style={styles.settingRow} activeOpacity={0.7} onPress={() => Alert.alert('About StayHub', `StayHub Mobile\nVersion ${APP_CONFIG.VERSION}\n\nA smart hostel reservation platform for students. Book your room, manage reservations, and pay seamlessly in one place.`)}>
-              <View style={[styles.settingIconWrap, { backgroundColor: primaryTint }]}>
-                <MaterialCommunityIcons name="information-outline" size={18} color={palette.primary}/>
-              </View>
-              <Text style={[styles.settingLabel, dynText]}>About StayHub</Text>
-              <MaterialCommunityIcons name="chevron-right" size={20} color={palette.textMuted}/>
-            </TouchableOpacity>
-
-            <View style={[styles.sep, dynSep]}/>
-
-            
-            <Text style={[styles.settingSection, dynTextSec, { marginTop: 14 }]}>Account</Text>
-
-              <TouchableOpacity style={styles.settingRow} onPress={handleLogout} activeOpacity={0.7}>
+              <TouchableOpacity
+                style={styles.settingRow}
+                onPress={handleLogout}
+                activeOpacity={0.75}
+              >
                 <View style={[styles.settingIconWrap, { backgroundColor: dangerTint }]}>
                   <MaterialCommunityIcons name="logout" size={18} color={palette.danger}/>
                 </View>
-                <Text style={[styles.settingLabel, { color: palette.danger }]}>Sign Out</Text>
+                <View style={styles.settingCopy}>
+                  <Text style={[styles.settingLabel, { color: palette.danger }]}>Sign Out</Text>
+                  <Text style={[styles.settingHint, dynTextSec]}>
+                    End your current session on this device.
+                  </Text>
+                </View>
                 <MaterialCommunityIcons name="chevron-right" size={20} color={palette.textMuted}/>
               </TouchableOpacity>
             </View>
           </Reveal>
         </ScrollView>
       </KeyboardAvoidingView>
-
-      
-      <Modal visible={pwModalVisible} transparent animationType="slide" onRequestClose={closePwModal}>
-        <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={styles.modalOverlay}>
-          <TouchableOpacity style={styles.modalBackdrop} activeOpacity={1} onPress={closePwModal}/>
-          <View style={[styles.modalBox, { backgroundColor: palette.surface }]}>
-            <View style={styles.modalHandle}/>
-            <Text style={styles.modalTitle}>Change Password</Text>
-            <Text style={styles.modalSubtitle}>Enter your current password, then choose a new one.</Text>
-            <Divider style={{ marginBottom: 20, marginTop: 4 }}/>
-
-            <TextInput mode="outlined" label="Current Password" value={currentPw} onChangeText={setCurrentPw} secureTextEntry={!showCurrentPw} right={<TextInput.Icon icon={showCurrentPw ? 'eye-off-outline' : 'eye-outline'} onPress={() => setShowCurrentPw((v) => !v)}/>} style={styles.input} disabled={pwSaving} outlineColor={palette.border} activeOutlineColor={palette.primary}/>
-
-            <TextInput mode="outlined" label="New Password" value={newPw} onChangeText={setNewPw} secureTextEntry={!showNewPw} right={<TextInput.Icon icon={showNewPw ? 'eye-off-outline' : 'eye-outline'} onPress={() => setShowNewPw((v) => !v)}/>} style={styles.input} disabled={pwSaving} outlineColor={palette.border} activeOutlineColor={palette.primary}/>
-
-            <TextInput mode="outlined" label="Confirm New Password" value={confirmPw} onChangeText={setConfirmPw} secureTextEntry={!showConfirmPw} right={<TextInput.Icon icon={showConfirmPw ? 'eye-off-outline' : 'eye-outline'} onPress={() => setShowConfirmPw((v) => !v)}/>} style={styles.input} disabled={pwSaving} outlineColor={palette.border} activeOutlineColor={palette.primary}/>
-
-            <View style={styles.editActions}>
-              <TouchableOpacity style={styles.cancelBtn} onPress={closePwModal} disabled={pwSaving}>
-                <Text style={styles.cancelBtnText}>Cancel</Text>
-              </TouchableOpacity>
-              <TouchableOpacity style={[styles.saveBtn, pwSaving && { opacity: 0.7 }]} onPress={handleChangePassword} disabled={pwSaving}>
-                {pwSaving
-            ? <ActivityIndicator size={16} color="#fff"/>
-            : <Text style={styles.saveBtnText}>Update</Text>}
-              </TouchableOpacity>
-            </View>
-          </View>
-        </KeyboardAvoidingView>
-      </Modal>
     </>);
 }
 const styles = StyleSheet.create({
     flex: { flex: 1 },
     container: { flex: 1, backgroundColor: 'transparent' },
     center: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-    content: { paddingBottom: 144 },
+    content: {},
     hero: {
         backgroundColor: '#1565C0',
         alignItems: 'center',
@@ -879,10 +796,11 @@ const styles = StyleSheet.create({
         paddingVertical: 7,
     },
     heroPillText: { color: '#fff', fontSize: 12, fontWeight: '700' },
+    summarySection: {
+        paddingTop: 16,
+    },
     summaryGrid: {
         paddingHorizontal: 18,
-        marginTop: -22,
-        paddingTop: 0,
         flexDirection: 'row',
         flexWrap: 'wrap',
         gap: 12,

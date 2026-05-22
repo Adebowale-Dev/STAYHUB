@@ -26,6 +26,7 @@ export default function StudentLayout() {
             <Tabs.Screen name="reservation" options={{ title: 'Reserve' }} />
             <Tabs.Screen name="payment" options={{ title: 'Payment' }} />
             <Tabs.Screen name="profile" options={{ title: 'Profile' }} />
+            <Tabs.Screen name="settings" options={{ href: null, title: 'Settings' }} />
             <Tabs.Screen name="notifications" options={{ href: null, title: 'Notifications' }} />
             <Tabs.Screen name="rooms/[id]" options={{ href: null, title: 'Room', headerShown: true }} />
         </Tabs>

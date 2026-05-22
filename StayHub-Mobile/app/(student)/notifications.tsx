@@ -2,7 +2,7 @@ import React, { useCallback, useMemo, useState } from 'react';
 import { RefreshControl, ScrollView, StatusBar, StyleSheet, TouchableOpacity, View } from 'react-native';
 import { ActivityIndicator, SegmentedButtons, Text, useTheme } from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { useFocusEffect, useRouter } from 'expo-router';
+import { useFocusEffect, useNavigation, useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { studentAPI } from '../../services/api';
 import { LoadingSpinner } from '../../components/LoadingSpinner';
@@ -32,7 +32,9 @@ export default function NotificationsScreen() {
     const theme = useTheme();
     const palette = getStudentPalette(theme.dark);
     const router = useRouter();
+    const navigation = useNavigation();
     const insets = useSafeAreaInsets();
+    const bottomContentPadding = Math.max(insets.bottom + 88, 104);
     const [notifications, setNotifications] = useState<StudentNotification[]>([]);
     const [loading, setLoading] = useState(true);
     const [refreshing, setRefreshing] = useState(false);
@@ -143,6 +145,15 @@ export default function NotificationsScreen() {
         }
     };
 
+    const handleBack = () => {
+        if (navigation.canGoBack()) {
+            router.back();
+            return;
+        }
+
+        router.replace('/(student)/profile');
+    };
+
     if (loading) {
         return (
             <LoadingSpinner
@@ -154,11 +165,14 @@ export default function NotificationsScreen() {
 
     return (
         <View className="flex-1" style={{ backgroundColor: palette.pageBackground }}>
-            <StatusBar barStyle="light-content" backgroundColor={palette.hero} />
+            <StatusBar
+                barStyle={theme.dark ? 'light-content' : 'dark-content'}
+                backgroundColor={palette.surface}
+            />
 
             <ScrollView
                 className="flex-1"
-                contentContainerStyle={{ paddingBottom: 144 }}
+                contentContainerStyle={{ paddingBottom: bottomContentPadding }}
                 refreshControl={
                     <RefreshControl
                         refreshing={refreshing}
@@ -174,50 +188,101 @@ export default function NotificationsScreen() {
                     eyebrow="Notifications"
                     title="Stay on top of updates"
                     subtitle="See invitations, approvals, reminders, and reservation activity in one place."
+                    variant="surface"
+                    titleAccessory={
+                        <TouchableOpacity
+                            style={[
+                                styles.backButton,
+                                {
+                                    backgroundColor: palette.surfaceMuted,
+                                    borderColor: palette.border,
+                                },
+                            ]}
+                            activeOpacity={0.8}
+                            onPress={handleBack}
+                        >
+                            <MaterialCommunityIcons
+                                name="arrow-left"
+                                size={18}
+                                color={palette.textPrimary}
+                            />
+                            <Text style={[styles.backButtonText, { color: palette.textPrimary }]}>
+                                Back
+                            </Text>
+                        </TouchableOpacity>
+                    }
                 >
                     <View className="mt-6 flex-row gap-2.5">
                         <View
                             style={[
                                 styles.heroStatCard,
                                 {
-                                    backgroundColor: palette.heroGlass,
-                                    borderColor: palette.heroBorder,
+                                    backgroundColor: palette.surfaceMuted,
+                                    borderColor: palette.border,
                                 },
                             ]}
                         >
-                            <Text className="text-2xl font-extrabold text-white">{unreadCount}</Text>
-                            <Text className="text-[12px] font-bold leading-[18px] text-white/80">Unread</Text>
+                            <Text
+                                className="text-2xl font-extrabold"
+                                style={{ color: palette.textPrimary }}
+                            >
+                                {unreadCount}
+                            </Text>
+                            <Text
+                                className="text-[12px] font-bold leading-[18px]"
+                                style={{ color: palette.textSecondary }}
+                            >
+                                Unread
+                            </Text>
                         </View>
                         <View
                             style={[
                                 styles.heroStatCard,
                                 {
-                                    backgroundColor: palette.heroGlass,
-                                    borderColor: palette.heroBorder,
+                                    backgroundColor: palette.surfaceMuted,
+                                    borderColor: palette.border,
                                 },
                             ]}
                         >
-                            <Text className="text-2xl font-extrabold text-white">{notifications.length}</Text>
-                            <Text className="text-[12px] font-bold leading-[18px] text-white/80">Total alerts</Text>
+                            <Text
+                                className="text-2xl font-extrabold"
+                                style={{ color: palette.textPrimary }}
+                            >
+                                {notifications.length}
+                            </Text>
+                            <Text
+                                className="text-[12px] font-bold leading-[18px]"
+                                style={{ color: palette.textSecondary }}
+                            >
+                                Total alerts
+                            </Text>
                         </View>
                         <View
                             style={[
                                 styles.heroStatCard,
                                 {
-                                    backgroundColor: palette.heroGlass,
-                                    borderColor: palette.heroBorder,
+                                    backgroundColor: palette.surfaceMuted,
+                                    borderColor: palette.border,
                                 },
                             ]}
                         >
-                            <Text className="text-2xl font-extrabold text-white">
+                            <Text
+                                className="text-2xl font-extrabold"
+                                style={{ color: palette.textPrimary }}
+                            >
                                 {notifications.length - unreadCount}
                             </Text>
-                            <Text className="text-[12px] font-bold leading-[18px] text-white/80">Reviewed</Text>
+                            <Text
+                                className="text-[12px] font-bold leading-[18px]"
+                                style={{ color: palette.textSecondary }}
+                            >
+                                Reviewed
+                            </Text>
                         </View>
                     </View>
                 </StudentHero>
 
-                <View className="mt-3 px-[18px]">
+                <View className="px-[18px] pt-[16px]">
                     <Reveal delay={60}>
                         <View
                             style={[
@@ -445,10 +510,24 @@ export default function NotificationsScreen() {
 }
 
 const styles = StyleSheet.create({
+    backButton: {
+        minHeight: 40,
+        borderRadius: 999,
+        borderWidth: 1,
+        paddingHorizontal: 12,
+        alignItems: 'center',
+        justifyContent: 'center',
+        flexDirection: 'row',
+        gap: 6,
+    },
+    backButtonText: {
+        fontSize: 12,
+        fontWeight: '700',
+    },
     heroStatCard: {
         flex: 1,
-        minHeight: 88,
-        borderRadius: 22,
+        minHeight: 84,
+        borderRadius: 20,
         paddingHorizontal: 14,
         paddingVertical: 14,
         alignItems: 'flex-start',
@@ -456,7 +535,7 @@ const styles = StyleSheet.create({
         borderWidth: 1,
     },
     controlsPanel: {
-        borderRadius: 28,
+        borderRadius: 24,
         borderWidth: 1,
         padding: 18,
         shadowOffset: { width: 0, height: 14 },
@@ -491,7 +570,7 @@ const styles = StyleSheet.create({
         opacity: 0.55,
     },
     emptyPanel: {
-        borderRadius: 28,
+        borderRadius: 24,
         borderWidth: 1,
         paddingHorizontal: 24,
         paddingVertical: 28,
@@ -522,7 +601,7 @@ const styles = StyleSheet.create({
     },
     notificationCard: {
         flexDirection: 'row',
-        borderRadius: 24,
+        borderRadius: 22,
         overflow: 'hidden',
         marginBottom: 14,
         borderWidth: 1,

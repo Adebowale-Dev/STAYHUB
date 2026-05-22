@@ -43,6 +43,7 @@ export default function PaymentScreen() {
     const paystackWebViewRef = useRef<paystackProps.PayStackRef>(null);
     const useBrowserCheckout = APP_CONFIG.IS_EXPO_GO;
     const swipeHandlers = useStudentTabSwipe('payment');
+    const bottomContentPadding = Math.max(insets.bottom + 88, 104);
 
     const loadData = async () => {
         setError(false);
@@ -191,11 +192,11 @@ export default function PaymentScreen() {
 
     return (
         <View className="flex-1" style={{ backgroundColor: palette.pageBackground }}>
-            <StatusBar barStyle="light-content" backgroundColor={palette.hero} />
+            <StatusBar barStyle={theme.dark ? 'light-content' : 'dark-content'} backgroundColor={palette.surface} />
 
             <ScrollView
                 className="flex-1"
-                contentContainerStyle={{ paddingBottom: 144 }}
+                contentContainerStyle={{ paddingBottom: bottomContentPadding }}
                 showsVerticalScrollIndicator={false}
                 {...swipeHandlers}
                 refreshControl={
@@ -209,6 +210,7 @@ export default function PaymentScreen() {
             >
                 <StudentHero
                     insetTop={insets.top}
+                    variant="surface"
                     eyebrow="Payments"
                     title={formattedAmount}
                     subtitle="Pay online or confirm an offline payment code from one place."
@@ -231,17 +233,17 @@ export default function PaymentScreen() {
                                 style={[
                                     styles.heroDatePill,
                                     {
-                                        backgroundColor: palette.heroGlass,
-                                        borderColor: palette.heroBorder,
+                                        backgroundColor: palette.surfaceMuted,
+                                        borderColor: palette.border,
                                     },
                                 ]}
                             >
                                 <MaterialCommunityIcons
                                     name="calendar-check-outline"
                                     size={14}
-                                    color="#FFFFFF"
+                                    color={palette.textPrimary}
                                 />
-                                <Text style={styles.heroDateText}>
+                                <Text style={[styles.heroDateText, { color: palette.textPrimary }]}>
                                     Paid{' '}
                                     {new Date(status.paidAt).toLocaleDateString('en-GB', {
                                         day: 'numeric',

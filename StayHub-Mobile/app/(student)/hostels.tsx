@@ -37,6 +37,7 @@ export default function HostelsScreen() {
     const user = useAuthStore((s) => s.user);
     const studentGender = (user?.gender ?? 'male') as 'male' | 'female';
     const swipeHandlers = useStudentTabSwipe('hostels');
+    const bottomContentPadding = Math.max(insets.bottom + 88, 104);
 
     const loadHostels = async () => {
         setError(false);
@@ -85,6 +86,7 @@ export default function HostelsScreen() {
         <>
             <StudentHero
                 insetTop={insets.top}
+                variant="surface"
                 eyebrow="Hostels"
                 title="Browse hostels"
                 subtitle="Compare available options and choose a hostel that suits your session."
@@ -94,48 +96,48 @@ export default function HostelsScreen() {
                         style={[
                             styles.heroStatCard,
                             {
-                                backgroundColor: palette.heroGlass,
-                                borderColor: palette.heroBorder,
+                                backgroundColor: palette.surfaceMuted,
+                                borderColor: palette.border,
                             },
                         ]}
                     >
-                        <Text className="text-2xl font-extrabold text-white">{filtered.length}</Text>
-                        <Text className="text-[12px] font-bold leading-[18px] text-white/80">Hostels</Text>
+                        <Text className="text-2xl font-extrabold" style={{ color: palette.textPrimary }}>{filtered.length}</Text>
+                        <Text className="text-[12px] font-bold leading-[18px]" style={{ color: palette.textSecondary }}>Hostels</Text>
                     </View>
                     <View
                         style={[
                             styles.heroStatCard,
                             {
-                                backgroundColor: palette.heroGlass,
-                                borderColor: palette.heroBorder,
+                                backgroundColor: palette.surfaceMuted,
+                                borderColor: palette.border,
                             },
                         ]}
                     >
-                        <Text className="text-2xl font-extrabold text-white">{totalAvailable}</Text>
-                        <Text className="text-[12px] font-bold leading-[18px] text-white/80">Beds open</Text>
+                        <Text className="text-2xl font-extrabold" style={{ color: palette.textPrimary }}>{totalAvailable}</Text>
+                        <Text className="text-[12px] font-bold leading-[18px]" style={{ color: palette.textSecondary }}>Beds open</Text>
                     </View>
                     <View
                         style={[
                             styles.heroStatCard,
                             {
-                                backgroundColor: palette.heroGlass,
-                                borderColor: palette.heroBorder,
+                                backgroundColor: palette.surfaceMuted,
+                                borderColor: palette.border,
                             },
                         ]}
                     >
                         <MaterialCommunityIcons
                             name={studentGender === 'male' ? 'human-male' : 'human-female'}
                             size={18}
-                            color="#FFFFFF"
+                            color={palette.primary}
                         />
-                        <Text className="text-[12px] font-bold leading-[18px] text-white/80">
+                        <Text className="text-[12px] font-bold leading-[18px]" style={{ color: palette.textSecondary }}>
                             {studentGender === 'male' ? 'Male only' : 'Female only'}
                         </Text>
                     </View>
                 </View>
             </StudentHero>
 
-            <View className="-mt-[22px] px-[18px]">
+            <View className="px-[18px] pt-[16px]">
                 <View
                     style={[
                         styles.searchPanel,
@@ -217,14 +219,14 @@ export default function HostelsScreen() {
     if (error) {
         return (
             <View className="flex-1" style={{ backgroundColor: palette.pageBackground }}>
-                <StatusBar barStyle="light-content" backgroundColor={palette.hero} />
+                <StatusBar barStyle={theme.dark ? 'light-content' : 'dark-content'} backgroundColor={palette.surface} />
                 <FlatList
                     data={[]}
                     {...swipeHandlers}
                     renderItem={null}
                     ListHeaderComponent={listHeader}
                     ListFooterComponent={
-                        <View className="px-[18px] pb-36 pt-2">
+                        <View style={{ paddingHorizontal: 18, paddingTop: 8, paddingBottom: bottomContentPadding }}>
                             <View
                                 style={[
                                     styles.stateCard,
@@ -266,7 +268,7 @@ export default function HostelsScreen() {
 
     return (
         <View className="flex-1" style={{ backgroundColor: palette.pageBackground }}>
-            <StatusBar barStyle="light-content" backgroundColor={palette.hero} />
+            <StatusBar barStyle={theme.dark ? 'light-content' : 'dark-content'} backgroundColor={palette.surface} />
 
             <KeyboardAvoidingView
                 className="flex-1"
@@ -276,7 +278,7 @@ export default function HostelsScreen() {
                     data={filtered}
                     {...swipeHandlers}
                     keyExtractor={(item) => item._id}
-                    contentContainerStyle={{ paddingBottom: 144 }}
+                    contentContainerStyle={{ paddingBottom: bottomContentPadding }}
                     showsVerticalScrollIndicator={false}
                     keyboardShouldPersistTaps="handled"
                     keyboardDismissMode="on-drag"
