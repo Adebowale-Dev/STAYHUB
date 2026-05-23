@@ -16,9 +16,11 @@ interface StudentHeroProps {
     subtitle?: string;
     align?: 'left' | 'center';
     variant?: 'hero' | 'surface';
+    containerStyle?: StyleProp<ViewStyle>;
     contentStyle?: StyleProp<ViewStyle>;
     titleStyle?: StyleProp<TextStyle>;
     subtitleStyle?: StyleProp<TextStyle>;
+    leadingAccessory?: React.ReactNode;
     titleAccessory?: React.ReactNode;
     children?: React.ReactNode;
 }
@@ -30,9 +32,11 @@ export function StudentHero({
     subtitle,
     align = 'left',
     variant = 'hero',
+    containerStyle,
     contentStyle,
     titleStyle,
     subtitleStyle,
+    leadingAccessory,
     titleAccessory,
     children,
 }: StudentHeroProps) {
@@ -46,6 +50,7 @@ export function StudentHero({
     const subtitleColor = isSurface ? palette.textSecondary : 'rgba(255,255,255,0.76)';
     const eyebrowBackground = isSurface ? palette.surfaceMuted : 'rgba(255,255,255,0.08)';
     const eyebrowText = isSurface ? palette.textSecondary : '#FFFFFF';
+    const hasTitleRow = Boolean(title) || titleAccessory != null || leadingAccessory != null;
 
     return (
         <View
@@ -55,6 +60,7 @@ export function StudentHero({
                     backgroundColor,
                     borderBottomColor: borderColor,
                 },
+                containerStyle,
             ]}
         >
 
@@ -83,28 +89,41 @@ export function StudentHero({
                     </View>
                 ) : null}
 
-                <View
-                    className={centered ? 'mb-2 items-center gap-3' : 'mb-3 flex-row items-start justify-between gap-4'}
-                >
-                    <Text
-                        style={[
-                            {
-                                color: titleColor,
-                                fontSize: 26,
-                                lineHeight: 32,
-                                fontWeight: '800',
-                                letterSpacing: -0.5,
-                                textAlign: centered ? 'center' : 'left',
-                                flexShrink: 1,
-                            },
-                            titleStyle,
-                        ]}
+                {hasTitleRow ? (
+                    <View
+                        className={centered ? 'mb-2 items-center gap-3' : 'mb-3 flex-row items-start justify-between gap-4'}
                     >
-                        {title}
-                    </Text>
+                        <View
+                            style={[
+                                styles.titleGroup,
+                                centered && styles.titleGroupCentered,
+                            ]}
+                        >
+                            {leadingAccessory ? <View style={styles.leadingWrap}>{leadingAccessory}</View> : null}
 
-                    {titleAccessory}
-                </View>
+                            {title ? (
+                                <Text
+                                    style={[
+                                        {
+                                            color: titleColor,
+                                            fontSize: 26,
+                                            lineHeight: 32,
+                                            fontWeight: '800',
+                                            letterSpacing: -0.5,
+                                            textAlign: centered ? 'center' : 'left',
+                                            flexShrink: 1,
+                                        },
+                                        titleStyle,
+                                    ]}
+                                >
+                                    {title}
+                                </Text>
+                            ) : null}
+                        </View>
+
+                        {titleAccessory}
+                    </View>
+                ) : null}
 
                 {subtitle ? (
                     <Text
@@ -135,5 +154,17 @@ const styles = StyleSheet.create({
         borderBottomWidth: 1,
         borderBottomLeftRadius: 34,
         borderBottomRightRadius: 34,
+    },
+    titleGroup: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 10,
+        flexShrink: 1,
+    },
+    titleGroupCentered: {
+        justifyContent: 'center',
+    },
+    leadingWrap: {
+        flexShrink: 0,
     },
 });

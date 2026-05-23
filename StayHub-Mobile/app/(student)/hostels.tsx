@@ -19,7 +19,6 @@ import { HostelCard } from '../../components/HostelCard';
 import { useAuthStore } from '../../store/authStore';
 import type { Hostel } from '../../types';
 import { getStudentPalette } from '../../constants/design';
-import { StudentHero } from '../../components/ui/StudentHero';
 import { LoadingSpinner } from '../../components/LoadingSpinner';
 import { useStudentTabSwipe } from '../../components/ui/StudentTabSwipe';
 
@@ -37,7 +36,9 @@ export default function HostelsScreen() {
     const user = useAuthStore((s) => s.user);
     const studentGender = (user?.gender ?? 'male') as 'male' | 'female';
     const swipeHandlers = useStudentTabSwipe('hostels');
-    const bottomContentPadding = Math.max(insets.bottom + 88, 104);
+    const bottomContentPadding = Math.max(insets.bottom + 96, 116);
+    const headerTop = insets.top + 18;
+    const headerHeight = 60;
 
     const loadHostels = async () => {
         setError(false);
@@ -84,14 +85,12 @@ export default function HostelsScreen() {
 
     const listHeader = (
         <>
-            <StudentHero
-                insetTop={insets.top}
-                variant="surface"
-                eyebrow="Hostels"
-                title="Browse hostels"
-                subtitle="Compare available options and choose a hostel that suits your session."
-            >
-                <View className="mt-6 flex-row gap-2.5">
+            <View className="px-[18px] pt-[18px]">
+                <Text style={[styles.heroLead, { color: palette.textSecondary }]}>
+                    Compare available options and choose a hostel that suits your session.
+                </Text>
+
+                <View className="mt-4 flex-row gap-2.5">
                     <View
                         style={[
                             styles.heroStatCard,
@@ -135,7 +134,7 @@ export default function HostelsScreen() {
                         </Text>
                     </View>
                 </View>
-            </StudentHero>
+            </View>
 
             <View className="px-[18px] pt-[16px]">
                 <View
@@ -220,10 +219,19 @@ export default function HostelsScreen() {
         return (
             <View className="flex-1" style={{ backgroundColor: palette.pageBackground }}>
                 <StatusBar barStyle={theme.dark ? 'light-content' : 'dark-content'} backgroundColor={palette.surface} />
+                <View style={[styles.fixedHeaderShell, { backgroundColor: palette.surface, borderBottomColor: palette.border }]}>
+                    <View style={[styles.fixedHeader, { paddingTop: headerTop }]}>
+                        <Text style={[styles.fixedTitle, { color: palette.textPrimary }]}>Browse hostels</Text>
+                        <Text style={[styles.fixedSubtitle, { color: palette.textSecondary }]}>
+                            Compare available options and choose a hostel that suits your session.
+                        </Text>
+                    </View>
+                </View>
                 <FlatList
                     data={[]}
                     {...swipeHandlers}
                     renderItem={null}
+                    contentContainerStyle={{ paddingTop: headerTop + headerHeight }}
                     ListHeaderComponent={listHeader}
                     ListFooterComponent={
                         <View style={{ paddingHorizontal: 18, paddingTop: 8, paddingBottom: bottomContentPadding }}>
@@ -269,6 +277,14 @@ export default function HostelsScreen() {
     return (
         <View className="flex-1" style={{ backgroundColor: palette.pageBackground }}>
             <StatusBar barStyle={theme.dark ? 'light-content' : 'dark-content'} backgroundColor={palette.surface} />
+            <View style={[styles.fixedHeaderShell, { backgroundColor: palette.surface, borderBottomColor: palette.border }]}>
+                <View style={[styles.fixedHeader, { paddingTop: headerTop }]}>
+                    <Text style={[styles.fixedTitle, { color: palette.textPrimary }]}>Browse hostels</Text>
+                    {/* <Text style={[styles.fixedSubtitle, { color: palette.textSecondary }]}>
+                        Compare available options and choose a hostel that suits your session.
+                    </Text> */}
+                </View>
+            </View>
 
             <KeyboardAvoidingView
                 className="flex-1"
@@ -278,7 +294,7 @@ export default function HostelsScreen() {
                     data={filtered}
                     {...swipeHandlers}
                     keyExtractor={(item) => item._id}
-                    contentContainerStyle={{ paddingBottom: bottomContentPadding }}
+                    contentContainerStyle={{ paddingTop: headerTop + headerHeight, paddingBottom: bottomContentPadding }}
                     showsVerticalScrollIndicator={false}
                     keyboardShouldPersistTaps="handled"
                     keyboardDismissMode="on-drag"
@@ -343,6 +359,36 @@ export default function HostelsScreen() {
 }
 
 const styles = StyleSheet.create({
+    fixedHeaderShell: {
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        right: 0,
+        zIndex: 20,
+        borderBottomWidth: 1,
+        borderBottomLeftRadius: 28,
+        borderBottomRightRadius: 28,
+    },
+    fixedHeader: {
+        paddingHorizontal: 18,
+        paddingBottom: 20,
+    },
+    fixedTitle: {
+        fontSize: 28,
+        lineHeight: 34,
+        fontWeight: '800',
+        letterSpacing: -0.6,
+    },
+    fixedSubtitle: {
+        fontSize: 14,
+        lineHeight: 22,
+        marginTop: 6,
+    },
+    heroLead: {
+        fontSize: 14,
+        lineHeight: 22,
+        paddingHorizontal: 2,
+    },
     heroStatCard: {
         flex: 1,
         minHeight: 88,

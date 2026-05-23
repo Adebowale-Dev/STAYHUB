@@ -2,12 +2,13 @@ import React, { useCallback, useMemo, useState } from 'react';
 import { RefreshControl, ScrollView, StatusBar, StyleSheet, TouchableOpacity, View } from 'react-native';
 import { ActivityIndicator, SegmentedButtons, Text, useTheme } from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { useFocusEffect, useNavigation, useRouter } from 'expo-router';
+import { useFocusEffect, useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { studentAPI } from '../../services/api';
 import { LoadingSpinner } from '../../components/LoadingSpinner';
 import { Reveal } from '../../components/ui/Reveal';
 import { StudentHero } from '../../components/ui/StudentHero';
+import { useStudentBackSwipe } from '../../components/ui/StudentTabSwipe';
 import { getStudentPalette } from '../../constants/design';
 import type { StudentNotification } from '../../types';
 import { toMobileNotificationRoute } from '../../utils/notificationRoutes';
@@ -32,9 +33,9 @@ export default function NotificationsScreen() {
     const theme = useTheme();
     const palette = getStudentPalette(theme.dark);
     const router = useRouter();
-    const navigation = useNavigation();
     const insets = useSafeAreaInsets();
-    const bottomContentPadding = Math.max(insets.bottom + 88, 104);
+    const bottomContentPadding = Math.max(insets.bottom + 96, 116);
+    const swipeHandlers = useStudentBackSwipe('/(student)/profile');
     const [notifications, setNotifications] = useState<StudentNotification[]>([]);
     const [loading, setLoading] = useState(true);
     const [refreshing, setRefreshing] = useState(false);
@@ -146,11 +147,6 @@ export default function NotificationsScreen() {
     };
 
     const handleBack = () => {
-        if (navigation.canGoBack()) {
-            router.back();
-            return;
-        }
-
         router.replace('/(student)/profile');
     };
 
@@ -182,14 +178,14 @@ export default function NotificationsScreen() {
                     />
                 }
                 showsVerticalScrollIndicator={false}
+                {...swipeHandlers}
             >
                 <StudentHero
                     insetTop={insets.top}
-                    eyebrow="Notifications"
                     title="Stay on top of updates"
                     subtitle="See invitations, approvals, reminders, and reservation activity in one place."
                     variant="surface"
-                    titleAccessory={
+                    leadingAccessory={
                         <TouchableOpacity
                             style={[
                                 styles.backButton,
@@ -202,13 +198,10 @@ export default function NotificationsScreen() {
                             onPress={handleBack}
                         >
                             <MaterialCommunityIcons
-                                name="arrow-left"
-                                size={18}
+                                name="chevron-left"
+                                size={22}
                                 color={palette.textPrimary}
                             />
-                            <Text style={[styles.backButtonText, { color: palette.textPrimary }]}>
-                                Back
-                            </Text>
                         </TouchableOpacity>
                     }
                 >
@@ -511,18 +504,12 @@ export default function NotificationsScreen() {
 
 const styles = StyleSheet.create({
     backButton: {
-        minHeight: 40,
-        borderRadius: 999,
+        width: 36,
+        height: 36,
+        borderRadius: 18,
         borderWidth: 1,
-        paddingHorizontal: 12,
         alignItems: 'center',
         justifyContent: 'center',
-        flexDirection: 'row',
-        gap: 6,
-    },
-    backButtonText: {
-        fontSize: 12,
-        fontWeight: '700',
     },
     heroStatCard: {
         flex: 1,

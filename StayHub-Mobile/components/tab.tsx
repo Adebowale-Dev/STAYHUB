@@ -1,5 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import type { BottomTabBarProps } from '@react-navigation/bottom-tabs';
+import { BlurView } from 'expo-blur';
 import React, { useEffect, useMemo, useRef } from 'react';
 import {
     Animated,
@@ -77,9 +78,10 @@ export function AnimatedTabBar({
     const palette = getStudentPalette(isDark);
     const insets = useSafeAreaInsets();
     const indicatorX = useRef(new Animated.Value(0)).current;
-    const glassSurface = isDark ? 'rgba(16,28,45,0.86)' : 'rgba(255,255,255,0.82)';
-    const glassBorder = isDark ? 'rgba(255,255,255,0.08)' : 'rgba(255,255,255,0.65)';
-    const activePlate = isDark ? 'rgba(66,165,245,0.14)' : 'rgba(12,74,140,0.08)';
+    const blurTint = isDark ? 'dark' : 'light';
+    const blurOverlay = isDark ? 'rgba(12,20,32,0.3)' : 'rgba(255,255,255,0.28)';
+    const glassBorder = isDark ? 'rgba(255,255,255,0.08)' : 'rgba(255,255,255,0.56)';
+    const activePlate = isDark ? 'rgba(66,165,245,0.12)' : 'rgba(12,74,140,0.06)';
 
     const visibleRoutes = useMemo<VisibleRoute[]>(
         () =>
@@ -138,17 +140,29 @@ export function AnimatedTabBar({
 
     return (
         <View style={styles.safeArea}>
-            <View style={[styles.outer, { paddingBottom: Math.max(insets.bottom, 8) }]}>
+            <View style={[styles.outer, { paddingBottom: Math.max(insets.bottom - 10, 2) }]}>
                 <View
                     style={[
                         styles.inner,
                         {
-                            backgroundColor: glassSurface,
                             borderColor: glassBorder,
                             shadowColor: palette.shadow,
+                            shadowOpacity: isDark ? 0.1 : 0.08,
                         },
                     ]}
                 >
+                <BlurView
+                    tint={blurTint}
+                    intensity={60}
+                    style={StyleSheet.absoluteFillObject}
+                />
+                <View
+                    pointerEvents="none"
+                    style={[
+                        StyleSheet.absoluteFillObject,
+                        { backgroundColor: blurOverlay },
+                    ]}
+                />
                 <Animated.View
                     pointerEvents="none"
                     style={[
@@ -213,8 +227,8 @@ export function AnimatedTabBar({
                                         isFocused && {
                                             backgroundColor: activePlate,
                                             borderColor: isDark
-                                                ? 'rgba(255,255,255,0.08)'
-                                                : 'rgba(12,74,140,0.08)',
+                                                ? 'rgba(255,255,255,0.07)'
+                                                : 'rgba(12,74,140,0.06)',
                                         },
                                     ]}
                                 >
@@ -245,6 +259,10 @@ export function AnimatedTabBar({
 
 const styles = StyleSheet.create({
     safeArea: {
+        position: 'absolute',
+        left: 0,
+        right: 0,
+        bottom: 0,
         backgroundColor: 'transparent',
     },
     outer: {
@@ -258,9 +276,9 @@ const styles = StyleSheet.create({
         paddingTop: 8,
         paddingBottom: 6,
         shadowOffset: { width: 0, height: 10 },
-        shadowOpacity: 0.16,
         shadowRadius: 24,
-        elevation: 10,
+        elevation: 7,
+        overflow: 'hidden',
     },
     indicator: {
         position: 'absolute',

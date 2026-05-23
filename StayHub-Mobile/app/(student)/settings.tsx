@@ -13,11 +13,12 @@ import {
 } from 'react-native';
 import { ActivityIndicator, Divider, Text, TextInput, useTheme } from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { useNavigation, useRouter } from 'expo-router';
+import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LoadingSpinner } from '../../components/LoadingSpinner';
 import { Reveal } from '../../components/ui/Reveal';
 import { StudentHero } from '../../components/ui/StudentHero';
+import { useStudentBackSwipe } from '../../components/ui/StudentTabSwipe';
 import { APP_CONFIG } from '../../constants/config';
 import { getStudentPalette } from '../../constants/design';
 import { authAPI, studentAPI } from '../../services/api';
@@ -58,7 +59,6 @@ export default function SettingsScreen() {
     const user = useAuthStore((state) => state.user);
     const updateUser = useAuthStore((state) => state.updateUser);
     const router = useRouter();
-    const navigation = useNavigation();
     const theme = useTheme();
     const palette = getStudentPalette(theme.dark);
     const insets = useSafeAreaInsets();
@@ -67,7 +67,8 @@ export default function SettingsScreen() {
     const primaryTint = palette.primarySoft;
     const warningTint = palette.warningSoft;
     const successTint = palette.successSoft;
-    const bottomContentPadding = Math.max(insets.bottom + 88, 104);
+    const bottomContentPadding = Math.max(insets.bottom + 96, 116);
+    const swipeHandlers = useStudentBackSwipe('/(student)/profile');
 
     const [loading, setLoading] = useState(true);
     const [pwModalVisible, setPwModalVisible] = useState(false);
@@ -380,11 +381,6 @@ export default function SettingsScreen() {
           : 'Needs setup';
 
     const handleBack = () => {
-        if (navigation.canGoBack()) {
-            router.back();
-            return;
-        }
-
         router.replace('/(student)/profile');
     };
 
@@ -418,15 +414,16 @@ export default function SettingsScreen() {
                         },
                     ]}
                     showsVerticalScrollIndicator={false}
+                    {...swipeHandlers}
                 >
                     <StudentHero
                         insetTop={insets.top}
                         variant="surface"
-                        eyebrow="Settings"
+                        // eyebrow="Settings"
                         title="Security & preferences"
-                        subtitle="Manage password, appearance, alerts, and account actions from one place."
+                        subtitle="Manage password, appearance, and alert preferences from one place."
                         align="left"
-                        titleAccessory={
+                        leadingAccessory={
                             <TouchableOpacity
                                 style={[
                                     styles.backButton,
@@ -439,13 +436,10 @@ export default function SettingsScreen() {
                                 onPress={handleBack}
                             >
                                 <MaterialCommunityIcons
-                                    name="arrow-left"
-                                    size={18}
+                                    name="chevron-left"
+                                    size={22}
                                     color={palette.textPrimary}
                                 />
-                                <Text style={[styles.backButtonText, { color: palette.textPrimary }]}>
-                                    Back
-                                </Text>
                             </TouchableOpacity>
                         }
                     >
@@ -1051,18 +1045,12 @@ const styles = StyleSheet.create({
     container: { flex: 1, backgroundColor: 'transparent' },
     content: {},
     backButton: {
-        minHeight: 40,
-        borderRadius: 999,
+        width: 36,
+        height: 36,
+        borderRadius: 18,
         borderWidth: 1,
-        paddingHorizontal: 12,
         alignItems: 'center',
         justifyContent: 'center',
-        flexDirection: 'row',
-        gap: 6,
-    },
-    backButtonText: {
-        fontSize: 12,
-        fontWeight: '700',
     },
     contentWrap: {
         paddingHorizontal: 18,

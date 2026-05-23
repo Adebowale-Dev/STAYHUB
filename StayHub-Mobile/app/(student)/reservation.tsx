@@ -7,7 +7,6 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { studentAPI } from '../../services/api';
 import { LoadingSpinner } from '../../components/LoadingSpinner';
 import { getStudentPalette } from '../../constants/design';
-import { StudentHero } from '../../components/ui/StudentHero';
 import { useStudentTabSwipe } from '../../components/ui/StudentTabSwipe';
 import type { GroupMember, InvitationHistoryEntry, Reservation, ReservationInviteTrackerItem } from '../../types';
 
@@ -78,8 +77,10 @@ export default function ReservationScreen() {
     const palette = getStudentPalette(theme.dark);
     const insets = useSafeAreaInsets();
     const router = useRouter();
-    const bottomContentPadding = Math.max(insets.bottom + 88, 104);
+    const bottomContentPadding = Math.max(insets.bottom + 96, 116);
     const swipeHandlers = useStudentTabSwipe('reservation');
+    const headerTop = insets.top + 18;
+    const headerHeight = 60;
     const primaryTone = buildTone('Ready', 'home-city-outline', palette.primary, palette.primarySoft);
     const successTone = buildTone('Approved', 'check-circle-outline', palette.success, palette.successSoft);
     const warningTone = buildTone('Pending', 'clock-outline', palette.warning, palette.warningSoft);
@@ -560,24 +561,29 @@ export default function ReservationScreen() {
         return (
             <View className="flex-1" style={{ backgroundColor: palette.pageBackground }}>
                 <StatusBar barStyle={theme.dark ? 'light-content' : 'dark-content'} backgroundColor={palette.surface} />
+                <View style={[styles.fixedHeaderShell, { backgroundColor: palette.surface, borderBottomColor: palette.border }]}>
+                    <View style={[styles.fixedHeader, { paddingTop: headerTop }]}>
+                        <Text style={[styles.fixedTitle, { color: palette.textPrimary }]}>No room reserved yet</Text>
+                        {/* <Text style={[styles.fixedSubtitle, { color: palette.textSecondary }]}>
+                            Browse hostels, compare available rooms, and reserve the best space before it fills up.
+                        </Text> */}
+                    </View>
+                </View>
                 <ScrollView
                     className="flex-1"
-                    contentContainerStyle={{ paddingBottom: bottomContentPadding }}
+                    contentContainerStyle={{ paddingTop: headerTop + headerHeight, paddingBottom: bottomContentPadding }}
                     refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={palette.primary} colors={[palette.primary]} />}
                     showsVerticalScrollIndicator={false}
                 >
-                    <StudentHero
-                        insetTop={insets.top}
-                        variant="surface"
-                        eyebrow="My reservation"
-                        title="No room reserved yet"
-                        subtitle="Browse hostels, compare available rooms, and reserve the best space before it fills up."
-                    >
+                    <View className="px-[18px] pt-[18px]">
+                        <Text style={[styles.heroLead, { color: palette.textSecondary }]}>
+                            Browse hostels, compare available rooms, and reserve the best space before it fills up.
+                        </Text>
                         <TouchableOpacity style={styles.heroButton} activeOpacity={0.85} onPress={() => router.push('/(student)/hostels')}>
                             <MaterialCommunityIcons name="home-search-outline" size={18} color={palette.primary} />
                             <Text style={[styles.heroButtonText, { color: palette.primary }]}>Browse hostels</Text>
                         </TouchableOpacity>
-                    </StudentHero>
+                    </View>
 
                     <View className="pt-[16px]">
                         <View style={[styles.emptyPanel, { backgroundColor: palette.surface, borderColor: palette.border, shadowColor: palette.shadow }]}>
@@ -621,25 +627,32 @@ export default function ReservationScreen() {
         <>
             <View className="flex-1" style={{ backgroundColor: palette.pageBackground }}>
                 <StatusBar barStyle={theme.dark ? 'light-content' : 'dark-content'} backgroundColor={palette.surface} />
+                <View style={[styles.fixedHeaderShell, { backgroundColor: palette.surface, borderBottomColor: palette.border }]}>
+                    <View style={[styles.fixedHeader, { paddingTop: headerTop }]}>
+                        <Text style={[styles.fixedTitle, { color: palette.textPrimary }]}>
+                            {reservation.room?.roomNumber ? `Room ${reservation.room.roomNumber}` : 'Reserved room'}
+                        </Text>
+                        <Text style={[styles.fixedSubtitle, { color: palette.textSecondary }]}>
+                            {isTemporaryInvite
+                                ? `${reservedByName} reserved this room for you. Review it before the approval window closes.`
+                                : `${reservation.hostel?.name ?? 'Your hostel'} is currently assigned to you.`}
+                        </Text>
+                    </View>
+                </View>
 
                 <ScrollView
                     className="flex-1"
-                    contentContainerStyle={{ paddingBottom: bottomContentPadding }}
+                    contentContainerStyle={{ paddingTop: headerTop + headerHeight, paddingBottom: bottomContentPadding }}
                     {...swipeHandlers}
                     refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={palette.primary} colors={[palette.primary]} />}
                     showsVerticalScrollIndicator={false}
                 >
-                    <StudentHero
-                        insetTop={insets.top}
-                        variant="surface"
-                        eyebrow="My reservation"
-                        title={reservation.room?.roomNumber ? `Room ${reservation.room.roomNumber}` : 'Reserved room'}
-                        subtitle={
-                            isTemporaryInvite
+                    <View className="px-[18px] pt-[18px]">
+                        <Text style={[styles.heroLead, { color: palette.textSecondary }]}>
+                            {isTemporaryInvite
                                 ? `${reservedByName} reserved this room for you. Review it before the approval window closes.`
-                                : `${reservation.hostel?.name ?? 'Your hostel'} is currently assigned to you.`
-                        }
-                    >
+                                : `${reservation.hostel?.name ?? 'Your hostel'} is currently assigned to you.`}
+                        </Text>
                         <View className="mt-[18px] flex-row flex-wrap gap-[10px]">
                             <View style={[styles.heroMetaChip, { backgroundColor: statusMeta.backgroundColor }]}>
                                 <MaterialCommunityIcons name={statusMeta.icon} size={14} color={statusMeta.color} />
@@ -650,7 +663,7 @@ export default function ReservationScreen() {
                                 <Text style={[styles.heroGhostChipText, { color: palette.textSecondary }]}>{reservation.hostel?.name ?? 'Hostel'}</Text>
                             </View>
                         </View>
-                    </StudentHero>
+                    </View>
 
                     <View className="pt-[16px]">
                         <View className="px-[18px] pt-[6px]">
@@ -1053,6 +1066,36 @@ export default function ReservationScreen() {
 }
 
 const styles = StyleSheet.create({
+    fixedHeaderShell: {
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        right: 0,
+        zIndex: 20,
+        borderBottomWidth: 1,
+        borderBottomLeftRadius: 28,
+        borderBottomRightRadius: 28,
+    },
+    fixedHeader: {
+        paddingHorizontal: 18,
+        paddingBottom: 20,
+    },
+    fixedTitle: {
+        fontSize: 28,
+        lineHeight: 34,
+        fontWeight: '800',
+        letterSpacing: -0.6,
+    },
+    fixedSubtitle: {
+        fontSize: 14,
+        lineHeight: 22,
+        marginTop: 6,
+    },
+    heroLead: {
+        fontSize: 14,
+        lineHeight: 22,
+        paddingHorizontal: 2,
+    },
     loadingScreen: {
         flex: 1,
     },
@@ -1668,4 +1711,3 @@ const styles = StyleSheet.create({
         fontWeight: '800',
     },
 });
-

@@ -1,4 +1,4 @@
-import { useRouter } from 'expo-router';
+import { useRouter, type Href } from 'expo-router';
 import { useMemo } from 'react';
 import { PanResponder, type GestureResponderEvent, type PanResponderGestureState } from 'react-native';
 
@@ -59,5 +59,34 @@ export function useStudentTabSwipe(routeName: StudentTabRoute) {
                 },
             }).panHandlers,
         [routeName, router]
+    );
+}
+
+export function useStudentBackSwipe(targetRoute: Href) {
+    const router = useRouter();
+
+    return useMemo(
+        () =>
+            PanResponder.create({
+                onMoveShouldSetPanResponder: (
+                    _event: GestureResponderEvent,
+                    gestureState: PanResponderGestureState
+                ) => shouldHandleSwipe(gestureState.dx, gestureState.dy),
+                onMoveShouldSetPanResponderCapture: (
+                    _event: GestureResponderEvent,
+                    gestureState: PanResponderGestureState
+                ) => shouldHandleSwipe(gestureState.dx, gestureState.dy),
+                onPanResponderRelease: (
+                    _event: GestureResponderEvent,
+                    gestureState: PanResponderGestureState
+                ) => {
+                    if (!shouldNavigate(gestureState.dx, gestureState.dy) || gestureState.dx <= 0) {
+                        return;
+                    }
+
+                    router.replace(targetRoute);
+                },
+            }).panHandlers,
+        [router, targetRoute]
     );
 }

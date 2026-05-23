@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, ScrollView, StyleSheet, Alert, KeyboardAvoidingView, Platform, TouchableOpacity, StatusBar, Modal, Switch, Image, } from 'react-native';
+import { View, ScrollView, StyleSheet, Alert, KeyboardAvoidingView, Platform, TouchableOpacity, StatusBar, Modal, Switch, Image, Animated, } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import { Text, TextInput, ActivityIndicator, Divider, useTheme, } from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
@@ -49,7 +49,8 @@ export default function ProfileScreen() {
     const warningTint = palette.warningSoft;
     const successTint = palette.successSoft;
     const dangerTint = palette.dangerSoft;
-    const bottomContentPadding = Math.max(insets.bottom + 88, 104);
+    const bottomContentPadding = Math.max(insets.bottom + 96, 116);
+    const scrollY = useState(() => new Animated.Value(0))[0];
     const dynText = { color: palette.textPrimary };
     const dynTextSec = { color: palette.textSecondary };
     const dynSep = { backgroundColor: palette.divider };
@@ -444,6 +445,16 @@ export default function ProfileScreen() {
         : notificationSettings.hasActiveDevice
             ? `${notificationSettings.registeredDevicesCount} device${notificationSettings.registeredDevicesCount === 1 ? '' : 's'} linked`
             : 'Needs setup';
+    const identityOpacity = scrollY.interpolate({
+        inputRange: [0, 72, 108],
+        outputRange: [1, 0.55, 0],
+        extrapolate: 'clamp',
+    });
+    const stickyHeaderOpacity = scrollY.interpolate({
+        inputRange: [112, 128],
+        outputRange: [0, 1],
+        extrapolate: 'clamp',
+    });
     if (loading) {
         return (
             <LoadingSpinner
@@ -454,51 +465,80 @@ export default function ProfileScreen() {
     }
     return (<>
       <StatusBar barStyle={theme.dark ? 'light-content' : 'dark-content'} backgroundColor={palette.surface}/>
+      <Animated.View
+        pointerEvents="none"
+        style={[
+          styles.floatingStickyHeaderShell,
+          {
+            backgroundColor: palette.surface,
+            borderBottomColor: palette.border,
+            paddingTop: insets.top + 8,
+            opacity: stickyHeaderOpacity,
+          },
+        ]}
+      >
+        <Animated.View
+          style={[
+            styles.floatingStickyHeaderContent,
+          ]}
+        >
+          <Text style={[styles.floatingStickyHeaderText, dynText]}>
+            {`${user?.firstName ?? ''} ${user?.lastName ?? ''}`.trim() || 'StayHub student'}
+          </Text>
+        </Animated.View>
+      </Animated.View>
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         style={[styles.flex, { backgroundColor: palette.pageBackground }]}
       >
-        <ScrollView
+        <Animated.ScrollView
           style={[styles.container, { backgroundColor: palette.pageBackground }]}
           contentContainerStyle={[styles.content, { backgroundColor: palette.pageBackground, paddingBottom: bottomContentPadding }]}
           showsVerticalScrollIndicator={false}
           {...swipeHandlers}
+          onScroll={Animated.event(
+            [{ nativeEvent: { contentOffset: { y: scrollY } } }],
+            { useNativeDriver: true }
+          )}
+          scrollEventThrottle={16}
         >
           <StudentHero
             insetTop={insets.top}
             variant="surface"
-            eyebrow="Profile"
-            title={`${user?.firstName ?? ''} ${user?.lastName ?? ''}`.trim() || 'StayHub student'}
-            subtitle="Manage your account details, appearance, and notification settings."
+            containerStyle={styles.profileHeroShell}
+            // eyebrow="Profile"
+            title=""
+            // subtitle="Manage your account details, appearance, and notification settings."
             align="center"
           >
-            <TouchableOpacity onPress={handleAvatarPress} activeOpacity={0.85} disabled={uploading} style={styles.avatarWrap}>
-              <View style={[styles.avatarRing, { borderColor: palette.border, backgroundColor: palette.surfaceMuted }]}>
-                {user?.profilePicture ? (<Image source={{ uri: user.profilePicture }} style={styles.avatarImage}/>) : (<View style={styles.avatar}>
-                    <Text style={styles.avatarText}>{initials}</Text>
+            <Animated.View
+              style={[
+                styles.identityCard,
+                {
+                  backgroundColor: palette.surface,
+                  borderColor: palette.border,
+                  shadowColor: palette.shadow,
+                  opacity: identityOpacity,
+                },
+              ]}
+            >
+              <TouchableOpacity onPress={handleAvatarPress} activeOpacity={0.85} disabled={uploading} style={styles.avatarWrap}>
+                <View style={[styles.avatarRing, { borderColor: palette.border, backgroundColor: palette.surfaceMuted }]}>
+                  {user?.profilePicture ? (<Image source={{ uri: user.profilePicture }} style={styles.avatarImage}/>) : (<View style={styles.avatar}>
+                      <Text style={styles.avatarText}>{initials}</Text>
+                    </View>)}
+                </View>
+
+                {uploading ? (<View style={styles.avatarOverlay}>
+                    <ActivityIndicator size="small" color="#fff"/>
+                  </View>) : (<View style={[styles.cameraBadge, { backgroundColor: palette.primary }]}>
+                    <MaterialCommunityIcons name="camera" size={13} color="#fff"/>
                   </View>)}
-              </View>
-
-              {uploading ? (<View style={styles.avatarOverlay}>
-                  <ActivityIndicator size="small" color="#fff"/>
-                </View>) : (<View style={[styles.cameraBadge, { backgroundColor: palette.primary }]}>
-                  <MaterialCommunityIcons name="camera" size={13} color="#fff"/>
-                </View>)}
-            </TouchableOpacity>
-
-            <Text style={[styles.heroMatric, dynTextSec]}>{user?.matricNumber}</Text>
-            {user?.email ? <Text style={[styles.heroEmail, dynTextSec]}>{user.email}</Text> : null}
-            <View style={styles.heroPillRow}>
-              {deptName ? (<View style={[styles.heroPill, { backgroundColor: palette.surfaceMuted, borderColor: palette.border }]}>
-                  <Text style={[styles.heroPillText, dynText]}>{deptName}</Text>
-                </View>) : null}
-              {user?.level ? (<View style={[styles.heroPill, { backgroundColor: palette.surfaceMuted, borderColor: palette.border }]}>
-                  <Text style={[styles.heroPillText, dynText]}>{user.level} Level</Text>
-                </View>) : null}
-              <View style={[styles.heroPill, { backgroundColor: palette.surfaceMuted, borderColor: palette.border }]}>
-                <Text style={[styles.heroPillText, dynText]}>{isDark ? 'Dark mode' : 'Light mode'}</Text>
-              </View>
-            </View>
+              </TouchableOpacity>
+              <Text style={[styles.identityName, dynText]}>
+                {`${user?.firstName ?? ''} ${user?.lastName ?? ''}`.trim() || 'StayHub student'}
+              </Text>
+            </Animated.View>
           </StudentHero>
 
           <Reveal delay={60}>
@@ -694,7 +734,7 @@ export default function ProfileScreen() {
               </TouchableOpacity>
             </View>
           </Reveal>
-        </ScrollView>
+        </Animated.ScrollView>
       </KeyboardAvoidingView>
     </>);
 }
@@ -703,6 +743,51 @@ const styles = StyleSheet.create({
     container: { flex: 1, backgroundColor: 'transparent' },
     center: { flex: 1, justifyContent: 'center', alignItems: 'center' },
     content: {},
+    profileHeroShell: {
+        borderBottomLeftRadius: 16,
+        borderBottomRightRadius: 16,
+    },
+    floatingStickyHeaderShell: {
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        right: 0,
+        zIndex: 30,
+        paddingHorizontal: 18,
+        paddingBottom: 12,
+        borderBottomWidth: 1,
+        overflow: 'hidden',
+    },
+    floatingStickyHeaderContent: {
+        alignItems: 'center',
+    },
+    floatingStickyHeaderText: {
+        fontSize: 24,
+        lineHeight: 30,
+        fontWeight: '800',
+        letterSpacing: -0.5,
+        textAlign: 'center',
+    },
+    identityCard: {
+        marginHorizontal: 18,
+        marginTop: 8,
+        borderRadius: 10,
+        borderWidth: 0,
+        paddingTop: 18,
+        paddingBottom: 18,
+        alignItems: 'center',
+        shadowOffset: { width: 0, height: 12 },
+        shadowOpacity: 0.06,
+        shadowRadius: 18,
+        elevation: 4,
+    },
+    identityName: {
+        fontSize: 24,
+        lineHeight: 30,
+        fontWeight: '800',
+        letterSpacing: -0.5,
+        textAlign: 'center',
+    },
     hero: {
         backgroundColor: '#1565C0',
         alignItems: 'center',
@@ -778,24 +863,6 @@ const styles = StyleSheet.create({
         borderWidth: 2,
         borderColor: '#fff',
     },
-    heroName: { color: '#fff', fontSize: 20, fontWeight: '700', marginBottom: 4 },
-    heroMatric: { color: 'rgba(255,255,255,0.6)', fontSize: 13, marginBottom: 3 },
-    heroEmail: { color: 'rgba(255,255,255,0.45)', fontSize: 12 },
-    heroPillRow: {
-        flexDirection: 'row',
-        flexWrap: 'wrap',
-        gap: 8,
-        justifyContent: 'center',
-        marginTop: 14,
-        paddingHorizontal: 24,
-    },
-    heroPill: {
-        borderRadius: 999,
-        backgroundColor: 'rgba(255,255,255,0.14)',
-        paddingHorizontal: 12,
-        paddingVertical: 7,
-    },
-    heroPillText: { color: '#fff', fontSize: 12, fontWeight: '700' },
     summarySection: {
         paddingTop: 16,
     },

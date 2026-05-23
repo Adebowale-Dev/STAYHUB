@@ -19,7 +19,6 @@ import { APP_CONFIG, PAYSTACK_CONFIG } from '../../constants/config';
 import { Reveal } from '../../components/ui/Reveal';
 import type { PaymentStatus } from '../../types';
 import { getStudentPalette } from '../../constants/design';
-import { StudentHero } from '../../components/ui/StudentHero';
 import { LoadingSpinner } from '../../components/LoadingSpinner';
 import { useStudentTabSwipe } from '../../components/ui/StudentTabSwipe';
 
@@ -43,7 +42,9 @@ export default function PaymentScreen() {
     const paystackWebViewRef = useRef<paystackProps.PayStackRef>(null);
     const useBrowserCheckout = APP_CONFIG.IS_EXPO_GO;
     const swipeHandlers = useStudentTabSwipe('payment');
-    const bottomContentPadding = Math.max(insets.bottom + 88, 104);
+    const bottomContentPadding = Math.max(insets.bottom + 96, 116);
+    const headerTop = insets.top + 18;
+    const headerHeight =60;
 
     const loadData = async () => {
         setError(false);
@@ -193,10 +194,18 @@ export default function PaymentScreen() {
     return (
         <View className="flex-1" style={{ backgroundColor: palette.pageBackground }}>
             <StatusBar barStyle={theme.dark ? 'light-content' : 'dark-content'} backgroundColor={palette.surface} />
+            <View style={[styles.fixedHeaderShell, { backgroundColor: palette.surface, borderBottomColor: palette.border }]}>
+                <View style={[styles.fixedHeader, { paddingTop: headerTop }]}>
+                    <Text style={[styles.fixedTitle, { color: palette.textPrimary }]}>{formattedAmount}</Text>
+                    {/* <Text style={[styles.fixedSubtitle, { color: palette.textSecondary }]}>
+                        Pay online or confirm an offline payment code from one place.
+                    </Text> */}
+                </View>
+            </View>
 
             <ScrollView
                 className="flex-1"
-                contentContainerStyle={{ paddingBottom: bottomContentPadding }}
+                contentContainerStyle={{ paddingTop: headerTop + headerHeight, paddingBottom: bottomContentPadding }}
                 showsVerticalScrollIndicator={false}
                 {...swipeHandlers}
                 refreshControl={
@@ -208,14 +217,10 @@ export default function PaymentScreen() {
                     />
                 }
             >
-                <StudentHero
-                    insetTop={insets.top}
-                    variant="surface"
-                    eyebrow="Payments"
-                    title={formattedAmount}
-                    subtitle="Pay online or confirm an offline payment code from one place."
-                    align="center"
-                >
+                <View className="px-[18px] pt-[18px]">
+                    <Text style={[styles.heroLead, { color: palette.textSecondary }]}>
+                        Pay online or confirm an offline payment code from one place.
+                    </Text>
                     <View style={styles.heroStatusWrap}>
                         <View style={[styles.statusChip, { backgroundColor: heroStatusBg }]}>
                             <MaterialCommunityIcons
@@ -254,7 +259,7 @@ export default function PaymentScreen() {
                             </View>
                         ) : null}
                     </View>
-                </StudentHero>
+                </View>
 
                 <View className="-mt-[6px] px-[18px]">
                     {error ? (
@@ -590,6 +595,39 @@ export default function PaymentScreen() {
 }
 
 const styles = StyleSheet.create({
+    fixedHeaderShell: {
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        right: 0,
+        zIndex: 20,
+        borderBottomWidth: 1,
+        borderBottomLeftRadius: 28,
+        borderBottomRightRadius: 28,
+    },
+    fixedHeader: {
+        paddingHorizontal: 18,
+        paddingBottom: 20,
+        alignItems: 'center',
+    },
+    fixedTitle: {
+        fontSize: 30,
+        lineHeight: 36,
+        fontWeight: '800',
+        letterSpacing: -0.7,
+        textAlign: 'center',
+    },
+    fixedSubtitle: {
+        fontSize: 14,
+        lineHeight: 22,
+        marginTop: 6,
+        textAlign: 'center',
+    },
+    heroLead: {
+        fontSize: 14,
+        lineHeight: 22,
+        textAlign: 'center',
+    },
     heroStatusWrap: {
         alignItems: 'center',
         gap: 12,

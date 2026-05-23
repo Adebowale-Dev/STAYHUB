@@ -17,7 +17,6 @@ import AlertsCard from '../../components/AlertsCard';
 import { useAuthStore } from '../../store/authStore';
 import type { DashboardData } from '../../types';
 import { getStudentPalette } from '../../constants/design';
-import { StudentHero } from '../../components/ui/StudentHero';
 import { LoadingSpinner } from '../../components/LoadingSpinner';
 import { useStudentTabSwipe } from '../../components/ui/StudentTabSwipe';
 
@@ -63,7 +62,9 @@ export default function DashboardScreen() {
     const theme = useTheme();
     const palette = getStudentPalette(theme.dark);
     const swipeHandlers = useStudentTabSwipe('dashboard');
-    const bottomContentPadding = Math.max(insets.bottom + 88, 104);
+    const bottomContentPadding = Math.max(insets.bottom + 96, 116);
+    const headerTop = insets.top + 1;
+    const headerHeight = 90;
 
     const loadDashboard = async () => {
         setError(false);
@@ -184,9 +185,61 @@ export default function DashboardScreen() {
         <View className="flex-1" style={{ backgroundColor: palette.pageBackground }}>
             <StatusBar barStyle={theme.dark ? 'light-content' : 'dark-content'} backgroundColor={palette.surface} />
 
+            <View
+                style={[
+                    styles.fixedHeaderShell,
+                    {
+                        backgroundColor: palette.surface,
+                        borderBottomColor: palette.border,
+                    },
+                ]}
+            >
+                <View
+                    style={[
+                        styles.fixedHeader,
+                        {
+                            paddingTop: headerTop,
+                        },
+                    ]}
+                    pointerEvents="box-none"
+                >
+                    <View style={styles.fixedHeaderCopy}>
+                        <Text style={[styles.fixedGreeting, { color: palette.textPrimary }]}>
+                            {getGreeting()},
+                        </Text>
+                        <Text style={[styles.fixedName, { color: palette.textPrimary }]}>
+                            {user?.firstName ?? 'Student'}
+                        </Text>
+                    </View>
+
+                <TouchableOpacity
+                    style={[
+                        styles.fixedHeaderAvatar,
+                        {
+                            borderColor: palette.border,
+                            backgroundColor: palette.surfaceMuted,
+                        },
+                    ]}
+                    activeOpacity={0.85}
+                    onPress={() => router.push('/(student)/profile')}
+                >
+                    {user?.profilePicture ? (
+                        <Image source={{ uri: user.profilePicture }} style={styles.avatarImage} />
+                    ) : (
+                        <View style={styles.avatarInner}>
+                            <Text style={styles.avatarText}>{initials}</Text>
+                        </View>
+                    )}
+                </TouchableOpacity>
+            </View>
+            </View>
+
             <ScrollView
                 className="flex-1"
-                contentContainerStyle={{ paddingBottom: bottomContentPadding }}
+                contentContainerStyle={{
+                    paddingTop: headerTop + headerHeight,
+                    paddingBottom: bottomContentPadding,
+                }}
                 showsVerticalScrollIndicator={false}
                 {...swipeHandlers}
                 refreshControl={
@@ -198,116 +251,105 @@ export default function DashboardScreen() {
                     />
                 }
             >
-                <StudentHero
-                    insetTop={insets.top}
-                    variant="surface"
-                    title={`${getGreeting()}, ${user?.firstName ?? 'Student'}`}
-                    subtitle="Track your payment, reservation, and room progress from one place."
-                    titleAccessory={
-                        <View style={styles.avatarRing}>
-                            {user?.profilePicture ? (
-                                <Image source={{ uri: user.profilePicture }} style={styles.avatarImage} />
-                            ) : (
-                                <View style={styles.avatarInner}>
-                                    <Text style={styles.avatarText}>{initials}</Text>
+                <View style={styles.content}>
+                    <View style={styles.heroSection}>
+                        <Text style={[styles.heroLead, { color: palette.textSecondary }]}>
+                            Track your payment, reservation, and room progress from one place.
+                        </Text>
+
+                        <View
+                            style={[
+                                styles.heroInfoPanel,
+                                {
+                                    backgroundColor: palette.surface,
+                                    borderColor: palette.border,
+                                    shadowColor: palette.shadow,
+                                },
+                            ]}
+                        >
+                            <View style={styles.heroInfoStack}>
+                                <View style={styles.heroInfoRow}>
+                                    {department ? (
+                                        <View
+                                            style={[
+                                                styles.heroInfoBadge,
+                                                styles.heroInfoBadgeWide,
+                                                {
+                                                    backgroundColor: palette.surfaceMuted,
+                                                    borderColor: palette.border,
+                                                },
+                                            ]}
+                                        >
+                                            <View
+                                                style={[
+                                                    styles.heroInfoIconWrap,
+                                                    { backgroundColor: palette.primarySoft },
+                                                ]}
+                                            >
+                                                <MaterialCommunityIcons
+                                                    name="school-outline"
+                                                    size={14}
+                                                    color={palette.primary}
+                                                />
+                                            </View>
+                                            <Text style={[styles.heroInfoText, { color: palette.textPrimary }]}>
+                                                {department}
+                                                {user?.level ? ` - ${user.level} Level` : ''}
+                                            </Text>
+                                        </View>
+                                    ) : null}
+
+                                    {user?.matricNumber ? (
+                                        <View
+                                            style={[
+                                                styles.heroInfoBadge,
+                                                {
+                                                    backgroundColor: palette.surfaceMuted,
+                                                    borderColor: palette.border,
+                                                },
+                                            ]}
+                                        >
+                                            <View
+                                                style={[
+                                                    styles.heroInfoIconWrap,
+                                                    { backgroundColor: palette.primarySoft },
+                                                ]}
+                                            >
+                                                <MaterialCommunityIcons
+                                                    name="card-account-details-outline"
+                                                    size={14}
+                                                    color={palette.primary}
+                                                />
+                                            </View>
+                                            <Text style={[styles.heroInfoText, { color: palette.textPrimary }]}>
+                                                {user.matricNumber}
+                                            </Text>
+                                        </View>
+                                    ) : null}
                                 </View>
-                            )}
-                        </View>
-                    }
-                >
-                    <View
-                        style={[
-                            styles.heroInfoPanel,
-                            {
-                                backgroundColor: palette.surface,
-                                borderColor: palette.border,
-                            },
-                        ]}
-                    >
-                        <View style={styles.heroInfoStack}>
-                            <View style={styles.heroInfoRow}>
-                                {department ? (
+
+                                {dashboard?.currentSession ? (
                                     <View
                                         style={[
-                                            styles.heroInfoBadge,
-                                            styles.heroInfoBadgeWide,
+                                            styles.sessionCard,
                                             {
                                                 backgroundColor: palette.surfaceMuted,
                                                 borderColor: palette.border,
                                             },
                                         ]}
                                     >
-                                    <View
-                                        style={[
-                                            styles.heroInfoIconWrap,
-                                            { backgroundColor: palette.primarySoft },
-                                        ]}
-                                    >
-                                        <MaterialCommunityIcons
-                                            name="school-outline"
-                                            size={14}
-                                            color={palette.primary}
-                                        />
-                                    </View>
-                                    <Text style={[styles.heroInfoText, { color: palette.textPrimary }]}>
-                                            {department}
-                                            {user?.level ? ` - ${user.level} Level` : ''}
+                                        <Text style={[styles.sessionLabel, { color: palette.textSecondary }]}>
+                                            Current session
+                                        </Text>
+                                        <Text style={[styles.sessionValue, { color: palette.textPrimary }]}>
+                                            {dashboard.currentSession}
                                         </Text>
                                     </View>
                                 ) : null}
-
-                                {user?.matricNumber ? (
-                                    <View
-                                        style={[
-                                            styles.heroInfoBadge,
-                                            {
-                                                backgroundColor: palette.surfaceMuted,
-                                                borderColor: palette.border,
-                                            },
-                                        ]}
-                                    >
-                                    <View
-                                        style={[
-                                            styles.heroInfoIconWrap,
-                                            { backgroundColor: palette.primarySoft },
-                                        ]}
-                                    >
-                                        <MaterialCommunityIcons
-                                            name="card-account-details-outline"
-                                            size={14}
-                                            color={palette.primary}
-                                        />
-                                    </View>
-                                    <Text style={[styles.heroInfoText, { color: palette.textPrimary }]}>
-                                        {user.matricNumber}
-                                    </Text>
-                                    </View>
-                                ) : null}
                             </View>
-
-                            {dashboard?.currentSession ? (
-                                <View
-                                    style={[
-                                        styles.sessionCard,
-                                        {
-                                            backgroundColor: palette.surfaceMuted,
-                                            borderColor: palette.border,
-                                        },
-                                    ]}
-                                >
-                                    <Text style={[styles.sessionLabel, { color: palette.textSecondary }]}>
-                                        Current session
-                                    </Text>
-                                    <Text style={[styles.sessionValue, { color: palette.textPrimary }]}>
-                                        {dashboard.currentSession}
-                                    </Text>
-                                </View>
-                            ) : null}
                         </View>
                     </View>
-                </StudentHero>
 
-                <View style={styles.content}>
                     {error ? (
                         <View
                             style={[
@@ -643,17 +685,50 @@ export default function DashboardScreen() {
 const styles = StyleSheet.create({
     content: {
         paddingHorizontal: 18,
-        paddingTop: 14,
+        paddingTop: 18,
         gap: 18,
     },
-    avatarRing: {
+    fixedHeaderShell: {
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        right: 0,
+        zIndex: 20,
+        borderBottomWidth: 1,
+        borderBottomLeftRadius: 28,
+        borderBottomRightRadius: 28,
+    },
+    fixedHeader: {
+        paddingHorizontal: 18,
+        paddingBottom: 20,
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+    },
+    fixedHeaderCopy: {
+        flex: 1,
+        paddingRight: 16,
+    },
+    fixedGreeting: {
+        fontSize: 18,
+        lineHeight: 24,
+        fontWeight: '800',
+        letterSpacing: -0.3,
+    },
+    fixedName: {
+        fontSize: 30,
+        lineHeight: 36,
+        fontWeight: '800',
+        letterSpacing: -0.7,
+        marginTop: 2,
+    },
+    fixedHeaderAvatar: {
         width: 68,
         height: 68,
         borderRadius: 34,
         borderWidth: 1,
-        borderColor: 'rgba(255,255,255,0.18)',
         padding: 4,
-        backgroundColor: 'rgba(255,255,255,0.04)',
+        flexShrink: 0,
     },
     avatarInner: {
         flex: 1,
@@ -672,11 +747,22 @@ const styles = StyleSheet.create({
         fontSize: 18,
         fontWeight: '800',
     },
+    heroSection: {
+        gap: 14,
+    },
+    heroLead: {
+        fontSize: 14,
+        lineHeight: 22,
+        paddingHorizontal: 2,
+    },
     heroInfoPanel: {
-        marginTop: 18,
         borderRadius: 22,
         padding: 12,
         borderWidth: 1,
+        shadowOffset: { width: 0, height: 12 },
+        shadowOpacity: 0.1,
+        shadowRadius: 22,
+        elevation: 7,
     },
     heroInfoStack: {
         gap: 10,
