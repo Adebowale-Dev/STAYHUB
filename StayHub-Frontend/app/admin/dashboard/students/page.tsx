@@ -1,6 +1,5 @@
 "use client";
 import { ChangeEvent, useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
 import { Plus, Users, Building2, Search, AlertCircle, CheckCircle, XCircle, Download, Upload, Edit, Trash2, Eye, Filter, RefreshCw, KeyRound, } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -66,7 +65,6 @@ interface StudentImportSummary {
     errors?: StudentImportError[];
 }
 function StudentsPageContent() {
-    const router = useRouter();
     const [students, setStudents] = useState<Student[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -494,166 +492,162 @@ Current backend behavior is abnormal - password hashing should take <1 second.
             setIsImporting(false);
         }
     };
-    return (<div className="min-h-screen bg-background">
-      
-      <div className="sticky top-0 z-10 border-b bg-card/95 backdrop-blur supports-backdrop-filter:bg-card/60">
-        <div className="max-w-7xl mx-auto px-4 py-4">
-          <div className="flex items-center justify-between gap-4">
-            <div className="min-w-0 flex-1">
-              <h1 className="text-2xl font-bold text-foreground">Students Management</h1>
-              <p className="text-sm text-muted-foreground mt-1">
-                Manage all students across colleges and departments
-              </p>
-            </div>
-            <div className="flex items-center gap-2">
-              <Button variant="outline" size="sm" onClick={loadStudents} disabled={loading}>
-                <RefreshCw className={`w-4 h-4 mr-2 ${loading ? "animate-spin" : ""}`}/>
-                Refresh
-              </Button>
-              <Button variant="outline" size="sm" onClick={handleExportStudents} disabled={isExporting || filteredStudents.length === 0}>
-                <Download className="w-4 h-4 mr-2"/>
-                {isExporting ? "Exporting..." : "Export"}
-              </Button>
-              <Button variant="outline" size="sm" onClick={() => {
-                resetImportState();
-                setImportModalOpen(true);
-            }}>
-                <Upload className="w-4 h-4 mr-2"/>
-                Import
-              </Button>
-              <Button size="sm" onClick={() => setAddModalOpen(true)}>
-                <Plus className="w-4 h-4 mr-2"/>
-                Add Student
-              </Button>
-            </div>
-          </div>
+    const hasActiveFilters = searchQuery || levelFilter !== "all" || paymentFilter !== "all" ||
+        collegeFilter !== "all" || statusFilter !== "all";
+    const activeFilterCount = [
+        Boolean(searchQuery),
+        levelFilter !== "all",
+        paymentFilter !== "all",
+        collegeFilter !== "all",
+        statusFilter !== "all",
+    ].filter(Boolean).length;
+    return (<div className="space-y-6">
+      <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+        <div className="min-w-0 flex-1">
+          <h1 className="text-2xl font-bold text-foreground">Students Management</h1>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Manage all students across colleges and departments
+          </p>
+        </div>
+        <div className="flex flex-wrap items-center gap-2">
+          <Button variant="outline" size="sm" onClick={loadStudents} disabled={loading}>
+            <RefreshCw className={`w-4 h-4 mr-2 ${loading ? "animate-spin" : ""}`}/>
+            Refresh
+          </Button>
+          <Button variant="outline" size="sm" onClick={handleExportStudents} disabled={isExporting || filteredStudents.length === 0}>
+            <Download className="w-4 h-4 mr-2"/>
+            {isExporting ? "Exporting..." : "Export"}
+          </Button>
+          <Button variant="outline" size="sm" onClick={() => {
+            resetImportState();
+            setImportModalOpen(true);
+        }}>
+            <Upload className="w-4 h-4 mr-2"/>
+            Import
+          </Button>
+          <Button size="sm" onClick={() => setAddModalOpen(true)}>
+            <Plus className="w-4 h-4 mr-2"/>
+            Add Student
+          </Button>
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 py-6 space-y-6">
+      <div className="space-y-6">
         
-        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3">
-          <Card className="p-4 border shadow-none hover:shadow-md transition-shadow">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-blue-500/10 rounded-lg">
-                <Users className="w-5 h-5 text-blue-600"/>
-              </div>
-              <div>
+        <div className="grid grid-cols-1 gap-4 xl:grid-cols-[1.8fr,1fr]">
+          <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+            <Card className="border shadow-none">
+              <div className="p-4">
+                <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-xl bg-blue-500/10">
+                  <Users className="h-5 w-5 text-blue-600"/>
+                </div>
                 <p className="text-2xl font-bold text-foreground">{stats.total}</p>
-                <p className="text-xs text-muted-foreground">Total</p>
+                <p className="mt-1 text-xs text-muted-foreground">Total students</p>
               </div>
-            </div>
-          </Card>
+            </Card>
 
-          <Card className="p-4 border shadow-none hover:shadow-md transition-shadow">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-green-500/10 rounded-lg">
-                <CheckCircle className="w-5 h-5 text-green-600"/>
-              </div>
-              <div>
+            <Card className="border shadow-none">
+              <div className="p-4">
+                <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-xl bg-green-500/10">
+                  <CheckCircle className="h-5 w-5 text-green-600"/>
+                </div>
                 <p className="text-2xl font-bold text-foreground">{stats.active}</p>
-                <p className="text-xs text-muted-foreground">Active</p>
+                <p className="mt-1 text-xs text-muted-foreground">Active students</p>
               </div>
-            </div>
-          </Card>
+            </Card>
 
-          <Card className="p-4 border shadow-none hover:shadow-md transition-shadow">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-gray-500/10 rounded-lg">
-                <XCircle className="w-5 h-5 text-gray-600"/>
-              </div>
-              <div>
-                <p className="text-2xl font-bold text-foreground">{stats.inactive}</p>
-                <p className="text-xs text-muted-foreground">Inactive</p>
-              </div>
-            </div>
-          </Card>
-
-          <Card className="p-4 border shadow-none hover:shadow-md transition-shadow">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-green-500/10 rounded-lg">
-                <CheckCircle className="w-5 h-5 text-green-600"/>
-              </div>
-              <div>
+            <Card className="border shadow-none">
+              <div className="p-4">
+                <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-500/10">
+                  <CheckCircle className="h-5 w-5 text-emerald-600"/>
+                </div>
                 <p className="text-2xl font-bold text-foreground">{stats.paid}</p>
-                <p className="text-xs text-muted-foreground">Paid</p>
+                <p className="mt-1 text-xs text-muted-foreground">Payments cleared</p>
               </div>
-            </div>
-          </Card>
+            </Card>
 
-          <Card className="p-4 border shadow-none hover:shadow-md transition-shadow">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-yellow-500/10 rounded-lg">
-                <AlertCircle className="w-5 h-5 text-yellow-600"/>
-              </div>
-              <div>
-                <p className="text-2xl font-bold text-foreground">{stats.pending}</p>
-                <p className="text-xs text-muted-foreground">Pending</p>
-              </div>
-            </div>
-          </Card>
-
-          <Card className="p-4 border shadow-none hover:shadow-md transition-shadow">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-blue-500/10 rounded-lg">
-                <Building2 className="w-5 h-5 text-blue-600"/>
-              </div>
-              <div>
+            <Card className="border shadow-none">
+              <div className="p-4">
+                <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-xl bg-amber-500/10">
+                  <Building2 className="h-5 w-5 text-amber-600"/>
+                </div>
                 <p className="text-2xl font-bold text-foreground">{stats.assigned}</p>
-                <p className="text-xs text-muted-foreground">Assigned</p>
+                <p className="mt-1 text-xs text-muted-foreground">Assigned rooms</p>
               </div>
-            </div>
-          </Card>
+            </Card>
+          </div>
 
-          <Card className="p-4 border shadow-none hover:shadow-md transition-shadow">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-orange-500/10 rounded-lg">
-                <AlertCircle className="w-5 h-5 text-orange-600"/>
-              </div>
+          <Card className="border shadow-none">
+            <div className="space-y-4 p-4">
               <div>
-                <p className="text-2xl font-bold text-foreground">{stats.unassigned}</p>
-                <p className="text-xs text-muted-foreground">Unassigned</p>
+                <p className="text-sm font-semibold text-foreground">Operational Snapshot</p>
+                <p className="mt-1 text-xs text-muted-foreground">
+                  Monitor payment, housing, and invitation activity from one place.
+                </p>
+              </div>
+
+              <div className="grid grid-cols-2 gap-2">
+                <div className="rounded-lg border bg-muted/20 px-3 py-2">
+                  <p className="text-xs text-muted-foreground">Inactive</p>
+                  <p className="mt-1 text-lg font-semibold text-foreground">{stats.inactive}</p>
+                </div>
+                <div className="rounded-lg border bg-muted/20 px-3 py-2">
+                  <p className="text-xs text-muted-foreground">Pending payment</p>
+                  <p className="mt-1 text-lg font-semibold text-foreground">{stats.pending}</p>
+                </div>
+                <div className="rounded-lg border bg-muted/20 px-3 py-2">
+                  <p className="text-xs text-muted-foreground">Unassigned</p>
+                  <p className="mt-1 text-lg font-semibold text-foreground">{stats.unassigned}</p>
+                </div>
+                <div className="rounded-lg border bg-muted/20 px-3 py-2">
+                  <p className="text-xs text-muted-foreground">Pending invites</p>
+                  <p className="mt-1 text-lg font-semibold text-foreground">{stats.pendingInvites}</p>
+                </div>
+              </div>
+
+              <div className="flex flex-wrap gap-2">
+                <Badge variant="outline" className="bg-sky-50 text-sky-700 border-sky-200">
+                  Invite history: {stats.inviteActivity}
+                </Badge>
+                <Badge variant="outline" className="bg-muted/50">
+                  Visible results: {filteredStudents.length}
+                </Badge>
               </div>
             </div>
           </Card>
         </div>
 
-        <Card className="p-4 border shadow-none">
-          <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-            <div>
-              <p className="text-sm font-medium text-foreground">Invitation Activity</p>
-              <p className="text-xs text-muted-foreground">
-                Track group reservation approvals and pending invites across students.
-              </p>
-            </div>
-            <div className="flex flex-wrap gap-2">
-              <Badge variant="outline" className="bg-amber-50 text-amber-700 border-amber-200">
-                Pending Invites: {stats.pendingInvites}
-              </Badge>
-              <Badge variant="outline" className="bg-sky-50 text-sky-700 border-sky-200">
-                Students With Invite History: {stats.inviteActivity}
-              </Badge>
-            </div>
-          </div>
-        </Card>
-
-        
-        <Card className="p-4 border shadow-none">
-          <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <Filter className="w-4 h-4 text-muted-foreground"/>
-                <span className="text-sm font-medium">Filters</span>
+        <Card className="border shadow-none">
+          <div className="space-y-4 p-4">
+            <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
+              <div>
+                <div className="flex items-center gap-2">
+                  <Filter className="h-4 w-4 text-muted-foreground"/>
+                  <span className="text-sm font-semibold text-foreground">Filters</span>
+                </div>
+                <p className="mt-1 text-xs text-muted-foreground">
+                  Search students quickly by profile, payment, college, and account state.
+                </p>
               </div>
-              {(searchQuery || levelFilter !== "all" || paymentFilter !== "all" ||
-            collegeFilter !== "all" || statusFilter !== "all") && (<Button variant="ghost" size="sm" onClick={clearFilters}>
-                  Clear All
-                </Button>)}
+              <div className="flex flex-wrap items-center gap-2">
+                <Badge variant="outline" className="bg-muted/40">
+                  {filteredStudents.length} shown
+                </Badge>
+                {hasActiveFilters ? (
+                  <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
+                    {activeFilterCount} active filter{activeFilterCount > 1 ? "s" : ""}
+                  </Badge>
+                ) : null}
+                {hasActiveFilters && (<Button variant="ghost" size="sm" onClick={clearFilters}>
+                    Clear All
+                  </Button>)}
+              </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-3">
+          <div className="space-y-4">
+            <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-5">
               
-              <div className="relative lg:col-span-2">
+              <div className="relative xl:col-span-2">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground"/>
                 <Input placeholder="Search by name, matric no, email..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="pl-9"/>
               </div>
@@ -698,20 +692,20 @@ Current backend behavior is abnormal - password hashing should take <1 second.
                   <SelectItem value="inactive">Inactive</SelectItem>
                 </SelectContent>
               </Select>
-            </div>
 
-            
-            {colleges.length > 0 && (<Select value={collegeFilter} onValueChange={setCollegeFilter}>
-                <SelectTrigger className="max-w-xs">
-                  <SelectValue placeholder="All Colleges"/>
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Colleges</SelectItem>
-                  {colleges.map((college) => (<SelectItem key={college._id} value={college._id}>
-                      {college.code} - {college.name}
-                    </SelectItem>))}
-                </SelectContent>
-              </Select>)}
+              {colleges.length > 0 && (<Select value={collegeFilter} onValueChange={setCollegeFilter}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="All Colleges"/>
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Colleges</SelectItem>
+                    {colleges.map((college) => (<SelectItem key={college._id} value={college._id}>
+                        {college.code} - {college.name}
+                      </SelectItem>))}
+                  </SelectContent>
+                </Select>)}
+            </div>
+          </div>
           </div>
         </Card>
 
@@ -728,7 +722,20 @@ Current backend behavior is abnormal - password hashing should take <1 second.
           </div>)}
 
         
-        <Card className="border shadow-none">
+        <Card className="overflow-hidden border shadow-none">
+          <div className="border-b bg-muted/20 px-4 py-3">
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <p className="text-sm font-semibold text-foreground">Student Directory</p>
+                <p className="text-xs text-muted-foreground">
+                  Review records, login details, accommodation status, and quick actions.
+                </p>
+              </div>
+              <Badge variant="outline" className="w-fit bg-background">
+                {filteredStudents.length} of {students.length} students
+              </Badge>
+            </div>
+          </div>
           <div className="overflow-x-auto">
             {loading ? (<div className="p-12 text-center">
                 <RefreshCw className="w-8 h-8 animate-spin text-muted-foreground mx-auto mb-3"/>
@@ -743,7 +750,7 @@ Current backend behavior is abnormal - password hashing should take <1 second.
                 : "Get started by adding your first student"}
                 </p>
                 {!searchQuery && levelFilter === "all" && paymentFilter === "all" &&
-                collegeFilter === "all" && statusFilter === "all" && (<Button onClick={() => router.push("/admin/dashboard/students/create")}>
+                collegeFilter === "all" && statusFilter === "all" && (<Button onClick={() => setAddModalOpen(true)}>
                     <Plus className="w-4 h-4 mr-2"/>
                     Add First Student
                   </Button>)}

@@ -2,11 +2,10 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { Alert, FlatList, KeyboardAvoidingView, Modal, Platform, RefreshControl, ScrollView, StatusBar, StyleSheet, TouchableOpacity, View } from 'react-native';
 import { ActivityIndicator, Divider, IconButton, Text, TextInput, useTheme } from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { useLocalSearchParams, useNavigation, useRouter } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { studentAPI } from '../../../services/api';
 import { LoadingSpinner } from '../../../components/LoadingSpinner';
-import { StudentHero } from '../../../components/ui/StudentHero';
 import { getStudentPalette } from '../../../constants/design';
 import type { ReservationInvitePreview, Room } from '../../../types';
 
@@ -57,28 +56,19 @@ export default function RoomsScreen() {
     const [invitePreviews, setInvitePreviews] = useState<ReservationInvitePreview[]>([]);
     const [validatingFriends, setValidatingFriends] = useState(false);
     const router = useRouter();
-    const navigation = useNavigation();
     const theme = useTheme();
     const palette = getStudentPalette(theme.dark);
     const insets = useSafeAreaInsets();
     const roomStatusMeta = useMemo(() => getRoomStatusMeta(palette), [palette]);
+    const bottomContentPadding = Math.max(insets.bottom + 96, 116);
+    const headerTop = insets.top + 18;
+    const headerHeight = 74;
     const bedTone = useMemo(() => ({
         empty: palette.divider,
         occupied: palette.danger,
         you: palette.primaryStrong,
         friends: palette.primary,
     }), [palette]);
-
-    useEffect(() => {
-        navigation.setOptions({
-            title: 'Available Rooms',
-            headerLeft: () => (
-                <TouchableOpacity onPress={() => router.navigate('/(student)/hostels')} style={styles.backBtn}>
-                    <MaterialCommunityIcons name="arrow-left" size={24} color={palette.textPrimary} />
-                </TouchableOpacity>
-            ),
-        });
-    }, [navigation, palette.textPrimary, router]);
 
     const loadRooms = async () => {
         if (!hostelId) {
@@ -249,51 +239,46 @@ export default function RoomsScreen() {
 
     const listHeader = (
         <>
-            <StudentHero
-                insetTop={insets.top}
-                eyebrow="Room selection"
-                title="Choose the right room"
-                subtitle="Review capacity, open beds, and current occupancy before locking in a space for yourself or your friends."
-            >
-                <View className="mt-6 flex-row gap-2.5">
+            <View style={styles.headerBody}>
+                <View className="flex-row gap-2.5">
                     <View
                         style={[
                             styles.heroStatCard,
                             {
-                                backgroundColor: palette.heroGlass,
-                                borderColor: palette.heroBorder,
+                                backgroundColor: palette.surfaceMuted,
+                                borderColor: palette.border,
                             },
                         ]}
                     >
-                        <Text className="text-2xl font-extrabold text-white">{availableRoomCount}</Text>
-                        <Text className="text-[12px] font-bold leading-[18px] text-white/80">Open rooms</Text>
+                        <Text className="text-2xl font-extrabold" style={{ color: palette.textPrimary }}>{availableRoomCount}</Text>
+                        <Text className="text-[12px] font-bold leading-[18px]" style={{ color: palette.textSecondary }}>Open rooms</Text>
                     </View>
                     <View
                         style={[
                             styles.heroStatCard,
                             {
-                                backgroundColor: palette.heroGlass,
-                                borderColor: palette.heroBorder,
+                                backgroundColor: palette.surfaceMuted,
+                                borderColor: palette.border,
                             },
                         ]}
                     >
-                        <Text className="text-2xl font-extrabold text-white">{totalAvailableBeds}</Text>
-                        <Text className="text-[12px] font-bold leading-[18px] text-white/80">Beds left</Text>
+                        <Text className="text-2xl font-extrabold" style={{ color: palette.textPrimary }}>{totalAvailableBeds}</Text>
+                        <Text className="text-[12px] font-bold leading-[18px]" style={{ color: palette.textSecondary }}>Beds left</Text>
                     </View>
                     <View
                         style={[
                             styles.heroStatCard,
                             {
-                                backgroundColor: palette.heroGlass,
-                                borderColor: palette.heroBorder,
+                                backgroundColor: palette.surfaceMuted,
+                                borderColor: palette.border,
                             },
                         ]}
                     >
-                        <Text className="text-2xl font-extrabold text-white">{fullRoomCount}</Text>
-                        <Text className="text-[12px] font-bold leading-[18px] text-white/80">Full rooms</Text>
+                        <Text className="text-2xl font-extrabold" style={{ color: palette.textPrimary }}>{fullRoomCount}</Text>
+                        <Text className="text-[12px] font-bold leading-[18px]" style={{ color: palette.textSecondary }}>Full rooms</Text>
                     </View>
                 </View>
-            </StudentHero>
+            </View>
 
             <View style={styles.sectionHeader}>
                 <Text style={[styles.sectionLabel, { color: palette.textMuted }]}>Available options</Text>
@@ -307,9 +292,23 @@ export default function RoomsScreen() {
     if (error) {
         return (
             <View style={[styles.screen, { backgroundColor: palette.pageBackground }]}>
-                <StatusBar barStyle="light-content" backgroundColor={palette.hero} />
-                {listHeader}
-                <View style={styles.section}>
+                <StatusBar barStyle={theme.dark ? 'light-content' : 'dark-content'} backgroundColor={palette.surface} />
+                <View style={[styles.fixedHeaderShell, { backgroundColor: palette.surface, borderBottomColor: palette.border }]}>
+                    <View style={[styles.fixedHeader, { paddingTop: headerTop }]}>
+                        <View style={styles.fixedHeaderRow}>
+                            <TouchableOpacity
+                                onPress={() => router.replace('/(student)/hostels')}
+                                style={[styles.fixedBackButton, { backgroundColor: palette.surfaceMuted, borderColor: palette.border }]}
+                                activeOpacity={0.85}
+                            >
+                                <MaterialCommunityIcons name="arrow-left" size={20} color={palette.textPrimary} />
+                            </TouchableOpacity>
+                            <Text style={[styles.fixedTitle, { color: palette.textPrimary }]}>Available rooms</Text>
+                        </View>
+                    </View>
+                </View>
+                <View style={[styles.section, { paddingTop: headerTop + headerHeight }]}>
+                    {listHeader}
                     <View
                         style={[
                             styles.errorPanel,
@@ -346,12 +345,30 @@ export default function RoomsScreen() {
 
     return (
         <View style={[styles.screen, { backgroundColor: palette.pageBackground }]}>
-            <StatusBar barStyle="light-content" backgroundColor={palette.hero} />
+            <StatusBar barStyle={theme.dark ? 'light-content' : 'dark-content'} backgroundColor={palette.surface} />
+
+            <View style={[styles.fixedHeaderShell, { backgroundColor: palette.surface, borderBottomColor: palette.border }]}>
+                <View style={[styles.fixedHeader, { paddingTop: headerTop }]}>
+                    <View style={styles.fixedHeaderRow}>
+                        <TouchableOpacity
+                            onPress={() => router.replace('/(student)/hostels')}
+                            style={[styles.fixedBackButton, { backgroundColor: palette.surfaceMuted, borderColor: palette.border }]}
+                            activeOpacity={0.85}
+                        >
+                            <MaterialCommunityIcons name="arrow-left" size={20} color={palette.textPrimary} />
+                        </TouchableOpacity>
+                        <Text style={[styles.fixedTitle, { color: palette.textPrimary }]}>Available rooms</Text>
+                    </View>
+                </View>
+            </View>
 
             <FlatList
                 data={rooms}
                 keyExtractor={(item) => item._id}
-                contentContainerStyle={styles.listContent}
+                contentContainerStyle={{
+                    paddingTop: headerTop + headerHeight,
+                    paddingBottom: bottomContentPadding,
+                }}
                 showsVerticalScrollIndicator={false}
                 refreshControl={
                     <RefreshControl
@@ -714,94 +731,53 @@ const styles = StyleSheet.create({
     screen: {
         flex: 1,
     },
-    loadingScreen: {
-        flex: 1,
-    },
-    loadingBody: {
-        flex: 1,
-        alignItems: 'center',
-        justifyContent: 'center',
-    },
-    hero: {
-        backgroundColor: '#1565C0',
-        paddingHorizontal: 22,
-        paddingBottom: 30,
-        overflow: 'hidden',
-        borderBottomLeftRadius: 32,
-        borderBottomRightRadius: 32,
-    },
-    heroBubbleLarge: {
+    fixedHeaderShell: {
         position: 'absolute',
-        width: 220,
-        height: 220,
-        borderRadius: 110,
-        backgroundColor: 'rgba(255,255,255,0.06)',
-        top: -84,
-        right: -72,
+        top: 0,
+        left: 0,
+        right: 0,
+        zIndex: 20,
+        borderBottomWidth: 1,
+        borderBottomLeftRadius: 28,
+        borderBottomRightRadius: 28,
     },
-    heroBubbleSmall: {
-        position: 'absolute',
-        width: 112,
-        height: 112,
-        borderRadius: 56,
-        backgroundColor: 'rgba(255,255,255,0.07)',
-        bottom: -24,
-        left: -18,
+    fixedHeader: {
+        paddingHorizontal: 18,
+        paddingBottom: 20,
     },
-    heroBubbleMid: {
-        position: 'absolute',
-        width: 72,
-        height: 72,
-        borderRadius: 36,
-        backgroundColor: 'rgba(255,255,255,0.08)',
-        top: 42,
-        left: 150,
-    },
-    heroEyebrow: {
-        color: 'rgba(255,255,255,0.72)',
-        fontSize: 12,
-        fontWeight: '700',
-        textTransform: 'uppercase',
-        letterSpacing: 1.2,
-        marginBottom: 10,
-    },
-    heroTitle: {
-        color: '#FFFFFF',
-        fontSize: 29,
-        fontWeight: '800',
-        letterSpacing: -0.5,
-        marginBottom: 10,
-        maxWidth: 300,
-    },
-    heroCopy: {
-        color: 'rgba(255,255,255,0.8)',
-        fontSize: 14,
-        lineHeight: 21,
-        maxWidth: 336,
-    },
-    heroStats: {
+    fixedHeaderRow: {
         flexDirection: 'row',
-        gap: 10,
-        marginTop: 22,
+        alignItems: 'center',
+        gap: 12,
     },
-    heroStatCard: {
-        flex: 1,
-        borderRadius: 18,
-        paddingVertical: 14,
+    fixedBackButton: {
+        width: 38,
+        height: 38,
+        borderRadius: 12,
         borderWidth: 1,
         alignItems: 'center',
         justifyContent: 'center',
     },
-    heroStatNumber: {
-        color: '#FFFFFF',
-        fontSize: 20,
+    fixedTitle: {
+        fontSize: 28,
+        lineHeight: 34,
         fontWeight: '800',
-        marginBottom: 4,
+        letterSpacing: -0.6,
+        flexShrink: 1,
     },
-    heroStatLabel: {
-        color: 'rgba(255,255,255,0.76)',
-        fontSize: 11,
-        fontWeight: '700',
+    headerBody: {
+        paddingHorizontal: 18,
+        paddingTop: 18,
+    },
+    heroStatCard: {
+        flex: 1,
+        minHeight: 88,
+        borderRadius: 22,
+        paddingHorizontal: 14,
+        paddingVertical: 14,
+        borderWidth: 1,
+        alignItems: 'flex-start',
+        justifyContent: 'space-between',
     },
     sectionHeader: {
         paddingHorizontal: 18,
@@ -824,9 +800,6 @@ const styles = StyleSheet.create({
     section: {
         paddingHorizontal: 18,
         paddingTop: 22,
-    },
-    listContent: {
-        paddingBottom: 32,
     },
     roomCard: {
         marginHorizontal: 18,
@@ -1036,10 +1009,6 @@ const styles = StyleSheet.create({
         color: '#FFFFFF',
         fontSize: 14,
         fontWeight: '800',
-    },
-    backBtn: {
-        paddingHorizontal: 8,
-        paddingVertical: 4,
     },
     modalOverlay: {
         flex: 1,

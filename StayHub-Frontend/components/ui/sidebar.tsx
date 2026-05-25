@@ -146,6 +146,7 @@ function Sidebar({
   collapsible?: "offcanvas" | "icon" | "none";
 }) {
   const { isMobile, openMobile, setOpenMobile, state } = useSidebar();
+  const usesInsetLayout = variant === "inset";
 
   if (isMobile) {
     return (
@@ -176,11 +177,12 @@ function Sidebar({
       data-variant={variant}
       data-side={side}
       className={cn(
-        "relative hidden md:block",
-        state === "expanded" && "w-[var(--sidebar-width)]",
-        state === "collapsed" && collapsible === "icon" && "w-[var(--sidebar-width-icon)]",
-        state === "collapsed" && collapsible === "offcanvas" && "w-0",
-        state === "collapsed" && collapsible === "none" && "w-[var(--sidebar-width)]"
+        "peer relative hidden md:block",
+        usesInsetLayout && "w-0",
+        !usesInsetLayout && state === "expanded" && "w-[var(--sidebar-width)]",
+        !usesInsetLayout && state === "collapsed" && collapsible === "icon" && "w-[var(--sidebar-width-icon)]",
+        !usesInsetLayout && state === "collapsed" && collapsible === "offcanvas" && "w-0",
+        !usesInsetLayout && state === "collapsed" && collapsible === "none" && "w-[var(--sidebar-width)]",
       )}
     >
       <div
@@ -204,14 +206,29 @@ function Sidebar({
 }
 
 function SidebarInset({ className, ...props }: React.ComponentProps<"main">) {
-  const { state } = useSidebar();
+  const { state, isMobile } = useSidebar();
+  const insetOffset =
+    state === "collapsed"
+      ? "calc(var(--sidebar-width-icon) + 0.75rem)"
+      : "calc(var(--sidebar-width) + 0.75rem)";
+  const desktopInsetStyle = isMobile
+    ? undefined
+    : {
+        marginTop: "0.75rem",
+        marginRight: "0.75rem",
+        marginBottom: "0.75rem",
+        marginLeft: insetOffset,
+        width: `calc(100% - ${insetOffset} - 0.75rem)`,
+      };
 
   return (
     <main
       data-slot="sidebar-inset"
       data-state={state}
+      style={desktopInsetStyle}
       className={cn(
         "flex min-h-screen flex-1 flex-col bg-background transition-[margin] duration-200 ease-linear",
+        "md:rounded-2xl md:border md:shadow-sm",
         className
       )}
       {...props}
