@@ -392,14 +392,14 @@ export default function ReportsPage() {
       <DashboardLayout>
         <div className="space-y-6">
           
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div>
               <h1 className="text-2xl font-bold text-foreground">Reports & Analytics</h1>
               <p className="text-sm text-muted-foreground mt-1">
                 Comprehensive system reports and data exports
               </p>
             </div>
-            <div className="flex items-center gap-2 text-sm text-muted-foreground bg-card border border-border rounded-xl px-4 py-2">
+            <div className="flex w-full items-center gap-2 rounded-xl border border-border bg-card px-4 py-2 text-sm text-muted-foreground sm:w-auto">
               <Calendar className="h-4 w-4 text-primary"/>
               <span>{new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</span>
             </div>
@@ -459,7 +459,7 @@ export default function ReportsPage() {
 
           
           <Tabs defaultValue="students" className="space-y-4">
-            <TabsList className="grid w-full grid-cols-4">
+            <TabsList className="grid h-auto w-full grid-cols-2 gap-2 sm:grid-cols-4">
               <TabsTrigger value="students">
                 <Users className="h-4 w-4 mr-2"/>
                 Students
@@ -480,9 +480,9 @@ export default function ReportsPage() {
 
             
             <TabsContent value="students" className="space-y-4">
-              <div className="flex items-center justify-between">
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                 <h3 className="text-lg font-semibold">Student Registration Report</h3>
-                <Button onClick={exportStudentsReport} disabled={exporting}>
+                <Button onClick={exportStudentsReport} disabled={exporting} className="w-full sm:w-auto">
                   <Download className="h-4 w-4 mr-2"/>
                   {exporting ? 'Exporting...' : 'Export CSV'}
                 </Button>
@@ -530,12 +530,43 @@ export default function ReportsPage() {
                   </div>
                 </div>)}
 
-              <div className="rounded-2xl border border-border bg-card overflow-hidden">
+              <div className="overflow-hidden rounded-2xl border border-border bg-card">
                 <div className="px-5 py-4 border-b border-border">
                   <h4 className="font-semibold text-foreground">Recent Student Registrations</h4>
                   <p className="text-xs text-muted-foreground mt-0.5">Latest 10 registered students</p>
                 </div>
-                <Table>
+                <div className="grid gap-3 p-4 md:hidden">
+                  {students.slice(0, 10).map((student) => (<div key={student._id} className="rounded-2xl border border-border bg-background p-4">
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="min-w-0">
+                          <p className="font-medium text-foreground">{student.name}</p>
+                          <p className="font-mono text-xs text-muted-foreground">{student.matricNumber}</p>
+                        </div>
+                        <div>
+                          {student.paymentStatus === 'paid' && (<Badge variant="outline" className="bg-emerald-50 text-emerald-700 border-emerald-200 gap-1 text-xs">Paid</Badge>)}
+                          {student.paymentStatus === 'failed' && (<Badge variant="outline" className="bg-rose-50 text-rose-700 border-rose-200 gap-1 text-xs">Failed</Badge>)}
+                          {student.paymentStatus === 'pending' && (<Badge variant="outline" className="bg-amber-50 text-amber-700 border-amber-200 gap-1 text-xs">Pending</Badge>)}
+                        </div>
+                      </div>
+                      <div className="mt-3 grid gap-2 text-sm">
+                        <div>
+                          <p className="text-xs uppercase tracking-wide text-muted-foreground">Department</p>
+                          <p className="text-foreground">{student.department?.name || 'N/A'}</p>
+                        </div>
+                        <div>
+                          <p className="text-xs uppercase tracking-wide text-muted-foreground">Room</p>
+                          <p className="text-foreground">
+                            {student.roomAllocation ? `${student.roomAllocation.hostel.name} - Room ${student.roomAllocation.room.roomNumber}` : 'Not allocated'}
+                          </p>
+                        </div>
+                        <div>
+                          <p className="text-xs uppercase tracking-wide text-muted-foreground">Registered</p>
+                          <p className="text-foreground">{new Date(student.createdAt).toLocaleDateString()}</p>
+                        </div>
+                      </div>
+                    </div>))}
+                </div>
+                <div className="hidden overflow-x-auto md:block"><Table className="min-w-[840px]">
                   <TableHeader>
                     <TableRow className="bg-muted/30 hover:bg-muted/30">
                       <TableHead>Name</TableHead>
@@ -564,26 +595,48 @@ export default function ReportsPage() {
                         </TableCell>
                       </TableRow>))}
                   </TableBody>
-                </Table>
+                </Table></div>
               </div>
             </TabsContent>
 
             
             <TabsContent value="hostels" className="space-y-4">
-              <div className="flex items-center justify-between">
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                 <h3 className="text-lg font-semibold">Hostel Occupancy Report</h3>
-                <Button onClick={exportHostelsReport} disabled={exporting}>
+                <Button onClick={exportHostelsReport} disabled={exporting} className="w-full sm:w-auto">
                   <Download className="h-4 w-4 mr-2"/>
                   {exporting ? 'Exporting...' : 'Export CSV'}
                 </Button>
               </div>
 
-              <div className="rounded-2xl border border-border bg-card overflow-hidden">
+              <div className="overflow-hidden rounded-2xl border border-border bg-card">
                 <div className="px-5 py-4 border-b border-border">
                   <h4 className="font-semibold text-foreground">Hostel Statistics</h4>
                   <p className="text-xs text-muted-foreground mt-0.5">Detailed occupancy and capacity information</p>
                 </div>
-                <Table>
+                <div className="grid gap-3 p-4 md:hidden">
+                  {hostels.map((hostel) => {
+                    const occupancyRate = hostel.capacity > 0
+                        ? ((hostel.currentOccupants / hostel.capacity) * 100).toFixed(1)
+                        : '0';
+                    return (<div key={hostel._id} className="rounded-2xl border border-border bg-background p-4">
+                        <div className="flex items-start justify-between gap-3">
+                          <div>
+                            <p className="font-medium text-foreground">{hostel.name}</p>
+                            <p className="text-xs text-muted-foreground">{hostel.gender === 'male' ? 'Male hostel' : 'Female hostel'}</p>
+                          </div>
+                          <Badge variant="outline">{occupancyRate}% occupied</Badge>
+                        </div>
+                        <div className="mt-3 grid grid-cols-2 gap-3 text-sm">
+                          <div><p className="text-xs uppercase tracking-wide text-muted-foreground">Rooms</p><p>{hostel.totalRooms}</p></div>
+                          <div><p className="text-xs uppercase tracking-wide text-muted-foreground">Occupied</p><p>{hostel.occupiedRooms}</p></div>
+                          <div><p className="text-xs uppercase tracking-wide text-muted-foreground">Available</p><p>{hostel.availableRooms}</p></div>
+                          <div><p className="text-xs uppercase tracking-wide text-muted-foreground">Occupants</p><p>{hostel.currentOccupants}/{hostel.capacity}</p></div>
+                        </div>
+                      </div>);
+                })}
+                </div>
+                <div className="hidden overflow-x-auto md:block"><Table className="min-w-[880px]">
                   <TableHeader>
                     <TableRow className="bg-muted/30 hover:bg-muted/30">
                       <TableHead>Hostel Name</TableHead>
@@ -630,15 +683,15 @@ export default function ReportsPage() {
                         </TableRow>);
         })}
                   </TableBody>
-                </Table>
+                </Table></div>
               </div>
             </TabsContent>
 
             
             <TabsContent value="payments" className="space-y-4">
-              <div className="flex items-center justify-between">
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                 <h3 className="text-lg font-semibold">Payment Transaction Report</h3>
-                <Button onClick={exportPaymentsReport} disabled={exporting}>
+                <Button onClick={exportPaymentsReport} disabled={exporting} className="w-full sm:w-auto">
                   <Download className="h-4 w-4 mr-2"/>
                   {exporting ? 'Exporting...' : 'Export CSV'}
                 </Button>
@@ -669,12 +722,45 @@ export default function ReportsPage() {
                 </div>
               </div>
 
-              <div className="rounded-2xl border border-border bg-card overflow-hidden">
+              <div className="overflow-hidden rounded-2xl border border-border bg-card">
                 <div className="px-5 py-4 border-b border-border">
                   <h4 className="font-semibold text-foreground">Recent Transactions</h4>
                   <p className="text-xs text-muted-foreground mt-0.5">Latest 15 payment records</p>
                 </div>
-                <Table>
+                <div className="grid gap-3 p-4 md:hidden">
+                  {payments.slice(0, 15).map((payment) => (<div key={payment._id} className="rounded-2xl border border-border bg-background p-4">
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="min-w-0">
+                          <p className="font-medium text-foreground">{payment.student?.name || 'N/A'}</p>
+                          <p className="font-mono text-xs text-muted-foreground">{payment.student?.matricNumber || 'N/A'}</p>
+                        </div>
+                        <p className="shrink-0 text-sm font-semibold text-foreground">N{payment.amount.toLocaleString()}</p>
+                      </div>
+                      <div className="mt-3 grid gap-2 text-sm">
+                        <div>
+                          <p className="text-xs uppercase tracking-wide text-muted-foreground">Status</p>
+                          <div className="mt-1">
+                            {payment.status === 'completed' && (<Badge variant="outline" className="bg-emerald-50 text-emerald-700 border-emerald-200 gap-1 text-xs">Completed</Badge>)}
+                            {payment.status === 'pending' && (<Badge variant="outline" className="bg-amber-50 text-amber-700 border-amber-200 gap-1 text-xs">Pending</Badge>)}
+                            {payment.status === 'failed' && (<Badge variant="outline" className="bg-rose-50 text-rose-700 border-rose-200 gap-1 text-xs">Failed</Badge>)}
+                          </div>
+                        </div>
+                        <div>
+                          <p className="text-xs uppercase tracking-wide text-muted-foreground">Reference</p>
+                          <p className="truncate text-xs text-foreground">{payment.reference || 'None'}</p>
+                        </div>
+                        <div>
+                          <p className="text-xs uppercase tracking-wide text-muted-foreground">Date</p>
+                          <p className="text-foreground">
+                            {payment.paymentDate
+                        ? new Date(payment.paymentDate).toLocaleDateString()
+                        : new Date(payment.createdAt).toLocaleDateString()}
+                          </p>
+                        </div>
+                      </div>
+                    </div>))}
+                </div>
+                <div className="hidden overflow-x-auto md:block"><Table className="min-w-[820px]">
                   <TableHeader>
                     <TableRow className="bg-muted/30 hover:bg-muted/30">
                       <TableHead>Student</TableHead>
@@ -705,7 +791,7 @@ export default function ReportsPage() {
                         </TableCell>
                       </TableRow>))}
                   </TableBody>
-                </Table>
+                </Table></div>
               </div>
             </TabsContent>
 

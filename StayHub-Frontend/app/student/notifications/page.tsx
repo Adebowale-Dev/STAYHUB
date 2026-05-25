@@ -125,7 +125,7 @@ export default function StudentNotificationsPage() {
     return (<ProtectedRoute allowedRoles={['student']}>
       <DashboardLayout>
         <div className="space-y-6">
-          <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
             <div>
               <h2 className="text-3xl font-bold tracking-tight text-foreground">
                 Notifications
@@ -134,21 +134,21 @@ export default function StudentNotificationsPage() {
                 Invitation updates, reservation reminders, and profile alerts.
               </p>
             </div>
-            <div className="flex flex-wrap gap-2">
-              <Button variant={filter === 'all' ? 'default' : 'outline'} onClick={() => setFilter('all')}>
+            <div className="grid w-full grid-cols-1 gap-2 sm:flex sm:w-auto sm:flex-wrap">
+              <Button className="w-full sm:w-auto" variant={filter === 'all' ? 'default' : 'outline'} onClick={() => setFilter('all')}>
                 All
               </Button>
-              <Button variant={filter === 'unread' ? 'default' : 'outline'} onClick={() => setFilter('unread')}>
+              <Button className="w-full sm:w-auto" variant={filter === 'unread' ? 'default' : 'outline'} onClick={() => setFilter('unread')}>
                 Unread ({unreadCount})
               </Button>
-              <Button variant="outline" onClick={handleMarkAllRead} disabled={markingAll || unreadCount === 0}>
+              <Button className="w-full sm:w-auto" variant="outline" onClick={handleMarkAllRead} disabled={markingAll || unreadCount === 0}>
                 <CheckCheck className="mr-2 h-4 w-4"/>
                 {markingAll ? 'Marking...' : 'Mark All Read'}
               </Button>
             </div>
           </div>
 
-          <div className="grid gap-4 md:grid-cols-3">
+          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
             <Card>
               <CardHeader className="pb-3">
                 <CardDescription>Total Notifications</CardDescription>
@@ -189,7 +189,7 @@ export default function StudentNotificationsPage() {
             const visuals = getNotificationVisuals(notification.type);
             const Icon = visuals.icon;
             return (<button key={notification._id} type="button" onClick={() => handleOpenNotification(notification)} className="w-full rounded-2xl border border-border bg-background px-4 py-4 text-left transition-all hover:border-primary/30 hover:bg-muted/20">
-                      <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+                      <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
                         <div className="flex items-start gap-3">
                           <div className={`mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-muted ${visuals.iconClassName}`}>
                             <Icon className="h-4 w-4"/>

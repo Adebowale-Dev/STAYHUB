@@ -233,7 +233,7 @@ export default function StudentPaymentContent() {
     return (
         <ProtectedRoute allowedRoles={['student']}>
             <DashboardLayout>
-                <div className="space-y-6 max-w-4xl mx-auto">
+                <div className="mx-auto max-w-5xl space-y-6">
                     <div>
                         <h2 className="text-3xl font-bold tracking-tight text-foreground">
                             Hostel Payment
@@ -287,7 +287,7 @@ export default function StudentPaymentContent() {
                                         If you&apos;ve completed payment on the payment gateway, it may take a few minutes to reflect.
                                         {paymentInfo?.reference && (<span> Reference: <code className="bg-orange-100 px-1 rounded">{paymentInfo.reference}</code></span>)}
                                     </p>
-                                    <div className="flex gap-2 mt-3">
+                                    <div className="mt-3 flex flex-col gap-2 sm:flex-row">
                                         <Button size="sm" variant="outline" onClick={() => loadPaymentInfo()} className="text-orange-700 border-orange-300 hover:bg-orange-100">
                                             Refresh Status
                                         </Button>
@@ -319,7 +319,7 @@ export default function StudentPaymentContent() {
                         </Alert>
                     )}
 
-                    <div className="grid gap-6 md:grid-cols-2">
+                    <div className="grid gap-6 xl:grid-cols-2">
                         <Card>
                             <CardHeader>
                                 <CardTitle className="flex items-center gap-2">

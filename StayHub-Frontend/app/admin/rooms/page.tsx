@@ -404,45 +404,40 @@ function RoomsPageContent() {
             setDeleting(false);
         }
     };
-    return (<div className="min-h-screen bg-background">
-      
-      <div className="sticky top-0 z-10 border-b bg-card/95 backdrop-blur supports-backdrop-filter:bg-card/60">
-        <div className="max-w-7xl mx-auto px-4 py-4">
-          <div className="flex items-center justify-between gap-4">
+    return (<div className="space-y-6">
+      <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
             <div className="min-w-0 flex-1">
               <h1 className="text-2xl font-bold text-foreground">Rooms Management</h1>
               <p className="text-sm text-muted-foreground mt-1">
                 Manage all rooms and their occupancy
               </p>
             </div>
-            <div className="flex items-center gap-2">
-              <Button variant="outline" size="sm" onClick={loadData} disabled={loading}>
+            <div className="grid w-full grid-cols-2 gap-2 sm:flex sm:w-auto sm:flex-wrap sm:items-center">
+              <Button variant="outline" size="sm" className="w-full sm:w-auto" onClick={loadData} disabled={loading}>
                 <RefreshCw className={`w-4 h-4 mr-2 ${loading ? "animate-spin" : ""}`}/>
                 Refresh
               </Button>
-              <Button variant="outline" size="sm" onClick={handleExportRooms} disabled={isExporting || filteredRooms.length === 0}>
+              <Button variant="outline" size="sm" className="w-full sm:w-auto" onClick={handleExportRooms} disabled={isExporting || filteredRooms.length === 0}>
                 <Download className="w-4 h-4 mr-2"/>
                 {isExporting ? "Exporting..." : "Export"}
               </Button>
-              <Button variant="outline" size="sm" onClick={() => {
+              <Button variant="outline" size="sm" className="w-full sm:w-auto" onClick={() => {
                 resetImportState();
                 setImportModalOpen(true);
             }}>
                 <Upload className="w-4 h-4 mr-2"/>
                 Import
               </Button>
-              <Button size="sm" onClick={() => setAddModalOpen(true)} className="bg-primary hover:bg-primary/90">
+              <Button size="sm" className="w-full sm:w-auto bg-primary hover:bg-primary/90" onClick={() => setAddModalOpen(true)}>
                 <Plus className="w-4 h-4 mr-2"/>
                 Add Room
               </Button>
             </div>
           </div>
-        </div>
-      </div>
 
-      <div className="max-w-7xl mx-auto px-4 py-6">
+      <div>
         
-        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-4 mb-6">
+        <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-7">
           <Card className="p-4 hover:shadow-md transition-shadow">
             <div className="flex items-center justify-between">
               <div>
@@ -521,7 +516,7 @@ function RoomsPageContent() {
         
         <Card className="mb-6">
           <div className="p-4">
-            <div className="flex flex-col md:flex-row gap-4">
+            <div className="flex flex-col gap-4 md:flex-row">
               <div className="flex-1">
                 <div className="relative">
                   <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4"/>
@@ -530,7 +525,7 @@ function RoomsPageContent() {
               </div>
 
               <Select value={genderFilter} onValueChange={setGenderFilter}>
-                <SelectTrigger className="w-full md:w-36">
+                <SelectTrigger className="w-full md:w-40">
                   <Users className="w-4 h-4 mr-2"/>
                   <SelectValue placeholder="Gender"/>
                 </SelectTrigger>
@@ -642,7 +637,7 @@ function RoomsPageContent() {
                       {group.rooms.length === 0 ? (<div className="py-8 text-center text-muted-foreground">
                           <DoorOpen className="w-12 h-12 mx-auto mb-2 opacity-50"/>
                           <p>No rooms in this hostel yet</p>
-                        </div>) : (<Table>
+                        </div>) : (<div className="overflow-x-auto"><Table className="min-w-[760px]">
                           <TableHeader>
                             <TableRow className="bg-muted/30">
                               <TableHead className="w-12">#</TableHead>
@@ -702,7 +697,7 @@ function RoomsPageContent() {
                                 </TableCell>
                               </TableRow>))}
                           </TableBody>
-                        </Table>)}
+                        </Table></div>)}
                     </AccordionContent>
                   </AccordionItem>))}
               </Accordion>)}

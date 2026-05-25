@@ -175,10 +175,10 @@ export default function StudentDashboard() {
       <DashboardLayout>
         <div className="space-y-6">
           
-          <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
             <div>
               <h1 className="text-2xl font-bold text-foreground">
-                Welcome back, {dashboardData?.profile?.firstName || dashboardData?.student?.name?.split(' ')[0] || 'Student'} 👋
+                Welcome back, {dashboardData?.profile?.firstName || dashboardData?.student?.name?.split(' ')[0] || 'Student'}
               </h1>
               <p className="text-sm text-muted-foreground mt-1">
                 {(dashboardData?.profile?.matricNo || dashboardData?.student?.matricNumber) && `${dashboardData?.profile?.matricNo || dashboardData?.student?.matricNumber} • `}
@@ -204,7 +204,7 @@ export default function StudentDashboard() {
             <div className="h-2.5 w-full rounded-full bg-muted overflow-hidden mb-4">
               <div className="h-full rounded-full bg-gradient-to-r from-primary to-primary/80 transition-all duration-700" style={{ width: `${completionProgress}%` }}/>
             </div>
-            <div className="grid gap-3 md:grid-cols-3">
+            <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
               {[
             {
                 label: 'Profile',
@@ -253,7 +253,7 @@ export default function StudentDashboard() {
           </div>
 
           
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
             
             <div className="rounded-2xl border border-border bg-card p-5 hover:shadow-md transition-all duration-200">
               <div className="flex items-start justify-between mb-3">

@@ -128,7 +128,7 @@ export default function PorterRoomsPage() {
           </div>
 
           
-          <div className="grid gap-4 md:grid-cols-4">
+          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
             <Card>
               <CardHeader className="pb-3">
                 <CardDescription>Total Rooms</CardDescription>
@@ -208,8 +208,27 @@ export default function PorterRoomsPage() {
               {filteredRooms.length === 0 ? (<div className="text-center py-12">
                   <DoorOpen className="h-12 w-12 mx-auto text-muted-foreground mb-4"/>
                   <p className="text-muted-foreground">No rooms found</p>
-                </div>) : (<div className="rounded-md border">
-                  <Table>
+                </div>) : (<>
+                  <div className="grid gap-3 md:hidden">
+                    {filteredRooms.map((room) => (<div key={room._id} className="rounded-2xl border border-border bg-background p-4">
+                        <div className="flex items-start justify-between gap-3">
+                          <div className="flex items-center gap-2">
+                            <DoorOpen className="h-4 w-4 text-muted-foreground"/>
+                            <p className="font-medium text-foreground">{room.roomNumber}</p>
+                          </div>
+                          {getOccupancyBadge(room)}
+                        </div>
+                        <div className="mt-3 grid grid-cols-2 gap-3 text-sm">
+                          <div><p className="text-xs uppercase tracking-wide text-muted-foreground">Floor</p><p>{room.floor || '-'}</p></div>
+                          <div><p className="text-xs uppercase tracking-wide text-muted-foreground">Capacity</p><p>{room.capacity}</p></div>
+                          <div><p className="text-xs uppercase tracking-wide text-muted-foreground">Occupied</p><p>{getOccupiedBeds(room)}</p></div>
+                          <div><p className="text-xs uppercase tracking-wide text-muted-foreground">Available</p><p className="text-green-600">{getAvailableBeds(room)}</p></div>
+                        </div>
+                      </div>))}
+                  </div>
+                  <div className="hidden rounded-md border md:block">
+                    <div className="overflow-x-auto">
+                  <Table className="min-w-[760px]">
                     <TableHeader>
                       <TableRow>
                         <TableHead>Room Number</TableHead>
@@ -248,7 +267,8 @@ export default function PorterRoomsPage() {
                         </TableRow>))}
                     </TableBody>
                   </Table>
-                </div>)}
+                    </div>
+                  </div></>)}
             </CardContent>
           </Card>
 

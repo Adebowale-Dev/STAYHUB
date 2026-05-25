@@ -341,45 +341,40 @@ function HostelsPageContent() {
             setIsImporting(false);
         }
     };
-    return (<div className="min-h-screen bg-background">
-      
-      <div className="sticky top-0 z-10 border-b bg-card/95 backdrop-blur supports-backdrop-filter:bg-card/60">
-        <div className="max-w-7xl mx-auto px-4 py-4">
-          <div className="flex items-center justify-between gap-4">
+    return (<div className="space-y-6">
+      <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
             <div className="min-w-0 flex-1">
               <h1 className="text-2xl font-bold text-foreground">Hostels Management</h1>
               <p className="text-sm text-muted-foreground mt-1">
                 Manage all hostels and their accommodations
               </p>
             </div>
-            <div className="flex items-center gap-2">
-              <Button variant="outline" size="sm" onClick={loadHostels} disabled={loading}>
+            <div className="grid w-full grid-cols-2 gap-2 sm:flex sm:w-auto sm:flex-wrap sm:items-center">
+              <Button variant="outline" size="sm" className="w-full sm:w-auto" onClick={loadHostels} disabled={loading}>
                 <RefreshCw className={`w-4 h-4 mr-2 ${loading ? "animate-spin" : ""}`}/>
                 Refresh
               </Button>
-              <Button variant="outline" size="sm" onClick={handleExportHostels} disabled={isExporting || filteredHostels.length === 0}>
+              <Button variant="outline" size="sm" className="w-full sm:w-auto" onClick={handleExportHostels} disabled={isExporting || filteredHostels.length === 0}>
                 <Download className="w-4 h-4 mr-2"/>
                 {isExporting ? "Exporting..." : "Export"}
               </Button>
-              <Button variant="outline" size="sm" onClick={() => {
+              <Button variant="outline" size="sm" className="w-full sm:w-auto" onClick={() => {
                 resetImportState();
                 setImportModalOpen(true);
             }}>
                 <Upload className="w-4 h-4 mr-2"/>
                 Import
               </Button>
-              <Button size="sm" onClick={() => setAddModalOpen(true)}>
+              <Button size="sm" className="w-full sm:w-auto" onClick={() => setAddModalOpen(true)}>
                 <Plus className="w-4 h-4 mr-2"/>
                 Add Hostel
               </Button>
             </div>
           </div>
-        </div>
-      </div>
 
-      <div className="max-w-7xl mx-auto px-4 py-6 space-y-6">
+      <div className="space-y-6">
         
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-7 gap-3">
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-7">
           <Card className="p-4 border shadow-none hover:shadow-md transition-shadow">
             <div className="flex items-center gap-3">
               <div className="p-2 bg-blue-500/10 rounded-lg">
@@ -468,7 +463,7 @@ function HostelsPageContent() {
         
         <Card className="p-4 border shadow-none">
           <div className="space-y-4">
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <div className="flex items-center gap-2">
                 <Filter className="w-4 h-4 text-muted-foreground"/>
                 <span className="text-sm font-medium">Filters</span>
@@ -478,7 +473,7 @@ function HostelsPageContent() {
                 </Button>)}
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
               
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground"/>
@@ -526,7 +521,7 @@ function HostelsPageContent() {
           </div>)}
 
         
-        <Card className="border shadow-none">
+        <Card className="overflow-hidden border shadow-none">
           <div className="overflow-x-auto">
             {loading ? (<div className="p-12 text-center">
                 <RefreshCw className="w-8 h-8 animate-spin text-muted-foreground mx-auto mb-3"/>
@@ -544,7 +539,7 @@ function HostelsPageContent() {
                     Add First Hostel
                   </Button>)}
               </div>) : (<>
-                <Table>
+                <Table className="min-w-[720px]">
                   <TableHeader>
                     <TableRow className="bg-muted/50">
                       <TableHead className="w-12 font-semibold">#</TableHead>

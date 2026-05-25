@@ -82,7 +82,7 @@ function CollegeDetailContent() {
     if (error || !college) {
         return (<ErrorState message={error || "College not found"} onBack={() => router.push("/admin/colleges")} backLabel="Back to Colleges"/>);
     }
-    return (<div className="min-h-screen bg-background">
+    return (<div className="space-y-4">
       
       <PageHeader code={college.code} title={college.name} isActive={college.isActive} backUrl="/admin/colleges" backLabel="Back" actionButton={{
             label: "Add Department",
@@ -90,7 +90,7 @@ function CollegeDetailContent() {
             onClick: () => router.push(`/admin/colleges/${collegeId}/departments/create`),
         }}/>
 
-      <div className="max-w-7xl mx-auto px-2 sm:px-4 py-4 space-y-4">
+      <div className="space-y-4 px-1 sm:px-2">
         
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
           <StatCard icon={GraduationCap} iconColor="text-green-600" iconBgColor="bg-green-500/10" value={departments.length} label="Departments"/>
@@ -102,7 +102,7 @@ function CollegeDetailContent() {
 
         
         <div className="space-y-3">
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
             <div>
               <h2 className="text-sm font-semibold text-foreground">Departments</h2>
               <p className="text-xs text-muted-foreground mt-0.5">

@@ -93,11 +93,8 @@ function CollegesPageContent() {
             setIsDeleting(false);
         }
     };
-    return (<div className="min-h-screen bg-background">
-      
-      <div className="sticky top-0 z-10 border-b bg-card/95 backdrop-blur supports-backdrop-filter:bg-card/60">
-        <div className="max-w-7xl mx-auto px-2 sm:px-4 py-3">
-          <div className="flex items-center justify-between gap-2">
+    return (<div className="space-y-4">
+      <div className="flex items-center justify-between gap-2">
             <div className="min-w-0 flex-1">
               <h1 className="text-sm md:text-lg font-semibold text-foreground truncate">
                 Colleges & Departments
@@ -106,16 +103,14 @@ function CollegesPageContent() {
                 Manage academic colleges and their departments
               </p>
             </div>
-            {isSuperAdmin && (<Button onClick={() => setCreateModalOpen(true)} className="h-8 md:h-9 text-xs shrink-0">
+            {isSuperAdmin && (<Button onClick={() => setCreateModalOpen(true)} className="h-8 shrink-0 text-xs md:h-9">
                 <Plus className="w-3.5 h-3.5 mr-1 md:mr-2"/>
                 <span className="hidden sm:inline">Create College</span>
                 <span className="sm:hidden">Create</span>
               </Button>)}
           </div>
-        </div>
-      </div>
 
-      <div className="max-w-7xl mx-auto px-2 sm:px-4 py-4 space-y-4">
+      <div className="space-y-4">
         
         {statistics && (<div className="grid grid-cols-1 md:grid-cols-4 gap-3">
             <Card className="p-3 border shadow-none">

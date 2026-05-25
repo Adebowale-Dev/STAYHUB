@@ -381,7 +381,7 @@ export default function StudentProfile() {
                       
                     </div>
                   </div>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
+                  <div className="grid grid-cols-1 gap-3 text-sm sm:grid-cols-2">
                     <div className="flex items-center gap-2 text-gray-700 dark:text-gray-300">
                       <GraduationCap className="h-4 w-4 text-blue-500"/>
                       <span className="font-medium">Matric:</span>
@@ -420,7 +420,7 @@ export default function StudentProfile() {
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="grid gap-4 md:grid-cols-3">
+                <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
                   <div className="space-y-2">
                     <Label className="flex items-center gap-2 text-gray-600 dark:text-gray-400 text-sm">
                       <Building2 className="h-4 w-4"/>
@@ -476,7 +476,7 @@ export default function StudentProfile() {
               </CardContent>
             </Card>)}
 
-          <div className="grid gap-6 md:grid-cols-2">
+          <div className="grid gap-6 xl:grid-cols-2">
             
             <Card>
               <CardHeader>

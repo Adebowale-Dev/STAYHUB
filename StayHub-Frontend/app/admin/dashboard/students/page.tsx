@@ -509,23 +509,23 @@ Current backend behavior is abnormal - password hashing should take <1 second.
             Manage all students across colleges and departments
           </p>
         </div>
-        <div className="flex flex-wrap items-center gap-2">
-          <Button variant="outline" size="sm" onClick={loadStudents} disabled={loading}>
+        <div className="grid w-full grid-cols-2 gap-2 sm:flex sm:w-auto sm:flex-wrap sm:items-center">
+          <Button variant="outline" size="sm" className="w-full sm:w-auto" onClick={loadStudents} disabled={loading}>
             <RefreshCw className={`w-4 h-4 mr-2 ${loading ? "animate-spin" : ""}`}/>
             Refresh
           </Button>
-          <Button variant="outline" size="sm" onClick={handleExportStudents} disabled={isExporting || filteredStudents.length === 0}>
+          <Button variant="outline" size="sm" className="w-full sm:w-auto" onClick={handleExportStudents} disabled={isExporting || filteredStudents.length === 0}>
             <Download className="w-4 h-4 mr-2"/>
             {isExporting ? "Exporting..." : "Export"}
           </Button>
-          <Button variant="outline" size="sm" onClick={() => {
+          <Button variant="outline" size="sm" className="w-full sm:w-auto" onClick={() => {
             resetImportState();
             setImportModalOpen(true);
         }}>
             <Upload className="w-4 h-4 mr-2"/>
             Import
           </Button>
-          <Button size="sm" onClick={() => setAddModalOpen(true)}>
+          <Button size="sm" className="w-full sm:w-auto" onClick={() => setAddModalOpen(true)}>
             <Plus className="w-4 h-4 mr-2"/>
             Add Student
           </Button>
@@ -535,7 +535,7 @@ Current backend behavior is abnormal - password hashing should take <1 second.
       <div className="space-y-6">
         
         <div className="grid grid-cols-1 gap-4 xl:grid-cols-[1.8fr,1fr]">
-          <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-4">
             <Card className="border shadow-none">
               <div className="p-4">
                 <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-xl bg-blue-500/10">
@@ -586,7 +586,7 @@ Current backend behavior is abnormal - password hashing should take <1 second.
                 </p>
               </div>
 
-              <div className="grid grid-cols-2 gap-2">
+              <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
                 <div className="rounded-lg border bg-muted/20 px-3 py-2">
                   <p className="text-xs text-muted-foreground">Inactive</p>
                   <p className="mt-1 text-lg font-semibold text-foreground">{stats.inactive}</p>
@@ -645,9 +645,9 @@ Current backend behavior is abnormal - password hashing should take <1 second.
             </div>
 
           <div className="space-y-4">
-            <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-5">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-5">
               
-              <div className="relative xl:col-span-2">
+              <div className="relative sm:col-span-2 xl:col-span-2">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground"/>
                 <Input placeholder="Search by name, matric no, email..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="pl-9"/>
               </div>
@@ -755,6 +755,92 @@ Current backend behavior is abnormal - password hashing should take <1 second.
                     Add First Student
                   </Button>)}
               </div>) : (<>
+                <div className="space-y-3 p-4 md:hidden">
+                  {filteredStudents.map((student, index) => {
+                const latestInvitation = student.invitationHistory?.length
+                    ? student.invitationHistory[student.invitationHistory.length - 1]
+                    : null;
+                return (<Card key={student._id} className="border shadow-none">
+                        <div className="space-y-4 p-4">
+                          <div className="flex items-start justify-between gap-3">
+                            <div className="min-w-0 flex-1">
+                              <p className="text-sm font-semibold text-foreground">
+                                {index + 1}. {student.firstName} {student.lastName}
+                              </p>
+                              <p className="mt-1 font-mono text-xs font-semibold text-primary">
+                                {student.matricNo}
+                              </p>
+                              <p className="mt-1 break-all text-xs text-muted-foreground">
+                                {student.email}
+                              </p>
+                            </div>
+                            <Badge variant={student.isActive ? "default" : "secondary"} className="shrink-0 text-[10px]">
+                              {student.isActive ? "Active" : "Inactive"}
+                            </Badge>
+                          </div>
+
+                          <div className="grid grid-cols-2 gap-2 text-sm">
+                            <div className="rounded-lg border bg-muted/20 px-3 py-2">
+                              <p className="text-[11px] uppercase tracking-wide text-muted-foreground">College</p>
+                              <p className="mt-1 font-medium text-foreground">{student.college?.code || "-"}</p>
+                            </div>
+                            <div className="rounded-lg border bg-muted/20 px-3 py-2">
+                              <p className="text-[11px] uppercase tracking-wide text-muted-foreground">Department</p>
+                              <p className="mt-1 font-medium text-foreground">{student.department?.code || "-"}</p>
+                            </div>
+                            <div className="rounded-lg border bg-muted/20 px-3 py-2">
+                              <p className="text-[11px] uppercase tracking-wide text-muted-foreground">Level</p>
+                              <p className="mt-1 font-medium text-foreground">{student.level}L</p>
+                            </div>
+                            <div className="rounded-lg border bg-muted/20 px-3 py-2">
+                              <p className="text-[11px] uppercase tracking-wide text-muted-foreground">Payment</p>
+                              <Badge variant="outline" className={`mt-1 text-[10px] font-medium ${getPaymentStatusColor(student.paymentStatus)}`}>
+                                {student.paymentStatus}
+                              </Badge>
+                            </div>
+                          </div>
+
+                          <div className="rounded-lg border bg-muted/20 px-3 py-3">
+                            <p className="text-[11px] uppercase tracking-wide text-muted-foreground">Accommodation</p>
+                            {student.assignedHostel ? (<div className="mt-1 space-y-1">
+                                <p className="font-medium text-foreground">{student.assignedHostel.name}</p>
+                                <p className="text-xs text-muted-foreground">
+                                  Room {student.assignedRoom?.roomNumber || "-"}
+                                </p>
+                                {student.invitationHistory?.length ? (<p className="text-xs text-muted-foreground">
+                                    Invites: {student.invitationHistory.length}
+                                    {latestInvitation?.action ? ` • Latest: ${latestInvitation.action}` : ""}
+                                  </p>) : null}
+                              </div>) : (<p className="mt-1 text-sm text-muted-foreground">No room assigned yet</p>)}
+                          </div>
+
+                          <div className="grid grid-cols-2 gap-2">
+                            <Button variant="outline" size="sm" className="justify-start" onClick={() => {
+                        setStudentToView(student);
+                        setViewLoginModalOpen(true);
+                    }}>
+                              <Eye className="mr-2 h-4 w-4"/>
+                              View Login
+                            </Button>
+                            <Button variant="outline" size="sm" className="justify-start" onClick={() => handleEditClick(student)}>
+                              <Edit className="mr-2 h-4 w-4"/>
+                              Edit
+                            </Button>
+                            <Button variant="outline" size="sm" className="justify-start" onClick={() => handleResetPasswordClick(student)}>
+                              <KeyRound className="mr-2 h-4 w-4"/>
+                              Reset
+                            </Button>
+                            <Button variant="outline" size="sm" className="justify-start text-destructive hover:text-destructive" onClick={() => handleDeleteClick(student._id, student.firstName, student.lastName, student.matricNo)}>
+                              <Trash2 className="mr-2 h-4 w-4"/>
+                              Delete
+                            </Button>
+                          </div>
+                        </div>
+                      </Card>);
+            })}
+                </div>
+
+                <div className="hidden md:block">
                 <Table>
                   <TableHeader>
                     <TableRow className="bg-muted/50">
@@ -865,10 +951,11 @@ Current backend behavior is abnormal - password hashing should take <1 second.
                       </TableRow>))}
                   </TableBody>
                 </Table>
+                </div>
 
                 
                 <div className="px-4 py-3 border-t bg-muted/20">
-                  <p className="text-sm text-muted-foreground">
+                  <p className="text-center text-sm text-muted-foreground md:text-left">
                     Showing <span className="font-medium text-foreground">{filteredStudents.length}</span> of{" "}
                     <span className="font-medium text-foreground">{students.length}</span> students
                   </p>

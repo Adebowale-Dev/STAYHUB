@@ -387,30 +387,26 @@ function AdminNotificationsPageContent() {
         }
     };
     return (<DashboardLayout>
-      <div className="min-h-screen bg-background">
-        <div className="sticky top-0 z-10 border-b bg-card/95 backdrop-blur supports-backdrop-filter:bg-card/60">
-          <div className="mx-auto max-w-7xl px-4 py-4">
-            <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
+      <div className="space-y-6">
+        <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
               <div>
                 <h1 className="text-xl font-semibold text-foreground">Admin Notifications</h1>
                 <p className="text-sm text-muted-foreground">
                   Send test pushes, broadcast urgent hostel updates, and track delivery history.
                 </p>
               </div>
-              <Badge variant="outline" className="gap-1">
+              <Badge variant="outline" className="w-fit gap-1">
                 <BellRing className="h-3.5 w-3.5"/>
                 Student inbox + push + email
               </Badge>
             </div>
-          </div>
-        </div>
 
-        <div className="mx-auto max-w-7xl space-y-6 px-4 py-6">
+        <div className="space-y-6">
           {notificationApiMessage && (<div className="rounded-2xl border border-amber-500/20 bg-amber-500/10 px-4 py-3 text-sm text-amber-700">
               {notificationApiMessage}
             </div>)}
 
-          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
             <Card className="shadow-none">
               <CardContent className="flex items-center gap-3 pt-6">
                 <div className="rounded-xl bg-primary/10 p-3">
@@ -755,9 +751,9 @@ function AdminNotificationsPageContent() {
                   Review what was sent, who it targeted, and how delivery performed.
                 </CardDescription>
               </div>
-              <div className="flex items-center gap-2">
+              <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
                 <Select value={historyFilter} onValueChange={(value) => setHistoryFilter(value as 'all' | 'test' | 'broadcast')}>
-                  <SelectTrigger className="w-[180px]">
+                  <SelectTrigger className="w-full sm:w-[180px]">
                     <SelectValue placeholder="Filter history"/>
                   </SelectTrigger>
                   <SelectContent>
@@ -766,7 +762,7 @@ function AdminNotificationsPageContent() {
                     <SelectItem value="broadcast">Broadcast only</SelectItem>
                   </SelectContent>
                 </Select>
-                <Button variant="outline" onClick={() => loadHistory(historyFilter)}>
+                <Button className="w-full sm:w-auto" variant="outline" onClick={() => loadHistory(historyFilter)}>
                   <History className="mr-2 h-4 w-4"/>
                   Refresh
                 </Button>
@@ -777,7 +773,7 @@ function AdminNotificationsPageContent() {
                   Loading notification tools...
                 </div>) : history.length === 0 ? (<div className="rounded-xl border border-dashed p-8 text-center text-sm text-muted-foreground">
                   No notification campaigns yet.
-                </div>) : (<Table>
+                </div>) : (<div className="overflow-x-auto"><Table className="min-w-[960px]">
                   <TableHeader>
                     <TableRow>
                       <TableHead>Campaign</TableHead>
@@ -843,7 +839,7 @@ function AdminNotificationsPageContent() {
                         </TableCell>
                       </TableRow>))}
                   </TableBody>
-                </Table>)}
+                </Table></div>)}
             </CardContent>
           </Card>
         </div>

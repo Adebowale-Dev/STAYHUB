@@ -182,21 +182,21 @@ export default function PortersPage() {
       <DashboardLayout>
         <div className="space-y-6">
           
-          <div className="flex justify-between items-start">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
             <div>
               <h1 className="text-2xl font-bold text-foreground">Porter Management</h1>
               <p className="text-sm text-muted-foreground mt-1">
                 Create porter accounts and manage hostel assignments
               </p>
             </div>
-            <Button onClick={() => setCreateDialogOpen(true)} className="gap-2">
+            <Button onClick={() => setCreateDialogOpen(true)} className="w-full gap-2 sm:w-auto">
               <UserPlus className="h-4 w-4"/>
               Create Porter
             </Button>
           </div>
 
           
-          <div className="grid gap-4 md:grid-cols-3">
+          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
             <div className="rounded-2xl bg-card border border-border p-5 hover:shadow-md transition-all duration-200">
               <div className="flex items-start justify-between">
                 <div>
@@ -259,7 +259,46 @@ export default function PortersPage() {
                 </div>
                 <p className="font-semibold text-muted-foreground">No porters found</p>
                 <p className="text-xs text-muted-foreground/60 mt-1">Create your first porter account</p>
-              </div>) : (<Table>
+              </div>) : (<>
+                <div className="grid gap-3 p-4 md:hidden">
+                  {filteredPorters.map((porter) => (<div key={porter._id} className="rounded-2xl border border-border bg-background p-4">
+                      <div className="flex items-start gap-3">
+                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-violet-100 text-sm font-bold text-violet-600 dark:bg-violet-900/30">
+                          {porter.name.charAt(0).toUpperCase()}
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <p className="font-medium text-foreground">{porter.name}</p>
+                          <p className="truncate text-xs text-muted-foreground">{porter.email}</p>
+                          {porter.phone && <p className="text-xs text-muted-foreground">{porter.phone}</p>}
+                        </div>
+                      </div>
+
+                      <div className="mt-3 grid gap-2 text-sm sm:grid-cols-2">
+                        <div>
+                          <p className="text-xs uppercase tracking-wide text-muted-foreground">Assigned Hostel</p>
+                          <p className="text-foreground">{porter.assignedHostel?.name || porter.hostel?.name || 'Not assigned'}</p>
+                        </div>
+                        <div>
+                          <p className="text-xs uppercase tracking-wide text-muted-foreground">Created</p>
+                          <p className="text-foreground">
+                            {new Date(porter.createdAt).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })}
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="mt-4">
+                        {(porter.assignedHostel || porter.hostel) ? (<Button size="sm" variant="outline" onClick={() => handleReassignClick(porter)} className="w-full gap-1.5 rounded-xl text-xs">
+                            <Building2 className="h-3.5 w-3.5"/>
+                            Reassign Hostel
+                          </Button>) : (<Button size="sm" onClick={() => handleReassignClick(porter)} className="w-full gap-1.5 rounded-xl text-xs">
+                            <Building2 className="h-3.5 w-3.5"/>
+                            Assign Hostel
+                          </Button>)}
+                      </div>
+                    </div>))}
+                </div>
+
+                <div className="hidden overflow-x-auto md:block"><Table className="min-w-[720px]">
                 <TableHeader>
                   <TableRow className="bg-muted/30 hover:bg-muted/30">
                     <TableHead className="w-10 text-xs">#</TableHead>
@@ -315,7 +354,7 @@ export default function PortersPage() {
                       </TableCell>
                     </TableRow>))}
                 </TableBody>
-              </Table>)}
+              </Table></div></>)}
           </div>
         </div>
 

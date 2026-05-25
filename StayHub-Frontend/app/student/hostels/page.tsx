@@ -153,7 +153,7 @@ export default function BrowseHostelsPage() {
           </div>
 
           
-          <div className="grid gap-4 md:grid-cols-3">
+          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
             <Card>
               <CardHeader className="pb-3">
                 <CardDescription>Available for You</CardDescription>
@@ -217,7 +217,7 @@ export default function BrowseHostelsPage() {
           </Card>
 
           
-          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+          <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
             {filteredHostels.length === 0 ? (<div className="col-span-full text-center py-12">
                 <Home className="h-12 w-12 mx-auto text-muted-foreground mb-4"/>
                 <p className="text-muted-foreground">No hostels found</p>

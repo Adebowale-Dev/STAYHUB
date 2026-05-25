@@ -179,7 +179,7 @@ export default function PendingCheckInsPage() {
           
           <Card>
             <CardContent className="pt-6">
-              <div className="flex items-center justify-between">
+              <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                 <div className="flex items-center gap-3">
                   <div className="h-12 w-12 rounded-full bg-orange-100 dark:bg-orange-900 flex items-center justify-center">
                     <Clock className="h-6 w-6 text-orange-600 dark:text-orange-400"/>
@@ -232,8 +232,46 @@ export default function PendingCheckInsPage() {
                   </div>)}
 
                 
-                {filteredStudents.length > 0 ? (<div className="rounded-md border">
-                    <Table>
+                {filteredStudents.length > 0 ? (<>
+                    <div className="grid gap-3 md:hidden">
+                      {filteredStudents.map((student) => {
+                const { roomNumber, bunkNumber } = getRoomInfo(student);
+                return (<div key={student._id} className="rounded-2xl border border-border bg-background p-4">
+                              <div className="flex items-start justify-between gap-3">
+                                <div className="min-w-0">
+                                  <p className="font-medium text-foreground">{getStudentName(student)}</p>
+                                  <p className="text-xs text-muted-foreground">{getMatricNumber(student)}</p>
+                                </div>
+                                <Badge variant="outline" className="bg-orange-50 text-orange-700 border-orange-200 dark:bg-orange-950 dark:text-orange-300 dark:border-orange-800">
+                                  <Clock className="h-3 w-3 mr-1"/>
+                                  Pending
+                                </Badge>
+                              </div>
+                              <div className="mt-3 grid gap-2 text-sm">
+                                <div>
+                                  <p className="text-xs uppercase tracking-wide text-muted-foreground">Contact</p>
+                                  <p>{student.email}</p>
+                                  <p className="text-muted-foreground">{getPhoneNumber(student)}</p>
+                                </div>
+                                <div>
+                                  <p className="text-xs uppercase tracking-wide text-muted-foreground">Room Assignment</p>
+                                  <p>Room {roomNumber}{bunkNumber ? ` - Bunk ${bunkNumber}` : ''}</p>
+                                </div>
+                                <div>
+                                  <p className="text-xs uppercase tracking-wide text-muted-foreground">Department</p>
+                                  <p>{getDepartment(student)} {student.level ? `- Level ${student.level}` : ''}</p>
+                                </div>
+                              </div>
+                              <Button size="sm" className="mt-4 w-full" onClick={() => router.push(`/porter/checkin?student=${student._id}`)}>
+                                <UserCheck className="h-4 w-4 mr-2"/>
+                                Check In
+                              </Button>
+                            </div>);
+            })}
+                    </div>
+                    <div className="hidden rounded-md border md:block">
+                      <div className="overflow-x-auto">
+                    <Table className="min-w-[920px]">
                       <TableHeader>
                         <TableRow>
                           <TableHead>Student</TableHead>
@@ -307,7 +345,8 @@ export default function PendingCheckInsPage() {
             })}
                       </TableBody>
                     </Table>
-                  </div>) : (<div className="text-center py-12">
+                      </div>
+                    </div></>) : (<div className="text-center py-12">
                     <Clock className="h-12 w-12 text-gray-400 mx-auto mb-4"/>
                     <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
                       {searchQuery ? 'No matching students' : 'No pending check-ins'}

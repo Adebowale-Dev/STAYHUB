@@ -121,7 +121,7 @@ export default function AdminDashboard() {
           <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
             <div className="min-w-0">
               <h1 className="text-xl font-bold text-foreground sm:text-2xl">
-                Welcome back, {user?.firstName || 'Admin'} 👋
+                Welcome back, {user?.firstName || 'Admin'}
               </h1>
               <p className="mt-1 text-sm text-muted-foreground">
                 Here&apos;s a full overview of your accommodation system.
@@ -130,7 +130,7 @@ export default function AdminDashboard() {
           </div>
 
           
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-5">
             <StatCard label="Total Students" value={stats?.totalStudents ?? 0} sub="Registered" icon={Users} iconBg="bg-violet-100 dark:bg-violet-900/30"/>
             <StatCard label="Students Paid" value={stats?.studentsPaid ?? 0} sub={`${paidPct}% rate`} icon={LogIn} iconBg="bg-emerald-100 dark:bg-emerald-900/30"/>
             <StatCard label="Total Rooms" value={stats?.totalRooms ?? 0} sub="All rooms" icon={DoorOpen} iconBg="bg-sky-100 dark:bg-sky-900/30"/>
@@ -139,7 +139,7 @@ export default function AdminDashboard() {
           </div>
 
           
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-2 2xl:grid-cols-4">
             <StatCard label="Total Hostels" value={stats?.totalHostels ?? 0} sub="Active hostels" icon={Building2} iconBg="bg-indigo-100 dark:bg-indigo-900/30"/>
             <StatCard label="Total Porters" value={stats?.totalPorters ?? 0} sub="Active porters" icon={UserCheck} iconBg="bg-pink-100 dark:bg-pink-900/30"/>
             <StatCard label="Pending Payments" value={stats?.studentsPending ?? 0} sub="Awaiting payment" icon={Clock} iconBg="bg-amber-100 dark:bg-amber-900/30"/>
@@ -147,11 +147,11 @@ export default function AdminDashboard() {
           </div>
 
           
-          <div className="grid gap-4 lg:grid-cols-2">
+          <div className="grid gap-4 xl:grid-cols-[minmax(0,1.05fr)_minmax(320px,0.95fr)]">
             
             <div className="space-y-3">
               <h2 className="text-base font-semibold text-foreground">Quick Actions</h2>
-              <div className="space-y-2.5">
+              <div className="grid gap-2.5 sm:grid-cols-2 xl:grid-cols-1">
                 <QuickLink icon={Users} label="Manage Students" sub="View and edit student records" onClick={() => router.push('/admin/dashboard/students')} iconBg="bg-violet-100 dark:bg-violet-900/30" iconColor="text-violet-600"/>
                 <QuickLink icon={Building2} label="Manage Colleges" sub="View departments and colleges" onClick={() => router.push('/admin/colleges')} iconBg="bg-sky-100 dark:bg-sky-900/30" iconColor="text-sky-600"/>
                 <QuickLink icon={Home} label="Manage Hostels" sub="View hostel details and rooms" onClick={() => router.push('/admin/dashboard/hostels')} iconBg="bg-amber-100 dark:bg-amber-900/30" iconColor="text-amber-600"/>
@@ -219,7 +219,7 @@ export default function AdminDashboard() {
               </Button>
             </CardHeader>
             <CardContent className="pt-0">
-              <div className="grid gap-6 lg:grid-cols-[220px_minmax(0,1fr)] lg:items-center">
+              <div className="grid gap-6 lg:grid-cols-[200px_minmax(0,1fr)] lg:items-center">
                 <div className="grid gap-3 sm:grid-cols-3 lg:grid-cols-1">
                   {[
                     { label: 'Total Rooms', value: stats?.totalRooms ?? 0 },
@@ -237,8 +237,8 @@ export default function AdminDashboard() {
                   ))}
                 </div>
 
-                <div className="mx-auto w-full max-w-2xl">
-                  <ChartContainer config={occupancyChartConfig} className="h-[240px] w-full sm:h-[280px] lg:h-[300px]">
+                <div className="mx-auto w-full min-w-0 max-w-2xl">
+                  <ChartContainer config={occupancyChartConfig} className="h-[220px] w-full sm:h-[260px] md:h-[280px] lg:h-[300px]">
                     <BarChart
                       accessibilityLayer
                       data={occupancyChartData}

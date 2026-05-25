@@ -223,7 +223,7 @@ export default function PorterStudentsPage() {
           </div>
 
           
-          <div className="grid gap-4 md:grid-cols-5">
+          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
             <Card>
               <CardHeader className="pb-3">
                 <CardDescription>Total Students</CardDescription>
@@ -325,8 +325,58 @@ export default function PorterStudentsPage() {
               {filteredStudents.length === 0 ? (<div className="text-center py-12">
                   <Users className="h-12 w-12 mx-auto text-muted-foreground mb-4"/>
                   <p className="text-muted-foreground">No students found</p>
-                </div>) : (<div className="rounded-md border">
-                  <Table>
+                </div>) : (<>
+                  <div className="grid gap-3 md:hidden">
+                    {filteredStudents.map((student) => (<div key={student._id} className="rounded-2xl border border-border bg-background p-4">
+                        <div className="flex items-start justify-between gap-3">
+                          <div className="min-w-0">
+                            <p className="font-medium text-foreground">{student.name}</p>
+                            <p className="text-xs text-muted-foreground">{student.matricNumber}</p>
+                          </div>
+                          <div>
+                            {(student.checkInStatus === 'checked-in' || student.checkInStatus === 'checked_in' || student.checkInStatus === 'active') ? (<Badge variant="outline" className="bg-green-50 text-green-700 border-green-200 dark:bg-green-950 dark:text-green-300 dark:border-green-800">
+                                <CheckCircle2 className="h-3 w-3 mr-1"/>
+                                Checked In
+                              </Badge>) : student.checkInStatus === 'temporary' ? (<Badge variant="outline" className="bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950 dark:text-amber-300 dark:border-amber-800">
+                                <Clock className="h-3 w-3 mr-1"/>
+                                Invite Pending
+                              </Badge>) : (student.checkInStatus === 'pending' || student.checkInStatus === 'confirmed') ? (<Badge variant="outline" className="bg-orange-50 text-orange-700 border-orange-200 dark:bg-orange-950 dark:text-orange-300 dark:border-orange-800">
+                                <Clock className="h-3 w-3 mr-1"/>
+                                {student.checkInStatus === 'confirmed' ? 'Confirmed' : 'Pending'}
+                              </Badge>) : student.checkInStatus === 'not-checked-in' ? (<Badge variant="outline" className="bg-gray-50 text-gray-700 border-gray-200 dark:bg-gray-950 dark:text-gray-300 dark:border-gray-800">
+                                <XCircle className="h-3 w-3 mr-1"/>
+                                Not Checked In
+                              </Badge>) : (<Badge variant="outline">{student.checkInStatus || 'Unknown'}</Badge>)}
+                          </div>
+                        </div>
+                        <div className="mt-3 grid gap-2 text-sm">
+                          <div>
+                            <p className="text-xs uppercase tracking-wide text-muted-foreground">Contact</p>
+                            <p className="text-foreground">{student.email}</p>
+                            <p className="text-muted-foreground">{student.phone || 'No phone number'}</p>
+                          </div>
+                          <div>
+                            <p className="text-xs uppercase tracking-wide text-muted-foreground">Room Assignment</p>
+                            <p className="text-foreground">
+                              {student.roomAssignment
+                                ? `Room ${student.roomAssignment.room.roomNumber}${student.roomAssignment.bunkNumber ? ` - Bunk ${student.roomAssignment.bunkNumber}` : ''}${student.roomAssignment.room.block ? ` - ${student.roomAssignment.room.block}` : ''}`
+                                : 'Not assigned'}
+                            </p>
+                          </div>
+                          <div>
+                            <p className="text-xs uppercase tracking-wide text-muted-foreground">Department</p>
+                            <p className="text-foreground">{student.department || '-'} {student.level ? `- ${student.level}L` : ''}</p>
+                          </div>
+                          <div>
+                            <p className="text-xs uppercase tracking-wide text-muted-foreground">Check-in Date</p>
+                            <p className="text-foreground">{student.checkInDate ? new Date(student.checkInDate).toLocaleDateString() : 'Not checked in'}</p>
+                          </div>
+                        </div>
+                      </div>))}
+                  </div>
+                  <div className="hidden rounded-md border md:block">
+                    <div className="overflow-x-auto">
+                  <Table className="min-w-[960px]">
                     <TableHeader>
                       <TableRow>
                         <TableHead>#</TableHead>
@@ -417,7 +467,8 @@ export default function PorterStudentsPage() {
                         </TableRow>))}
                     </TableBody>
                   </Table>
-                </div>)}
+                    </div>
+                  </div></>)}
             </CardContent>
           </Card>
         </div>

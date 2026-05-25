@@ -146,11 +146,8 @@ function DepartmentStudentsContent() {
     }
     const paidStudents = students.filter((s) => s.paymentStatus === "paid").length;
     const unpaidStudents = total - paidStudents;
-    return (<div className="min-h-screen bg-background">
-      
-      <div className="sticky top-0 z-10 border-b bg-card/95 backdrop-blur supports-backdrop-filter:bg-card/60">
-        <div className="max-w-7xl mx-auto px-2 sm:px-4 py-3">
-          <div className="flex items-center gap-3">
+    return (<div className="space-y-4">
+      <div className="flex items-center gap-3">
             <Button variant="ghost" size="sm" onClick={() => router.push(`/admin/colleges/${collegeId}`)} className="h-8">
               <ArrowLeft className="w-4 h-4 mr-1"/>
               Back
@@ -168,10 +165,8 @@ function DepartmentStudentsContent() {
               </h1>
             </div>
           </div>
-        </div>
-      </div>
 
-      <div className="max-w-7xl mx-auto px-2 sm:px-4 py-4 space-y-4">
+      <div className="space-y-4">
         
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
           <Card className="p-3 border shadow-none">
@@ -253,7 +248,7 @@ function DepartmentStudentsContent() {
                 ? "No students match your filters"
                 : "No students in this department yet"}
                 </p>
-              </div>) : (<Table>
+              </div>) : (<Table className="min-w-[760px]">
                 <TableHeader>
                   <TableRow className="bg-muted/50">
                     <TableHead className="w-12 font-semibold">#</TableHead>

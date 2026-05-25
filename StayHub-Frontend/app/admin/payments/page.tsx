@@ -278,21 +278,21 @@ export default function PaymentsPage() {
         <div className="space-y-6">
 
           
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
               <h1 className="text-2xl font-bold text-foreground">Payment Management</h1>
               <p className="text-sm text-muted-foreground mt-1">
                 Track student payments and manage payment settings
               </p>
             </div>
-            <Button onClick={() => setAmountDialogOpen(true)} className="gap-2">
+            <Button onClick={() => setAmountDialogOpen(true)} className="w-full gap-2 sm:w-auto">
               <CreditCard className="h-4 w-4"/>
               Set Payment Amount
             </Button>
           </div>
 
           
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             <div className="rounded-2xl bg-card border border-border p-5 hover:shadow-md transition-all duration-200">
               <div className="flex items-start justify-between">
                 <div>
@@ -354,7 +354,7 @@ export default function PaymentsPage() {
               <h2 className="font-semibold text-foreground">Payment Status</h2>
               <p className="text-xs text-muted-foreground mt-0.5 mb-5">Overall distribution by status</p>
 
-              <div className="flex items-center gap-8">
+              <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:gap-8">
                 <PaymentDonut completed={displayStats.totalPaid} pending={displayStats.totalPending} failed={displayStats.totalFailed}/>
 
                 <div className="flex-1 space-y-3">
@@ -436,12 +436,12 @@ export default function PaymentsPage() {
           </div>
 
           
-          {currentAmount > 0 && (<div className="rounded-2xl border border-primary/20 bg-primary/5 dark:bg-primary/10 p-5 flex items-center justify-between">
+          {currentAmount > 0 && (<div className="flex flex-col gap-4 rounded-2xl border border-primary/20 bg-primary/5 p-5 dark:bg-primary/10 sm:flex-row sm:items-center sm:justify-between">
               <div>
                 <p className="text-sm font-medium text-muted-foreground">Current Accommodation Fee</p>
                 <p className="text-2xl font-bold text-primary mt-0.5">₦{currentAmount.toLocaleString()}</p>
               </div>
-              <Button variant="outline" onClick={() => setAmountDialogOpen(true)} className="gap-2 border-primary/30 hover:bg-primary/10">
+              <Button variant="outline" onClick={() => setAmountDialogOpen(true)} className="w-full gap-2 border-primary/30 hover:bg-primary/10 sm:w-auto">
                 <CreditCard className="h-4 w-4"/>
                 Update Amount
               </Button>
@@ -469,8 +469,8 @@ export default function PaymentsPage() {
           </div>
 
           
-          <div className="rounded-2xl border border-border bg-card overflow-hidden">
-            <div className="flex items-center justify-between px-5 py-4 border-b border-border">
+          <div className="overflow-hidden rounded-2xl border border-border bg-card">
+            <div className="flex flex-col gap-2 border-b border-border px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
               <div>
                 <h2 className="font-semibold text-foreground">Payment Records</h2>
                 <p className="text-xs text-muted-foreground mt-0.5">
@@ -484,7 +484,53 @@ export default function PaymentsPage() {
                 </div>
                 <p className="font-semibold text-muted-foreground">No payments found</p>
                 <p className="text-xs text-muted-foreground/60 mt-1">Try adjusting your search or filters</p>
-              </div>) : (<Table>
+              </div>) : (<>
+                <div className="grid gap-3 p-4 md:hidden">
+                  {filteredPayments.map((payment) => (<div key={payment._id} className="rounded-2xl border border-border bg-background p-4">
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="min-w-0">
+                          <p className="font-medium text-foreground">{payment.student?.name || 'N/A'}</p>
+                          <p className="text-xs text-muted-foreground">{payment.student?.email || 'No email'}</p>
+                        </div>
+                        <p className="shrink-0 text-sm font-bold text-foreground">N{payment.amount.toLocaleString()}</p>
+                      </div>
+
+                      <div className="mt-3 grid grid-cols-1 gap-2 text-sm sm:grid-cols-2">
+                        <div>
+                          <p className="text-xs uppercase tracking-wide text-muted-foreground">Matric Number</p>
+                          <p className="font-mono text-xs text-foreground">{payment.student?.matricNumber || 'N/A'}</p>
+                        </div>
+                        <div>
+                          <p className="text-xs uppercase tracking-wide text-muted-foreground">Reference</p>
+                          <p className="truncate text-xs text-foreground">{payment.reference || 'None'}</p>
+                        </div>
+                        <div>
+                          <p className="text-xs uppercase tracking-wide text-muted-foreground">Status</p>
+                          <div className="mt-1">
+                            {payment.status === 'pending' && (<Badge variant="outline" className="bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-400 border-amber-200 dark:border-amber-800 gap-1 text-xs">
+                                <Clock className="h-3 w-3"/> Pending
+                              </Badge>)}
+                            {payment.status === 'completed' && (<Badge variant="outline" className="bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800 gap-1 text-xs">
+                                <CheckCircle className="h-3 w-3"/> Completed
+                              </Badge>)}
+                            {payment.status === 'failed' && (<Badge variant="outline" className="bg-rose-50 dark:bg-rose-900/20 text-rose-700 dark:text-rose-400 border-rose-200 dark:border-rose-800 gap-1 text-xs">
+                                <X className="h-3 w-3"/> Failed
+                              </Badge>)}
+                          </div>
+                        </div>
+                        <div>
+                          <p className="text-xs uppercase tracking-wide text-muted-foreground">Date</p>
+                          <p className="text-xs text-foreground">
+                            {payment.paymentDate
+                        ? new Date(payment.paymentDate).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })
+                        : new Date(payment.createdAt).toLocaleDateString()}
+                          </p>
+                        </div>
+                      </div>
+                    </div>))}
+                </div>
+
+                <div className="hidden overflow-x-auto md:block"><Table className="min-w-[760px]">
                 <TableHeader>
                   <TableRow className="bg-muted/30 hover:bg-muted/30">
                     <TableHead className="w-10 text-xs">#</TableHead>
@@ -528,7 +574,7 @@ export default function PaymentsPage() {
                       </TableCell>
                     </TableRow>))}
                 </TableBody>
-              </Table>)}
+              </Table></div></>)}
           </div>
         </div>
 

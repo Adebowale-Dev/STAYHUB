@@ -154,7 +154,7 @@ export default function PorterReportsPage() {
 
           
           <Tabs value={activeTab} onValueChange={setActiveTab}>
-            <TabsList className="grid w-full grid-cols-5">
+            <TabsList className="grid h-auto w-full grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-5">
               <TabsTrigger value="occupancy">Occupancy</TabsTrigger>
               <TabsTrigger value="checkin">Check-in</TabsTrigger>
               <TabsTrigger value="students">Students</TabsTrigger>
@@ -181,7 +181,7 @@ export default function PorterReportsPage() {
                   </div>
                 </CardHeader>
                 <CardContent>
-                  <div className="grid gap-4 md:grid-cols-3 mb-6">
+                  <div className="mb-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
                     <Card>
                       <CardHeader className="pb-3">
                         <CardDescription>Total Capacity</CardDescription>
@@ -211,8 +211,8 @@ export default function PorterReportsPage() {
                     </Card>
                   </div>
 
-                  <div className="rounded-md border">
-                    <Table>
+                  <div className="overflow-x-auto rounded-md border">
+                    <Table className="min-w-[720px]">
                       <TableHeader>
                         <TableRow>
                           <TableHead>Room Number</TableHead>
@@ -262,7 +262,7 @@ export default function PorterReportsPage() {
                   </div>
                 </CardHeader>
                 <CardContent>
-                  <div className="grid gap-4 md:grid-cols-4 mb-6">
+                  <div className="mb-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
                     <Card>
                       <CardHeader className="pb-3">
                         <CardDescription>Total Students</CardDescription>
@@ -289,8 +289,8 @@ export default function PorterReportsPage() {
                     </Card>
                   </div>
 
-                  <div className="rounded-md border">
-                    <Table>
+                  <div className="overflow-x-auto rounded-md border">
+                    <Table className="min-w-[780px]">
                       <TableHeader>
                         <TableRow>
                           <TableHead>Matric Number</TableHead>
@@ -343,7 +343,7 @@ export default function PorterReportsPage() {
                   </div>
                 </CardHeader>
                 <CardContent>
-                  <div className="grid gap-4 md:grid-cols-3 mb-6">
+                  <div className="mb-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
                     <Card>
                       <CardHeader className="pb-3">
                         <CardDescription>Total Students</CardDescription>
@@ -364,8 +364,8 @@ export default function PorterReportsPage() {
                     </Card>
                   </div>
 
-                  <div className="rounded-md border">
-                    <Table>
+                  <div className="overflow-x-auto rounded-md border">
+                    <Table className="min-w-[780px]">
                       <TableHeader>
                         <TableRow>
                           <TableHead>Matric Number</TableHead>
@@ -413,7 +413,7 @@ export default function PorterReportsPage() {
                   </div>
                 </CardHeader>
                 <CardContent>
-                  <div className="grid gap-4 md:grid-cols-3 mb-6">
+                  <div className="mb-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
                     <Card>
                       <CardHeader className="pb-3">
                         <CardDescription>Total Rooms</CardDescription>
@@ -434,8 +434,8 @@ export default function PorterReportsPage() {
                     </Card>
                   </div>
 
-                  <div className="rounded-md border">
-                    <Table>
+                  <div className="overflow-x-auto rounded-md border">
+                    <Table className="min-w-[760px]">
                       <TableHeader>
                         <TableRow>
                           <TableHead>Room Number</TableHead>
@@ -489,7 +489,7 @@ export default function PorterReportsPage() {
                   </div>
                 </CardHeader>
                 <CardContent>
-                  <div className="grid gap-4 md:grid-cols-3 mb-6">
+                  <div className="mb-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
                     <Card>
                       <CardHeader className="pb-3">
                         <CardDescription>Today's Date</CardDescription>
@@ -517,8 +517,8 @@ export default function PorterReportsPage() {
                     </Card>
                   </div>
 
-                  <div className="rounded-md border">
-                    <Table>
+                  <div className="overflow-x-auto rounded-md border">
+                    <Table className="min-w-[840px]">
                       <TableHeader>
                         <TableRow>
                           <TableHead>Time</TableHead>
