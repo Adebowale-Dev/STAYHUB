@@ -46,22 +46,7 @@ export default function PorterStudentsPage() {
         setLoading(true);
         try {
             const response = await porterAPI.getStudents();
-            console.log('Porter Students API Response:', response.data);
             const studentsData = response.data.data || response.data || [];
-            console.log('Students data:', studentsData);
-            console.log('Total students:', studentsData.length);
-            if (studentsData.length > 0) {
-                console.log('First student structure:', studentsData[0]);
-                console.log('Student fields:', Object.keys(studentsData[0]));
-                console.log('Name field:', studentsData[0].name || `${studentsData[0].firstName} ${studentsData[0].lastName}`);
-                console.log('Reservation:', studentsData[0].reservation);
-                console.log('Room assignment:', studentsData[0].roomAssignment);
-                console.log('Check-in status:', studentsData[0].checkInStatus);
-                console.log('assignedRoom (raw):', studentsData[0].assignedRoom);
-                console.log('assignedBunk (raw):', studentsData[0].assignedBunk);
-                console.log('assignedHostel (raw):', studentsData[0].assignedHostel);
-                console.log('reservationStatus:', studentsData[0].reservationStatus);
-            }
             const mappedStudents = studentsData.map((student: any) => {
                 const invitationHistory = Array.isArray(student.invitationHistory) ? student.invitationHistory : [];
                 const latestInvitation = invitationHistory[invitationHistory.length - 1];
@@ -110,12 +95,6 @@ export default function PorterStudentsPage() {
                     latestInvitationAt: latestInvitation?.createdAt,
                 };
             });
-            console.log('Mapped students:', mappedStudents);
-            if (mappedStudents.length > 0) {
-                console.log('First mapped student:', mappedStudents[0]);
-                console.log('Room assignment after mapping:', mappedStudents[0].roomAssignment);
-                console.log('Check-in status after mapping:', mappedStudents[0].checkInStatus);
-            }
             setStudents(mappedStudents);
         }
         catch (error: unknown) {
@@ -152,9 +131,7 @@ export default function PorterStudentsPage() {
     const handleCheckIn = async (studentId: string) => {
         setCheckingIn(studentId);
         try {
-            console.log('Checking in student:', studentId);
-            const response = await porterAPI.checkInStudent(studentId);
-            console.log('Check-in response:', response.data);
+            await porterAPI.checkInStudent(studentId);
             toast.success('Student checked in successfully!');
             loadStudents();
         }

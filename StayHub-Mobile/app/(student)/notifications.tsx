@@ -1,5 +1,5 @@
 import React, { useCallback, useMemo, useState } from 'react';
-import { RefreshControl, ScrollView, StatusBar, StyleSheet, TouchableOpacity, View } from 'react-native';
+import { Animated, RefreshControl, StatusBar, StyleSheet, TouchableOpacity, View } from 'react-native';
 import { ActivityIndicator, SegmentedButtons, Text, useTheme } from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useFocusEffect, useRouter } from 'expo-router';
@@ -36,6 +36,7 @@ export default function NotificationsScreen() {
     const insets = useSafeAreaInsets();
     const bottomContentPadding = Math.max(insets.bottom + 96, 116);
     const swipeHandlers = useStudentBackSwipe('/(student)/profile');
+    const scrollY = useState(() => new Animated.Value(0))[0];
     const [notifications, setNotifications] = useState<StudentNotification[]>([]);
     const [loading, setLoading] = useState(true);
     const [refreshing, setRefreshing] = useState(false);
@@ -150,6 +151,17 @@ export default function NotificationsScreen() {
         router.replace('/(student)/profile');
     };
 
+    const heroOpacity = scrollY.interpolate({
+        inputRange: [0, 42, 78],
+        outputRange: [1, 0.62, 0],
+        extrapolate: 'clamp',
+    });
+    const stickyHeaderOpacity = scrollY.interpolate({
+        inputRange: [58, 86],
+        outputRange: [0, 1],
+        extrapolate: 'clamp',
+    });
+
     if (loading) {
         return (
             <LoadingSpinner
@@ -166,7 +178,27 @@ export default function NotificationsScreen() {
                 backgroundColor={palette.surface}
             />
 
-            <ScrollView
+            <Animated.View
+                style={[
+                    styles.stickyHeaderShell,
+                    {
+                        backgroundColor: palette.surface,
+                        borderBottomColor: palette.border,
+                        paddingTop: insets.top + 8,
+                        opacity: stickyHeaderOpacity,
+                    },
+                ]}
+            >
+                <TouchableOpacity style={styles.stickyBackButton} activeOpacity={0.75} onPress={handleBack}>
+                    <MaterialCommunityIcons name="chevron-left" size={25} color={palette.textPrimary} />
+                </TouchableOpacity>
+                <Text numberOfLines={1} style={[styles.stickyHeaderTitle, { color: palette.textPrimary }]}>
+                    Stay on top of updates
+                </Text>
+                <View style={styles.stickyHeaderTrailingSpace} />
+            </Animated.View>
+
+            <Animated.ScrollView
                 className="flex-1"
                 contentContainerStyle={{ paddingBottom: bottomContentPadding }}
                 refreshControl={
@@ -179,32 +211,38 @@ export default function NotificationsScreen() {
                 }
                 showsVerticalScrollIndicator={false}
                 {...swipeHandlers}
+                onScroll={Animated.event(
+                    [{ nativeEvent: { contentOffset: { y: scrollY } } }],
+                    { useNativeDriver: true }
+                )}
+                scrollEventThrottle={16}
             >
-                <StudentHero
-                    insetTop={insets.top}
-                    title="Stay on top of updates"
-                    subtitle="See invitations, approvals, reminders, and reservation activity in one place."
-                    variant="surface"
-                    leadingAccessory={
-                        <TouchableOpacity
-                            style={[
-                                styles.backButton,
-                                {
-                                    backgroundColor: palette.surfaceMuted,
-                                    borderColor: palette.border,
-                                },
-                            ]}
-                            activeOpacity={0.8}
-                            onPress={handleBack}
-                        >
-                            <MaterialCommunityIcons
-                                name="chevron-left"
-                                size={22}
-                                color={palette.textPrimary}
-                            />
-                        </TouchableOpacity>
-                    }
-                >
+                <Animated.View style={{ opacity: heroOpacity }}>
+                    <StudentHero
+                        insetTop={insets.top}
+                        title="Stay on top of updates"
+                        subtitle="See invitations, approvals, reminders, and reservation activity in one place."
+                        variant="surface"
+                        leadingAccessory={
+                            <TouchableOpacity
+                                style={[
+                                    styles.backButton,
+                                    {
+                                        backgroundColor: palette.surfaceMuted,
+                                        borderColor: palette.border,
+                                    },
+                                ]}
+                                activeOpacity={0.8}
+                                onPress={handleBack}
+                            >
+                                <MaterialCommunityIcons
+                                    name="chevron-left"
+                                    size={22}
+                                    color={palette.textPrimary}
+                                />
+                            </TouchableOpacity>
+                        }
+                    >
                     <View className="mt-6 flex-row gap-2.5">
                         <View
                             style={[
@@ -273,7 +311,8 @@ export default function NotificationsScreen() {
                             </Text>
                         </View>
                     </View>
-                </StudentHero>
+                    </StudentHero>
+                </Animated.View>
 
                 <View className="px-[18px] pt-[16px]">
                     <Reveal delay={60}>
@@ -497,12 +536,47 @@ export default function NotificationsScreen() {
                         )}
                     </View>
                 </View>
-            </ScrollView>
+            </Animated.ScrollView>
         </View>
     );
 }
 
 const styles = StyleSheet.create({
+    stickyHeaderShell: {
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        right: 0,
+        zIndex: 30,
+        minHeight: 76,
+        paddingHorizontal: 18,
+        paddingBottom: 12,
+        borderBottomWidth: 1,
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 8,
+        overflow: 'hidden',
+    },
+    stickyBackButton: {
+        width: 34,
+        height: 34,
+        alignItems: 'center',
+        justifyContent: 'center',
+        flexShrink: 0,
+    },
+    stickyHeaderTitle: {
+        flex: 1,
+        fontSize: 20,
+        lineHeight: 25,
+        fontWeight: '800',
+        letterSpacing: -0.35,
+        textAlign: 'center',
+    },
+    stickyHeaderTrailingSpace: {
+        width: 34,
+        height: 34,
+        flexShrink: 0,
+    },
     backButton: {
         width: 36,
         height: 36,

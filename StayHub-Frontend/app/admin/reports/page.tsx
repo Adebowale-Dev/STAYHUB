@@ -186,8 +186,6 @@ export default function ReportsPage() {
                 adminAPI.getPayments({ limit: 200 }),
                 adminAPI.getPaymentStats(),
             ]);
-            console.log('Students API Response:', studentsRes.data);
-            console.log('Hostels API Response:', hostelsRes.data);
             const paymentsData = paymentsRes.data.data || paymentsRes.data || [];
             const transformedPayments = paymentsData.map((payment: any) => ({
               ...payment,
@@ -217,7 +215,6 @@ export default function ReportsPage() {
               .map((payment: any) => String(payment.student?._id || ''))
               .filter(Boolean));
             const studentsData = studentsRes.data.data || studentsRes.data || [];
-            console.log('Students data array:', studentsData);
             const mappedStudents = studentsData.map((student: any) => {
               const studentId = String(student._id || '');
               let resolvedPaymentStatus = normalizeStudentPaymentStatus(student.paymentStatus || student.payment?.status);
@@ -249,11 +246,7 @@ export default function ReportsPage() {
                 } : null
               };
             });
-            console.log('Mapped students:', mappedStudents);
-            console.log('Students with room allocation:', mappedStudents.filter((s: any) => s.roomAllocation));
             const hostelsData = hostelsRes.data.data || hostelsRes.data || [];
-            console.log('Hostels data:', hostelsData);
-            console.log('First hostel details:', JSON.stringify(hostelsData[0], null, 2));
             const mappedHostels = hostelsData.map((hostel: any) => {
                 const studentsInHostel = mappedStudents.filter((s: any) => s.roomAllocation?.hostel?._id === hostel._id ||
                     s.roomAllocation?.hostel?.id === hostel._id);
@@ -273,7 +266,6 @@ export default function ReportsPage() {
                     currentOccupants
                 };
             });
-            console.log('Mapped hostels:', mappedHostels);
             setStats(statsRes.data.data || statsRes.data);
             setStudents(mappedStudents);
             setHostels(mappedHostels);

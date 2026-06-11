@@ -46,21 +46,14 @@ export default function PorterReportsPage() {
                 porterAPI.getStudents(),
                 porterAPI.getRooms()
             ]);
-            console.log('Students API response:', studentsRes.data);
-            console.log('Rooms API response:', roomsRes.data);
             const studentsData = studentsRes.data.data || studentsRes.data || [];
             const roomsData = roomsRes.data.data || roomsRes.data || [];
-            console.log('Students data:', studentsData);
-            console.log('First student sample:', studentsData[0]);
-            console.log('Rooms data:', roomsData);
-            console.log('First room sample:', roomsData[0]);
             const mappedStudents = studentsData.map((s: any) => ({
                 ...s,
                 matricNumber: s.matricNo || s.matricNumber,
                 checkInStatus: s.reservationStatus || s.checkInStatus,
                 roomNumber: s.assignedRoom?.roomNumber || s.roomNumber
             }));
-            console.log('Mapped students:', mappedStudents);
             setStudents(mappedStudents);
             setRooms(roomsData);
         }
@@ -115,8 +108,6 @@ export default function PorterReportsPage() {
         pending: pending.length,
         notCheckedIn: notCheckedIn.length
     };
-    console.log('Check-in stats:', checkInStats);
-    console.log('Checked-in students sample:', checkedIn.slice(0, 2));
     const demographics = {
         male: students.filter(s => s.gender === 'male').length,
         female: students.filter(s => s.gender === 'female').length,

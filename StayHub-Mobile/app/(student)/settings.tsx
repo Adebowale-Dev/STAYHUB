@@ -1,10 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import {
     Alert,
+    Animated,
     KeyboardAvoidingView,
     Modal,
     Platform,
-    ScrollView,
     StatusBar,
     StyleSheet,
     Switch,
@@ -69,6 +69,7 @@ export default function SettingsScreen() {
     const successTint = palette.successSoft;
     const bottomContentPadding = Math.max(insets.bottom + 96, 116);
     const swipeHandlers = useStudentBackSwipe('/(student)/profile');
+    const scrollY = useState(() => new Animated.Value(0))[0];
 
     const [loading, setLoading] = useState(true);
     const [pwModalVisible, setPwModalVisible] = useState(false);
@@ -384,6 +385,17 @@ export default function SettingsScreen() {
         router.replace('/(student)/profile');
     };
 
+    const heroOpacity = scrollY.interpolate({
+        inputRange: [0, 42, 78],
+        outputRange: [1, 0.62, 0],
+        extrapolate: 'clamp',
+    });
+    const stickyHeaderOpacity = scrollY.interpolate({
+        inputRange: [58, 86],
+        outputRange: [0, 1],
+        extrapolate: 'clamp',
+    });
+
     if (loading) {
         return (
             <LoadingSpinner
@@ -400,11 +412,31 @@ export default function SettingsScreen() {
                 backgroundColor={palette.surface}
             />
 
+            <Animated.View
+                style={[
+                    styles.stickyHeaderShell,
+                    {
+                        backgroundColor: palette.surface,
+                        borderBottomColor: palette.border,
+                        paddingTop: insets.top + 8,
+                        opacity: stickyHeaderOpacity,
+                    },
+                ]}
+            >
+                <TouchableOpacity style={styles.stickyBackButton} activeOpacity={0.75} onPress={handleBack}>
+                    <MaterialCommunityIcons name="chevron-left" size={25} color={palette.textPrimary} />
+                </TouchableOpacity>
+                <Text numberOfLines={1} style={[styles.stickyHeaderTitle, { color: palette.textPrimary }]}>
+                    Security & preferences
+                </Text>
+                <View style={styles.stickyHeaderTrailingSpace} />
+            </Animated.View>
+
             <KeyboardAvoidingView
                 behavior={Platform.OS === 'ios' ? 'padding' : undefined}
                 style={[styles.flex, { backgroundColor: palette.pageBackground }]}
             >
-                <ScrollView
+                <Animated.ScrollView
                     style={[styles.container, { backgroundColor: palette.pageBackground }]}
                     contentContainerStyle={[
                         styles.content,
@@ -415,69 +447,75 @@ export default function SettingsScreen() {
                     ]}
                     showsVerticalScrollIndicator={false}
                     {...swipeHandlers}
+                    onScroll={Animated.event(
+                        [{ nativeEvent: { contentOffset: { y: scrollY } } }],
+                        { useNativeDriver: true }
+                    )}
+                    scrollEventThrottle={16}
                 >
-                    <StudentHero
-                        insetTop={insets.top}
-                        variant="surface"
-                        // eyebrow="Settings"
-                        title="Security & preferences"
-                        subtitle="Manage password, appearance, and alert preferences from one place."
-                        align="left"
-                        leadingAccessory={
-                            <TouchableOpacity
-                                style={[
-                                    styles.backButton,
-                                    {
-                                        backgroundColor: palette.surfaceMuted,
-                                        borderColor: palette.border,
-                                    },
-                                ]}
-                                activeOpacity={0.8}
-                                onPress={handleBack}
-                            >
-                                <MaterialCommunityIcons
-                                    name="chevron-left"
-                                    size={22}
-                                    color={palette.textPrimary}
-                                />
-                            </TouchableOpacity>
-                        }
-                    >
-                        <View style={styles.heroMetaRow}>
-                            <View
-                                style={[
-                                    styles.heroMetaCard,
-                                    {
-                                        backgroundColor: palette.surfaceMuted,
-                                        borderColor: palette.border,
-                                    },
-                                ]}
-                            >
-                                <Text style={[styles.heroMetaLabel, { color: palette.textSecondary }]}>
-                                    Appearance
-                                </Text>
-                                <Text style={[styles.heroMetaValue, { color: palette.textPrimary }]}>
-                                    {isDark ? 'Dark mode' : 'Light mode'}
-                                </Text>
+                    <Animated.View style={{ opacity: heroOpacity }}>
+                        <StudentHero
+                            insetTop={insets.top}
+                            variant="surface"
+                            title="Security & preferences"
+                            subtitle="Manage password, appearance, and alert preferences from one place."
+                            align="left"
+                            leadingAccessory={
+                                <TouchableOpacity
+                                    style={[
+                                        styles.backButton,
+                                        {
+                                            backgroundColor: palette.surfaceMuted,
+                                            borderColor: palette.border,
+                                        },
+                                    ]}
+                                    activeOpacity={0.8}
+                                    onPress={handleBack}
+                                >
+                                    <MaterialCommunityIcons
+                                        name="chevron-left"
+                                        size={22}
+                                        color={palette.textPrimary}
+                                    />
+                                </TouchableOpacity>
+                            }
+                        >
+                            <View style={styles.heroMetaRow}>
+                                <View
+                                    style={[
+                                        styles.heroMetaCard,
+                                        {
+                                            backgroundColor: palette.surfaceMuted,
+                                            borderColor: palette.border,
+                                        },
+                                    ]}
+                                >
+                                    <Text style={[styles.heroMetaLabel, { color: palette.textSecondary }]}>
+                                        Appearance
+                                    </Text>
+                                    <Text style={[styles.heroMetaValue, { color: palette.textPrimary }]}>
+                                        {isDark ? 'Dark mode' : 'Light mode'}
+                                    </Text>
+                                </View>
+                                <View
+                                    style={[
+                                        styles.heroMetaCard,
+                                        {
+                                            backgroundColor: palette.surfaceMuted,
+                                            borderColor: palette.border,
+                                        },
+                                    ]}
+                                >
+                                    <Text style={[styles.heroMetaLabel, { color: palette.textSecondary }]}>
+                                        Alerts
+                                    </Text>
+                                    <Text style={[styles.heroMetaValue, { color: palette.textPrimary }]}>
+                                        {notificationSummary}
+                                    </Text>
+                                </View>
                             </View>
-                            <View
-                                style={[
-                                    styles.heroMetaCard,
-                                    {
-                                        backgroundColor: palette.surfaceMuted,
-                                        borderColor: palette.border,
-                                    },
-                                ]}
-                            >
-                                <Text style={[styles.heroMetaLabel, { color: palette.textSecondary }]}>
-                                    Alerts
-                                </Text>
-                                <Text style={[styles.heroMetaValue, { color: palette.textPrimary }]}>
-                                    {notificationSummary}
-                                </Text>
-                            </View>
-                        </View>
-                    </StudentHero>
+                        </StudentHero>
+                    </Animated.View>
 
                     <View style={styles.contentWrap}>
                         <Reveal delay={60}>
@@ -931,7 +969,7 @@ export default function SettingsScreen() {
                         </Reveal>
 
                     </View>
-                </ScrollView>
+                </Animated.ScrollView>
             </KeyboardAvoidingView>
 
             <Modal
@@ -1044,6 +1082,41 @@ const styles = StyleSheet.create({
     flex: { flex: 1 },
     container: { flex: 1, backgroundColor: 'transparent' },
     content: {},
+    stickyHeaderShell: {
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        right: 0,
+        zIndex: 30,
+        minHeight: 76,
+        paddingHorizontal: 18,
+        paddingBottom: 12,
+        borderBottomWidth: 1,
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 8,
+        overflow: 'hidden',
+    },
+    stickyBackButton: {
+        width: 34,
+        height: 34,
+        alignItems: 'center',
+        justifyContent: 'center',
+        flexShrink: 0,
+    },
+    stickyHeaderTitle: {
+        flex: 1,
+        fontSize: 20,
+        lineHeight: 25,
+        fontWeight: '800',
+        letterSpacing: -0.35,
+        textAlign: 'center',
+    },
+    stickyHeaderTrailingSpace: {
+        width: 34,
+        height: 34,
+        flexShrink: 0,
+    },
     backButton: {
         width: 36,
         height: 36,

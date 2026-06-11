@@ -70,11 +70,7 @@ export default function StudentDashboard() {
     const fetchDashboardData = async (retryCount = 0) => {
         try {
             const response = await studentAPI.getDashboard();
-            console.log('Dashboard API Response:', response.data);
             const data = response.data.data || response.data;
-            console.log('Dashboard Data:', data);
-            console.log('Profile:', data?.profile);
-            console.log('Student Name:', data?.profile?.name || `${data?.profile?.firstName || ''} ${data?.profile?.lastName || ''}`.trim());
             const mappedData = {
                 ...data,
                 hasPaid: data.paymentStatus === 'paid' || data.hasPaid,
@@ -83,7 +79,6 @@ export default function StudentDashboard() {
                     data.reservationStatus === 'confirmed' ||
                     data.hasReservation
             };
-            console.log('Mapped Data:', { hasPaid: mappedData.hasPaid, hasReservation: mappedData.hasReservation });
             setDashboardData(mappedData);
         }
         catch (error: any) {

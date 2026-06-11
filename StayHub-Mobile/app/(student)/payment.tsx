@@ -1,7 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import {
     Alert,
-    Linking,
     RefreshControl,
     ScrollView,
     StatusBar,
@@ -15,7 +14,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Paystack, paystackProps } from 'react-native-paystack-webview';
 import { paymentAPI } from '../../services/api';
 import { useAuthStore } from '../../store/authStore';
-import { APP_CONFIG, PAYSTACK_CONFIG } from '../../constants/config';
+import { PAYSTACK_CONFIG } from '../../constants/config';
 import { Reveal } from '../../components/ui/Reveal';
 import type { PaymentStatus } from '../../types';
 import { getStudentPalette } from '../../constants/design';
@@ -33,6 +32,7 @@ export default function PaymentScreen() {
     const [initializing, setInitializing] = useState(false);
     const [paystackRef, setPaystackRef] = useState('');
     const [paystackAmt, setPaystackAmt] = useState(0);
+    const [checkoutRequested, setCheckoutRequested] = useState(false);
     const [verifyCode, setVerifyCode] = useState('');
     const [verifying, setVerifying] = useState(false);
     const user = useAuthStore((s) => s.user);
@@ -40,7 +40,6 @@ export default function PaymentScreen() {
     const palette = getStudentPalette(theme.dark);
     const insets = useSafeAreaInsets();
     const paystackWebViewRef = useRef<paystackProps.PayStackRef>(null);
-    const useBrowserCheckout = APP_CONFIG.IS_EXPO_GO;
     const swipeHandlers = useStudentTabSwipe('payment');
     const bottomContentPadding = Math.max(insets.bottom + 96, 116);
     const headerTop = insets.top + 18;
@@ -80,6 +79,28 @@ export default function PaymentScreen() {
         loadData();
     }, []);
 
+    useEffect(() => {
+        if (!checkoutRequested || !paystackRef || paystackAmt <= 0) {
+            return;
+        }
+
+        const frame = requestAnimationFrame(() => {
+            if (!paystackWebViewRef.current?.startTransaction) {
+                setCheckoutRequested(false);
+                Alert.alert(
+                    'Checkout Unavailable',
+                    'The in-app payment checkout could not start. Please try again.',
+                );
+                return;
+            }
+
+            paystackWebViewRef.current.startTransaction();
+            setCheckoutRequested(false);
+        });
+
+        return () => cancelAnimationFrame(frame);
+    }, [checkoutRequested, paystackAmt, paystackRef]);
+
     const onRefresh = () => {
         setRefreshing(true);
         loadData();
@@ -92,32 +113,14 @@ export default function PaymentScreen() {
             const initRes = await paymentAPI.initialize(amt);
             const initData = (initRes.data as any).data ?? initRes.data;
             const reference = initData.reference ?? '';
-            const authorizationUrl =
-                typeof initData.authorizationUrl === 'string'
-                    ? initData.authorizationUrl.trim()
-                    : '';
+
+            if (!reference) {
+                throw new Error('Payment reference was not returned.');
+            }
+
             setPaystackAmt(amt);
             setPaystackRef(reference);
-
-            if (useBrowserCheckout && authorizationUrl) {
-                await Linking.openURL(authorizationUrl);
-                Alert.alert(
-                    'Continue Payment',
-                    'Paystack opened in your browser. Complete payment there, then return here and refresh your status.',
-                );
-                return;
-            }
-
-            if (!paystackWebViewRef.current?.startTransaction && authorizationUrl) {
-                await Linking.openURL(authorizationUrl);
-                Alert.alert(
-                    'Continue Payment',
-                    'The embedded checkout is unavailable in this session, so payment was opened in your browser.',
-                );
-                return;
-            }
-
-            paystackWebViewRef.current?.startTransaction();
+            setCheckoutRequested(true);
         }
         catch (e: any) {
             Alert.alert('Error', e.response?.data?.message ?? 'Failed to initialize payment.');
@@ -196,7 +199,7 @@ export default function PaymentScreen() {
             <StatusBar barStyle={theme.dark ? 'light-content' : 'dark-content'} backgroundColor={palette.surface} />
             <View style={[styles.fixedHeaderShell, { backgroundColor: palette.surface, borderBottomColor: palette.border }]}>
                 <View style={[styles.fixedHeader, { paddingTop: headerTop }]}>
-                    <Text style={[styles.fixedTitle, { color: palette.textPrimary }]}>{formattedAmount}</Text>
+                    <Text style={[styles.fixedTitle, { color: palette.textPrimary }]}>Payment</Text>
                     {/* <Text style={[styles.fixedSubtitle, { color: palette.textSecondary }]}>
                         Pay online or confirm an offline payment code from one place.
                     </Text> */}
@@ -456,9 +459,8 @@ export default function PaymentScreen() {
                                     </View>
 
                                     <Text style={[styles.cardHint, { color: palette.textSecondary }]}>
-                                        {useBrowserCheckout
-                                            ? 'Expo Go will open Paystack in your browser. Return here after payment and refresh your status.'
-                                            : "You'll be redirected to Paystack's secure checkout to complete payment."}
+                                        Paystack checkout opens securely inside StayHub. Your payment is
+                                        verified automatically when checkout is complete.
                                     </Text>
 
                                     <TouchableOpacity
@@ -576,15 +578,19 @@ export default function PaymentScreen() {
                 </View>
             </ScrollView>
 
-            {user && !useBrowserCheckout ? (
+            {user ? (
                 <Paystack
                     paystackKey={PAYSTACK_CONFIG.PUBLIC_KEY}
                     amount={paystackAmt}
                     billingEmail={user.email ?? `${user.matricNumber}@stayhub.app`}
                     billingName={`${user.firstName} ${user.lastName}`}
                     refNumber={paystackRef}
+                    channels={['card', 'bank', 'ussd', 'bank_transfer']}
                     activityIndicatorColor={palette.primary}
-                    onCancel={() => Alert.alert('Cancelled', 'Payment was cancelled.')}
+                    onCancel={() => {
+                        setCheckoutRequested(false);
+                        Alert.alert('Payment Cancelled', 'No charge was made. You can try again when ready.');
+                    }}
                     onSuccess={handlePaystackSuccess}
                     autoStart={false}
                     ref={paystackWebViewRef as any}
