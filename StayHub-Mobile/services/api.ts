@@ -356,7 +356,16 @@ export const studentAPI = {
         };
     },
     cancelReservation: (reservationId: string) => api.delete(`/student/reservations/${reservationId}`),
-    addGroupMembers: (_reservationId: string, matricNumbers: string[]) => api.post<ApiResponse<Reservation>>('/student/reservation/members', { matrics: matricNumbers }),
+    addGroupMembers: (reservationId: string, matricNumbers: string[]) => {
+        const normalizedMatrics = matricNumbers
+            .map((matric) => matric.trim().toUpperCase())
+            .filter(Boolean);
+
+        return api.patch<ApiResponse<Reservation>>(`/student/reservations/${reservationId}/members`, {
+            matrics: normalizedMatrics,
+            matricNumbers: normalizedMatrics,
+        });
+    },
     respondToInvitation: async (action: 'approve' | 'reject') => {
         const response = await api.post<ApiResponse<Reservation | null>>('/student/reservation/respond', { action });
         const payload = unwrapData<any>(response.data);

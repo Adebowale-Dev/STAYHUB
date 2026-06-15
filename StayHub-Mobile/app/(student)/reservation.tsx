@@ -253,7 +253,7 @@ export default function ReservationScreen() {
             return;
         }
 
-        const filled = newMatrics.map((matric) => matric.trim()).filter(Boolean);
+        const filled = newMatrics.map((matric) => matric.trim().toUpperCase()).filter(Boolean);
 
         if (filled.length === 0) {
             Alert.alert('Empty', 'Enter at least one matric number.');
@@ -268,7 +268,7 @@ export default function ReservationScreen() {
         const existingMatrics = [
             reservation.student?.matricNumber,
             ...(reservation.groupMembers?.map((member) => member.matricNumber) ?? []),
-        ].filter(Boolean);
+        ].filter(Boolean).map((matric) => String(matric).trim().toUpperCase());
         const alreadyInRoom = filled.find((matric) => existingMatrics.includes(matric));
 
         if (alreadyInRoom) {

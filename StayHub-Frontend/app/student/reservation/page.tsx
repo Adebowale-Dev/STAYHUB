@@ -384,6 +384,7 @@ function ReservationPageContent() {
         }
     };
     const updateMatricField = (index: number, value: string) => {
+        setActionFeedback(null);
         setNewMatrics((current) => {
             const next = [...current];
             next[index] = value.toUpperCase();
@@ -400,7 +401,7 @@ function ReservationPageContent() {
         if (!reservation?._id) {
             return;
         }
-        const filled = newMatrics.map((matric) => matric.trim()).filter(Boolean);
+        const filled = newMatrics.map((matric) => matric.trim().toUpperCase()).filter(Boolean);
         if (filled.length === 0) {
             setActionFeedback({
                 type: 'info',
@@ -418,7 +419,7 @@ function ReservationPageContent() {
         const existingMatrics = [
             reservation.student?.matricNo || reservation.student?.matricNumber,
             ...((reservation.groupMembers || []).map((member) => member.matricNo || member.matricNumber)),
-        ].filter(Boolean);
+        ].filter(Boolean).map((matric) => String(matric).trim().toUpperCase());
         const alreadyInRoom = filled.find((matric) => existingMatrics.includes(matric));
         if (alreadyInRoom) {
             setActionFeedback({
@@ -427,14 +428,35 @@ function ReservationPageContent() {
             });
             return;
         }
+        if (filled.length > availableSpaces) {
+            setActionFeedback({
+                type: 'info',
+                message: `This room only has ${availableSpaces} available bed${availableSpaces === 1 ? '' : 's'}.`,
+            });
+            return;
+        }
+        if (!reservation.room?._id) {
+            setActionFeedback({
+                type: 'info',
+                message: 'Your reserved room could not be verified. Refresh the page and try again.',
+            });
+            return;
+        }
         try {
             setAddingMembers(true);
-            await studentAPI.addGroupMembers(reservation._id, filled);
+            const response = await studentAPI.addGroupMembers(reservation._id, filled);
+            if (response.status >= 400 || !response.data?.success) {
+                setActionFeedback({
+                    type: 'info',
+                    message: response.data?.message || 'These friends could not be added to this room.',
+                });
+                return;
+            }
             setNewMatrics(['']);
             await fetchStudentData();
             setActionFeedback({
                 type: 'success',
-                message: `${filled.length} friend${filled.length === 1 ? '' : 's'} added to your room successfully.`,
+                message: response.data?.message || `${filled.length} friend${filled.length === 1 ? '' : 's'} added to your room successfully.`,
             });
         }
         catch (err: any) {
@@ -745,6 +767,10 @@ function ReservationPageContent() {
                 {addingMembers ? 'Adding Friends...' : 'Add Friends To This Room'}
               </Button>
             </div>
+            {actionFeedback && (<Alert variant={actionFeedback.type === 'success' ? 'default' : undefined}>
+                {actionFeedback.type === 'success' ? <CheckCircle2 className="h-4 w-4"/> : <AlertCircle className="h-4 w-4"/>}
+                <AlertDescription>{actionFeedback.message}</AlertDescription>
+              </Alert>)}
           </div>) : null}
       </CardContent>
     </Card>);
@@ -795,7 +821,7 @@ function ReservationPageContent() {
     const isFriendReservedRoom = Boolean(reservation?.reservedBy?._id && reservation?.reservedBy?._id !== user?._id);
     const normalizedReservationStatus = String(reservation?.status || '').toLowerCase().replace('_', '-');
     const availableSpaces = reservation?.room?.availableSpaces ?? Math.max(0, (reservation?.room?.capacity || 0) - (reservation?.room?.currentOccupants || 0));
-    const canAddFriends = Boolean(reservation && availableSpaces > 0 && (normalizedReservationStatus === 'confirmed' || normalizedReservationStatus === 'checked-in'));
+    const canAddFriends = Boolean(reservation && !isFriendReservedRoom && availableSpaces > 0 && (normalizedReservationStatus === 'confirmed' || normalizedReservationStatus === 'checked-in'));
     if (loading) {
         return (<ProtectedRoute allowedRoles={['student']}>
         <DashboardLayout>
@@ -1127,4 +1153,3 @@ export default function ReservationPage() {
         </Suspense>
     );
 }
-

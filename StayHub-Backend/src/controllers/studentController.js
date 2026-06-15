@@ -1147,7 +1147,7 @@ exports.previewReservationInvite = async (req, res) => {
             matricNo,
             isActive: true,
         })
-            .select('firstName lastName matricNo email gender level department reservationStatus paymentStatus notificationPreferences pushDevices isActive')
+            .select('firstName lastName matricNo email gender level department reservationStatus paymentStatus notificationPreferences pushDevices isActive assignedHostel assignedRoom assignedBunk roommates reservedAt reservationExpiresAt reservedBy')
             .populate('department', 'name code');
         const invitee = inviteeRecord ? await reconcileStudentReservationState(inviteeRecord) : null;
         const validation = validateInvitationCandidate({
@@ -2038,6 +2038,22 @@ exports.createReservation = async (req, res) => {
 exports.addGroupMembers = async (req, res) => {
     try {
         const student = await reconcileStudentReservationState(req.user);
+        const requestedReservationId = req.params.reservationId || req.body.reservationId;
+        if (requestedReservationId && String(requestedReservationId) !== String(student._id)) {
+            return res.status(403).json({
+                success: false,
+                code: 'reservation_mismatch',
+                message: 'You can only add friends to your own reservation',
+            });
+        }
+        const reservationOwnerId = student.reservedBy?._id || student.reservedBy || student._id;
+        if (String(reservationOwnerId) !== String(student._id)) {
+            return res.status(403).json({
+                success: false,
+                code: 'not_reservation_owner',
+                message: 'Only the student who originally reserved this room can add friends',
+            });
+        }
         const matrics = Array.isArray(req.body.matrics)
             ? req.body.matrics
             : Array.isArray(req.body.matricNumbers)
@@ -2048,24 +2064,28 @@ exports.addGroupMembers = async (req, res) => {
         if (student.reservationStatus !== 'confirmed' && student.reservationStatus !== 'checked_in') {
             return res.status(400).json({
                 success: false,
+                code: 'inactive_reservation',
                 message: 'You must have an active reservation before adding group members',
             });
         }
         if (!matrics || !Array.isArray(matrics) || matrics.length === 0) {
             return res.status(400).json({
                 success: false,
+                code: 'missing_matric_numbers',
                 message: 'Please provide an array of matric numbers',
             });
         }
         if (upperMatrics.length !== uniqueMatrics.length) {
             return res.status(400).json({
                 success: false,
+                code: 'duplicate_matric_numbers',
                 message: 'Each invited matric number must be unique',
             });
         }
         if (uniqueMatrics.includes(student.matricNo)) {
             return res.status(400).json({
                 success: false,
+                code: 'self_invite',
                 message: 'You cannot add your own matric number to this room',
             });
         }
@@ -2103,6 +2123,7 @@ exports.addGroupMembers = async (req, res) => {
                 }
                 return res.status(400).json({
                     success: false,
+                    code: 'already_in_room',
                     message: `${member.firstName} ${member.lastName} (${member.matricNo}) is already in this room`,
                 });
             }
@@ -2114,6 +2135,7 @@ exports.addGroupMembers = async (req, res) => {
             if (!invitationValidation.valid) {
                 return res.status(400).json({
                     success: false,
+                    code: invitationValidation.code,
                     message: invitationValidation.message,
                 });
             }
@@ -2123,6 +2145,7 @@ exports.addGroupMembers = async (req, res) => {
         if (availableSpace < membersToInvite.length) {
             return res.status(400).json({
                 success: false,
+                code: 'insufficient_space',
                 message: `Insufficient space. Room has ${availableSpace} available space(s), but ${membersToInvite.length} needed.`,
             });
         }

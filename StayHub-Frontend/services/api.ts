@@ -114,10 +114,19 @@ export const studentAPI = {
         validateStatus: (status) => status >= 200 && status < 500,
     }),
     reserveRoom: (data: Record<string, unknown>) => api.post('/student/reservations', data),
-    addGroupMembers: (reservationId: string, matricNumbers: string[]) => api.post('/student/reservation/members', {
-        reservationId,
-        matrics: matricNumbers,
-    }),
+    addGroupMembers: (reservationId: string, matricNumbers: string[]) => {
+        const normalizedMatrics = matricNumbers
+            .map((matric) => matric.trim().toUpperCase())
+            .filter(Boolean);
+
+        return api.patch(`/student/reservations/${reservationId}/members`, {
+            // Keep both names while deployed backend versions are being brought in sync.
+            matrics: normalizedMatrics,
+            matricNumbers: normalizedMatrics,
+        }, {
+            validateStatus: (status) => status >= 200 && status < 500,
+        });
+    },
     removeGroupMember: (memberId: string) => api.delete(`/student/reservation/members/${memberId}`),
     getReservation: () => api.get('/student/reservation'),
     respondToInvitation: (action: 'approve' | 'reject') => api.post('/student/reservation/respond', { action }),
