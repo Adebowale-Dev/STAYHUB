@@ -69,6 +69,9 @@ function HostelsPageContent() {
     const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
     const [hostelToDelete, setHostelToDelete] = useState<Hostel | null>(null);
     const [deletePermanently, setDeletePermanently] = useState(true);
+    const [selectedHostelIds, setSelectedHostelIds] = useState<string[]>([]);
+    const [bulkDeleteDialogOpen, setBulkDeleteDialogOpen] = useState(false);
+    const [bulkDeletePermanently, setBulkDeletePermanently] = useState(true);
     const [deleting, setDeleting] = useState(false);
     const [isExporting, setIsExporting] = useState(false);
     const [isImporting, setIsImporting] = useState(false);
@@ -82,13 +85,7 @@ function HostelsPageContent() {
             setLoading(true);
             setError(null);
             const response = await adminAPI.getHostels();
-            console.log("Backend response:", response.data);
             const hostelsData = response.data.data || response.data.hostels || response.data;
-            console.log("Hostels data:", hostelsData);
-            if (hostelsData.length > 0) {
-                console.log("First hostel fields:", Object.keys(hostelsData[0]));
-                console.log("First hostel full data:", hostelsData[0]);
-            }
             setHostels(Array.isArray(hostelsData) ? hostelsData : []);
         }
         catch (err) {
@@ -126,6 +123,11 @@ function HostelsPageContent() {
         totalRooms: hostels.reduce((sum, h) => sum + (h.totalRooms || 0), 0),
         totalPorters: hostels.reduce((sum, h) => sum + ((h.porter ? 1 : 0) || h.occupancyStats?.porterCount || 0), 0),
     };
+    const filteredHostelIds = filteredHostels.map((hostel) => hostel._id);
+    const selectedVisibleHostelIds = selectedHostelIds.filter((id) => filteredHostelIds.includes(id));
+    const selectedHostels = hostels.filter((hostel) => selectedHostelIds.includes(hostel._id));
+    const allVisibleSelected = filteredHostels.length > 0 && selectedVisibleHostelIds.length === filteredHostels.length;
+    const someVisibleSelected = selectedVisibleHostelIds.length > 0 && !allVisibleSelected;
     const getGenderBadgeColor = (gender: string) => {
         switch (gender) {
             case "male":
@@ -157,6 +159,56 @@ function HostelsPageContent() {
         setHostelToDelete(hostel);
         setDeletePermanently(true);
         setDeleteDialogOpen(true);
+    };
+    const clearSelection = () => {
+        setSelectedHostelIds([]);
+    };
+    const toggleHostelSelection = (hostelId: string, checked: boolean) => {
+        setSelectedHostelIds((current) =>
+            checked ? Array.from(new Set([...current, hostelId])) : current.filter((id) => id !== hostelId)
+        );
+    };
+    const toggleVisibleSelection = (checked: boolean) => {
+        setSelectedHostelIds((current) => {
+            if (!checked) {
+                return current.filter((id) => !filteredHostelIds.includes(id));
+            }
+            return Array.from(new Set([...current, ...filteredHostelIds]));
+        });
+    };
+    const handleBulkDeleteClick = () => {
+        if (selectedHostelIds.length === 0) {
+            toast.error("Select at least one hostel to delete");
+            return;
+        }
+        setBulkDeletePermanently(true);
+        setBulkDeleteDialogOpen(true);
+    };
+    const handleBulkDeleteConfirm = async () => {
+        if (selectedHostels.length === 0)
+            return;
+        setDeleting(true);
+        try {
+            const results = await Promise.allSettled(selectedHostels.map((hostel) => adminAPI.deleteHostel(hostel._id, bulkDeletePermanently)));
+            const deletedCount = results.filter((result) => result.status === "fulfilled").length;
+            const failedCount = results.length - deletedCount;
+            await loadHostels();
+            clearSelection();
+            setBulkDeleteDialogOpen(false);
+            if (failedCount > 0) {
+                toast.warning(`Deleted ${deletedCount} hostel(s). ${failedCount} could not be deleted.`);
+            }
+            else {
+                toast.success(`Deleted ${deletedCount} hostel${deletedCount === 1 ? "" : "s"} successfully`);
+            }
+        }
+        catch (error) {
+            console.error("Failed to delete selected hostels:", error);
+            toast.error("Failed to delete selected hostels. Please try again.");
+        }
+        finally {
+            setDeleting(false);
+        }
     };
     const handleDeleteConfirm = async () => {
         if (!hostelToDelete)
@@ -539,9 +591,35 @@ function HostelsPageContent() {
                     Add First Hostel
                   </Button>)}
               </div>) : (<>
+                {selectedHostelIds.length > 0 && (<div className="flex flex-col gap-3 border-b bg-muted/20 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
+                    <div>
+                      <p className="text-sm font-semibold text-foreground">
+                        {selectedHostelIds.length} hostel{selectedHostelIds.length === 1 ? "" : "s"} selected
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        Delete selected hostels together instead of deleting one by one.
+                      </p>
+                    </div>
+                    <div className="flex flex-col gap-2 sm:flex-row">
+                      <Button variant="outline" size="sm" onClick={clearSelection} disabled={deleting}>
+                        Clear selection
+                      </Button>
+                      <Button variant="destructive" size="sm" onClick={handleBulkDeleteClick} disabled={deleting}>
+                        <Trash2 className="mr-2 h-4 w-4"/>
+                        Delete selected
+                      </Button>
+                    </div>
+                  </div>)}
                 <Table className="min-w-[720px]">
                   <TableHeader>
                     <TableRow className="bg-muted/50">
+                      <TableHead className="w-12">
+                        <Checkbox
+                          aria-label="Select all visible hostels"
+                          checked={allVisibleSelected ? true : someVisibleSelected ? "indeterminate" : false}
+                          onCheckedChange={(checked) => toggleVisibleSelection(checked === true)}
+                        />
+                      </TableHead>
                       <TableHead className="w-12 font-semibold">#</TableHead>
                       <TableHead className="font-semibold">Name</TableHead>
                       <TableHead className="text-center font-semibold">Gender</TableHead>
@@ -555,6 +633,13 @@ function HostelsPageContent() {
                   <TableBody>
                     {filteredHostels.map((hostel, index) => {
                 return (<TableRow key={hostel._id} className="hover:bg-muted/30">
+                          <TableCell>
+                            <Checkbox
+                              aria-label={`Select ${hostel.name}`}
+                              checked={selectedHostelIds.includes(hostel._id)}
+                              onCheckedChange={(checked) => toggleHostelSelection(hostel._id, checked === true)}
+                            />
+                          </TableCell>
                           <TableCell className="font-medium text-muted-foreground">
                             {index + 1}
                           </TableCell>
@@ -765,6 +850,53 @@ function HostelsPageContent() {
             </Button>
             <Button variant="destructive" onClick={handleDeleteConfirm} disabled={deleting}>
               {deleting ? "Deleting..." : "Delete"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={bulkDeleteDialogOpen} onOpenChange={setBulkDeleteDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-destructive">
+              <AlertCircle className="w-5 h-5"/>
+              Delete Selected Hostels
+            </DialogTitle>
+            <DialogDescription>
+              You are about to delete <span className="font-semibold">{selectedHostels.length}</span> selected hostel{selectedHostels.length === 1 ? "" : "s"}.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-3 py-1">
+            <div className="max-h-40 overflow-y-auto rounded-md border bg-muted/20 p-3">
+              <ul className="space-y-1 text-sm text-muted-foreground">
+                {selectedHostels.map((hostel) => (<li key={hostel._id} className="flex items-center justify-between gap-3">
+                    <span className="font-medium text-foreground">{hostel.name}</span>
+                    <span className="text-xs capitalize">{hostel.gender}</span>
+                  </li>))}
+              </ul>
+            </div>
+            <div className="flex items-start gap-3 rounded-md border p-3">
+              <Checkbox id="bulk-delete-permanent" checked={bulkDeletePermanently} onCheckedChange={(checked) => setBulkDeletePermanently(checked === true)}/>
+              <div className="space-y-1">
+                <Label htmlFor="bulk-delete-permanent" className="text-sm font-medium cursor-pointer">
+                  Delete permanently
+                </Label>
+                <p className="text-xs text-muted-foreground">
+                  {bulkDeletePermanently
+                    ? "Selected hostels, rooms, and bunks will be removed permanently."
+                    : "Selected hostels will be deactivated and kept for records."}
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <DialogFooter className="gap-2 sm:gap-0">
+            <Button variant="outline" onClick={() => setBulkDeleteDialogOpen(false)} disabled={deleting}>
+              Cancel
+            </Button>
+            <Button variant="destructive" onClick={handleBulkDeleteConfirm} disabled={deleting || selectedHostels.length === 0}>
+              {deleting ? "Deleting..." : `Delete ${selectedHostels.length} selected`}
             </Button>
           </DialogFooter>
         </DialogContent>

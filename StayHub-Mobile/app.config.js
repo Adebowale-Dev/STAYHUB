@@ -11,7 +11,8 @@ const getEnv = (...keys) => {
 const apiBaseUrl = getEnv('EXPO_PUBLIC_API_BASE_URL', 'API_BASE_URL');
 const paystackPublicKey = getEnv('EXPO_PUBLIC_PAYSTACK_PUBLIC_KEY', 'PAYSTACK_PUBLIC_KEY') ||
     'pk_test_f5ab1691491857e39c3ca1221d7e8d5680317b13';
-const easProjectId = getEnv('EXPO_PUBLIC_EAS_PROJECT_ID', 'EXPO_EAS_PROJECT_ID', 'EAS_PROJECT_ID');
+const easProjectId = getEnv('EXPO_PUBLIC_EAS_PROJECT_ID', 'EXPO_EAS_PROJECT_ID', 'EAS_PROJECT_ID') ||
+    '66c2f543-e9cc-4716-9bc3-b741720dc65c';
 module.exports = {
     expo: {
         name: 'StayHub',
