@@ -141,7 +141,7 @@ export const porterAPI = {
 };
 export const paymentAPI = {
     getAmount: () => api.get('/student/payment/amount'),
-    initialize: (amount: number) => api.post('/student/payment/initialize', { amount }),
+    initialize: (amount: number) => api.post('/student/payment/initialize', { amount, client: 'web' }),
     getStatus: () => api.get('/student/payment/status'),
     verify: (reference: string) => api.get(`/student/payment/verify/${reference}`),
     verifyWithCode: (paymentCode: string) => api.post('/student/payment/verify-code', { paymentCode }),

@@ -1,4 +1,27 @@
 require('dotenv').config();
+
+const CURRENT_FRONTEND_URL = 'https://stayhub-ducd.vercel.app';
+const OLD_FRONTEND_URLS = new Set([
+    'https://stayhubb.vercel.app',
+    'https://stayhubb.vercel.app/',
+]);
+
+const normalizeFrontendUrl = (url) => {
+    const trimmedUrl = String(url || '').trim();
+
+    if (!trimmedUrl) {
+        return process.env.NODE_ENV === 'production' ? CURRENT_FRONTEND_URL : 'http://localhost:3000';
+    }
+
+    const normalizedUrl = trimmedUrl.replace(/\/+$/, '');
+
+    if (OLD_FRONTEND_URLS.has(trimmedUrl) || OLD_FRONTEND_URLS.has(normalizedUrl)) {
+        return CURRENT_FRONTEND_URL;
+    }
+
+    return normalizedUrl;
+};
+
 module.exports = {
     PORT: process.env.PORT || 5000,
     NODE_ENV: process.env.NODE_ENV || 'development',
@@ -15,7 +38,7 @@ module.exports = {
     PAYSTACK_CALLBACK_URL: process.env.PAYSTACK_CALLBACK_URL,
     EMAIL_FROM: process.env.EMAIL_FROM,
     BREVO_API_KEY: process.env.BREVO_API_KEY,
-    FRONTEND_URL: process.env.FRONTEND_URL || 'http://localhost:3000',
+    FRONTEND_URL: normalizeFrontendUrl(process.env.FRONTEND_URL),
     RESERVATION_EXPIRY_HOURS: parseInt(process.env.RESERVATION_EXPIRY_HOURS) || 48,
     INVITATION_CLEANUP_INTERVAL_MINUTES: parseInt(process.env.INVITATION_CLEANUP_INTERVAL_MINUTES) || 15,
     INVITATION_REMINDER_HOURS: process.env.INVITATION_REMINDER_HOURS || '12,2',

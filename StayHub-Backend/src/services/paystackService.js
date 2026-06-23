@@ -91,14 +91,25 @@ const handlePaystackRequest = async (requestFn, fallbackMessage, logLabel) => {
     }
 };
 
-const initializeTransaction = async (data) => handlePaystackRequest(() => paystackAPI.post('/transaction/initialize', {
-    email: data.email,
-    amount: data.amount * 100,
-    reference: data.reference,
-    callback_url: config.PAYSTACK_CALLBACK_URL,
-    metadata: data.metadata,
-    channels: ['card', 'bank', 'ussd', 'bank_transfer'],
-}), 'Failed to initialize payment', 'Paystack initialization error:');
+const initializeTransaction = async (data) => {
+    const payload = {
+        email: data.email,
+        amount: data.amount * 100,
+        reference: data.reference,
+        metadata: data.metadata,
+        channels: ['card', 'bank', 'ussd', 'bank_transfer'],
+    };
+
+    if (data.callbackUrl) {
+        payload.callback_url = data.callbackUrl;
+    }
+
+    return handlePaystackRequest(
+        () => paystackAPI.post('/transaction/initialize', payload),
+        'Failed to initialize payment',
+        'Paystack initialization error:',
+    );
+};
 
 const verifyTransaction = async (reference) => {
     console.log('Calling Paystack API for reference:', reference);

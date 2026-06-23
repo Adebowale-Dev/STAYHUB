@@ -1,7 +1,9 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
     Alert,
+    Modal,
     RefreshControl,
+    SafeAreaView,
     ScrollView,
     StatusBar,
     StyleSheet,
@@ -11,7 +13,7 @@ import {
 import { ActivityIndicator, Text, TextInput, useTheme } from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Paystack, paystackProps } from 'react-native-paystack-webview';
+import { WebView } from 'react-native-webview';
 import { paymentAPI } from '../../services/api';
 import { useAuthStore } from '../../store/authStore';
 import { PAYSTACK_CONFIG } from '../../constants/config';
@@ -33,13 +35,14 @@ export default function PaymentScreen() {
     const [paystackRef, setPaystackRef] = useState('');
     const [paystackAmt, setPaystackAmt] = useState(0);
     const [checkoutRequested, setCheckoutRequested] = useState(false);
+    const [checkoutVisible, setCheckoutVisible] = useState(false);
+    const [checkoutLoading, setCheckoutLoading] = useState(false);
     const [verifyCode, setVerifyCode] = useState('');
     const [verifying, setVerifying] = useState(false);
     const user = useAuthStore((s) => s.user);
     const theme = useTheme();
     const palette = getStudentPalette(theme.dark);
     const insets = useSafeAreaInsets();
-    const paystackWebViewRef = useRef<paystackProps.PayStackRef>(null);
     const swipeHandlers = useStudentTabSwipe('payment');
     const bottomContentPadding = Math.max(insets.bottom + 96, 116);
     const headerTop = insets.top + 18;
@@ -85,16 +88,7 @@ export default function PaymentScreen() {
         }
 
         const frame = requestAnimationFrame(() => {
-            if (!paystackWebViewRef.current?.startTransaction) {
-                setCheckoutRequested(false);
-                Alert.alert(
-                    'Checkout Unavailable',
-                    'The in-app payment checkout could not start. Please try again.',
-                );
-                return;
-            }
-
-            paystackWebViewRef.current.startTransaction();
+            setCheckoutVisible(true);
             setCheckoutRequested(false);
         });
 
@@ -105,6 +99,81 @@ export default function PaymentScreen() {
         setRefreshing(true);
         loadData();
     };
+
+    const checkoutHtml = useMemo(() => {
+        if (!user || !paystackRef || paystackAmt <= 0) {
+            return '';
+        }
+
+        const billingEmail = user.email ?? `${user.matricNumber}@stayhub.app`;
+        const billingName = `${user.firstName} ${user.lastName}`.trim();
+        const amountInKobo = Math.round(paystackAmt * 100);
+
+        return `
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>StayHub Payment</title>
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      height: 100%;
+      background: #ffffff;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+  </style>
+</head>
+<body onload="payWithPaystack()">
+  <script src="https://js.paystack.co/v2/inline.js"></script>
+  <script>
+    function postToApp(payload) {
+      window.ReactNativeWebView.postMessage(JSON.stringify(payload));
+    }
+
+    function payWithPaystack() {
+      try {
+        var paystack = new PaystackPop();
+        paystack.newTransaction({
+          key: ${JSON.stringify(PAYSTACK_CONFIG.PUBLIC_KEY)},
+          email: ${JSON.stringify(billingEmail)},
+          amount: ${amountInKobo},
+          ref: ${JSON.stringify(paystackRef)},
+          currency: 'NGN',
+          channels: ${JSON.stringify(['card', 'bank', 'ussd', 'bank_transfer'])},
+          metadata: ${JSON.stringify({
+              custom_fields: [
+                  {
+                      display_name: billingName || 'StayHub Student',
+                      variable_name: 'student',
+                      value: user.matricNumber ?? billingEmail,
+                  },
+              ],
+          })},
+          onSuccess: function(response) {
+            postToApp({ event: 'successful', transactionRef: response });
+          },
+          onCancel: function() {
+            postToApp({ event: 'cancelled' });
+          }
+        });
+      } catch (error) {
+        postToApp({ event: 'error', message: error && error.message ? error.message : 'Unable to start checkout' });
+      }
+    }
+  </script>
+</body>
+</html>`;
+    }, [paystackAmt, paystackRef, user]);
+
+    const closeCheckout = useCallback(() => {
+        setCheckoutVisible(false);
+        setCheckoutLoading(false);
+        setCheckoutRequested(false);
+    }, []);
 
     const handleInitializePayment = async () => {
         setInitializing(true);
@@ -145,6 +214,68 @@ export default function PaymentScreen() {
             loadData();
         }
     };
+
+    const handleCheckoutMessage = useCallback((rawMessage: string) => {
+        try {
+            const webResponse = JSON.parse(rawMessage);
+
+            if (webResponse.event === 'successful') {
+                closeCheckout();
+                handlePaystackSuccess({ transactionRef: webResponse.transactionRef });
+                return;
+            }
+
+            if (webResponse.event === 'cancelled') {
+                closeCheckout();
+                Alert.alert('Payment Cancelled', 'No charge was made. You can try again when ready.');
+                return;
+            }
+
+            closeCheckout();
+            Alert.alert('Checkout Error', webResponse.message ?? 'The payment checkout could not continue.');
+        }
+        catch {
+            closeCheckout();
+            Alert.alert('Checkout Error', 'The payment checkout returned an invalid response.');
+        }
+    }, [closeCheckout, handlePaystackSuccess]);
+
+    const handleCheckoutNavigation = useCallback((request: any) => {
+        const url = String(request?.url ?? '').toLowerCase();
+        const isPaystackClose = url.includes('standard.paystack.co/close');
+        const isOldWebLogin = url.includes('stayhubb.vercel.app') || url.includes('/login');
+        const isBackendCallback = url.includes('/api/payments/callback') || url.includes('/api/student/payment/callback');
+
+        if (isPaystackClose) {
+            closeCheckout();
+            return false;
+        }
+
+        if (isOldWebLogin || isBackendCallback) {
+            closeCheckout();
+            handlePaystackSuccess({ transactionRef: { reference: paystackRef } });
+            return false;
+        }
+
+        return true;
+    }, [closeCheckout, handlePaystackSuccess, paystackRef]);
+
+    const handleCheckoutStateChange = useCallback((state: any) => {
+        const url = String(state?.url ?? '').toLowerCase();
+        const isPaystackClose = url.includes('standard.paystack.co/close');
+        const isOldWebLogin = url.includes('stayhubb.vercel.app') || url.includes('/login');
+        const isBackendCallback = url.includes('/api/payments/callback') || url.includes('/api/student/payment/callback');
+
+        if (isPaystackClose) {
+            closeCheckout();
+            return;
+        }
+
+        if (isOldWebLogin || isBackendCallback) {
+            closeCheckout();
+            handlePaystackSuccess({ transactionRef: { reference: paystackRef } });
+        }
+    }, [closeCheckout, handlePaystackSuccess, paystackRef]);
 
     const handleVerifyCode = async () => {
         if (!verifyCode.trim()) {
@@ -578,24 +709,55 @@ export default function PaymentScreen() {
                 </View>
             </ScrollView>
 
-            {user ? (
-                <Paystack
-                    paystackKey={PAYSTACK_CONFIG.PUBLIC_KEY}
-                    amount={paystackAmt}
-                    billingEmail={user.email ?? `${user.matricNumber}@stayhub.app`}
-                    billingName={`${user.firstName} ${user.lastName}`}
-                    refNumber={paystackRef}
-                    channels={['card', 'bank', 'ussd', 'bank_transfer']}
-                    activityIndicatorColor={palette.primary}
-                    onCancel={() => {
-                        setCheckoutRequested(false);
-                        Alert.alert('Payment Cancelled', 'No charge was made. You can try again when ready.');
-                    }}
-                    onSuccess={handlePaystackSuccess}
-                    autoStart={false}
-                    ref={paystackWebViewRef as any}
-                />
-            ) : null}
+            <Modal visible={checkoutVisible} animationType="slide" presentationStyle="fullScreen">
+                <SafeAreaView style={[styles.checkoutShell, { backgroundColor: palette.pageBackground }]}>
+                    <View style={[styles.checkoutHeader, { borderBottomColor: palette.border }]}>
+                        <TouchableOpacity
+                            style={[styles.checkoutClose, { backgroundColor: palette.surfaceMuted }]}
+                            onPress={() => {
+                                closeCheckout();
+                                Alert.alert('Payment Cancelled', 'No charge was made. You can try again when ready.');
+                            }}
+                            activeOpacity={0.85}
+                        >
+                            <MaterialCommunityIcons name="close" size={20} color={palette.textPrimary} />
+                        </TouchableOpacity>
+                        <Text style={[styles.checkoutTitle, { color: palette.textPrimary }]}>Secure checkout</Text>
+                        <View style={styles.checkoutCloseSpacer} />
+                    </View>
+
+                    {checkoutHtml ? (
+                        <WebView
+                            source={{ html: checkoutHtml, baseUrl: 'https://checkout.paystack.com' }}
+                            originWhitelist={['*']}
+                            javaScriptEnabled
+                            domStorageEnabled
+                            cacheEnabled={false}
+                            cacheMode="LOAD_NO_CACHE"
+                            startInLoadingState
+                            onLoadStart={() => setCheckoutLoading(true)}
+                            onLoadEnd={() => setCheckoutLoading(false)}
+                            onMessage={(event) => handleCheckoutMessage(event.nativeEvent.data)}
+                            onShouldStartLoadWithRequest={handleCheckoutNavigation}
+                            onNavigationStateChange={handleCheckoutStateChange}
+                            onError={() => {
+                                closeCheckout();
+                                Alert.alert('Checkout Error', 'Unable to load the secure payment checkout.');
+                            }}
+                            style={styles.checkoutWebView}
+                        />
+                    ) : null}
+
+                    {checkoutLoading ? (
+                        <View style={styles.checkoutLoader}>
+                            <ActivityIndicator size={28} color={palette.primary} />
+                            <Text style={[styles.checkoutLoaderText, { color: palette.textSecondary }]}>
+                                Opening secure checkout...
+                            </Text>
+                        </View>
+                    ) : null}
+                </SafeAreaView>
+            </Modal>
         </View>
     );
 }
@@ -830,5 +992,46 @@ const styles = StyleSheet.create({
     codeInput: {
         marginTop: 16,
         backgroundColor: 'transparent',
+    },
+    checkoutShell: {
+        flex: 1,
+    },
+    checkoutHeader: {
+        minHeight: 58,
+        borderBottomWidth: 1,
+        paddingHorizontal: 16,
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+    },
+    checkoutClose: {
+        width: 42,
+        height: 42,
+        borderRadius: 21,
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    checkoutCloseSpacer: {
+        width: 42,
+        height: 42,
+    },
+    checkoutTitle: {
+        fontSize: 16,
+        fontWeight: '800',
+    },
+    checkoutWebView: {
+        flex: 1,
+        backgroundColor: '#FFFFFF',
+    },
+    checkoutLoader: {
+        ...StyleSheet.absoluteFillObject,
+        alignItems: 'center',
+        justifyContent: 'center',
+        backgroundColor: 'rgba(255,255,255,0.82)',
+        gap: 10,
+    },
+    checkoutLoaderText: {
+        fontSize: 13,
+        fontWeight: '700',
     },
 });

@@ -501,7 +501,10 @@ export const paymentAPI = {
             },
         };
     },
-    initialize: (amount: number) => api.post<ApiResponse<PaymentInitResponse>>('/student/payment/initialize', { amount }),
+    initialize: (amount: number) => api.post<ApiResponse<PaymentInitResponse>>('/student/payment/initialize', {
+        amount,
+        client: 'mobile',
+    }),
     verifyWithCode: (paymentCode: string) => api.post<ApiResponse<PaymentStatus>>('/student/payment/verify-code', { paymentCode }),
     verifyReference: (reference: string) => api.get<ApiResponse<PaymentStatus>>(`/student/payment/verify/${reference}`),
 };

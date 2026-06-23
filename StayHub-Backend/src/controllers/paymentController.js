@@ -13,6 +13,8 @@ const getPaymentErrorStatus = (error) => error?.statusCode || 500;
 const initializePayment = async (req, res) => {
     try {
         const student = req.user;
+        const paymentClient = String(req.body?.client || req.body?.source || 'web').toLowerCase();
+        const isMobileClient = paymentClient === 'mobile' || paymentClient === 'app';
         if (student.paymentStatus === 'paid') {
             return res.status(400).json({
                 success: false,
@@ -36,6 +38,7 @@ const initializePayment = async (req, res) => {
             email: student.email,
             amount: paymentAmount,
             reference,
+            callbackUrl: isMobileClient ? null : config.PAYSTACK_CALLBACK_URL,
             metadata: {
                 student_id: student._id.toString(),
                 matric_no: student.matricNo,
@@ -79,6 +82,7 @@ const initializePayment = async (req, res) => {
                 reference: paystackData.data.reference,
                 paymentCode: payment.paymentCode,
                 amount: paymentAmount,
+                client: paymentClient,
             },
         });
     }
